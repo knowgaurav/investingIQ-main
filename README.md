@@ -34,7 +34,7 @@
     <img src="images/logo.png" alt="Logo"  height="40">
   </a>
 
-<h3 align="center">Investingiq – Algorithmic Trading Dashboard Powered By AI & ML Built Using ReactJS & Python</h3>
+<h3 align="center">InvestingIQ – Algorithmic Trading Dashboard Powered By AI & ML Built Using ReactJS & Python</h3>
 
   <p align="center">
 InvestingIQ is a user-friendly online platform built with ReactJS, Python, and Streamlit, designed to assist retail investors in making informed decisions in the stock market. It offers comprehensive stock information, including current and historical stock prices, company news, and management insights. The platform also features two machine learning models, Facebook's Prophet and Random Forest, for predicting future stock prices. Additionally, it provides sentiment analysis to gauge public confidence in the company. With these powerful tools and data-driven insights, InvestingIQ simplifies the investment process, allowing investors to make hassle-free decisions with confidence.
@@ -62,7 +62,6 @@ InvestingIQ is a user-friendly online platform built with ReactJS, Python, and S
     <li><a href="#usage">About</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
   </ol>
 </details>
 
