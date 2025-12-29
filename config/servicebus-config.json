@@ -1,0 +1,54 @@
+{
+    "UserConfig": {
+        "Namespaces": [
+            {
+                "Name": "investingiq",
+                "Queues": [
+                    {
+                        "Name": "data-queue",
+                        "Properties": {
+                            "DeadLetteringOnMessageExpiration": true,
+                            "DefaultMessageTimeToLive": "PT1H",
+                            "MaxDeliveryCount": 3
+                        }
+                    },
+                    {
+                        "Name": "llm-queue",
+                        "Properties": {
+                            "DeadLetteringOnMessageExpiration": true,
+                            "DefaultMessageTimeToLive": "PT1H",
+                            "MaxDeliveryCount": 3
+                        }
+                    },
+                    {
+                        "Name": "embed-queue",
+                        "Properties": {
+                            "DeadLetteringOnMessageExpiration": true,
+                            "DefaultMessageTimeToLive": "PT1H",
+                            "MaxDeliveryCount": 3
+                        }
+                    },
+                    {
+                        "Name": "aggregate-queue",
+                        "Properties": {
+                            "DeadLetteringOnMessageExpiration": true,
+                            "DefaultMessageTimeToLive": "PT1H",
+                            "MaxDeliveryCount": 3
+                        }
+                    },
+                    {
+                        "Name": "dead-letter-queue",
+                        "Properties": {
+                            "DefaultMessageTimeToLive": "P7D",
+                            "MaxDeliveryCount": 1
+                        }
+                    }
+                ],
+                "Topics": []
+            }
+        ],
+        "Logging": {
+            "Type": "Console"
+        }
+    }
+}
