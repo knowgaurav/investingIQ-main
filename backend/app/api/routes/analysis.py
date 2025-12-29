@@ -1,6 +1,6 @@
 """Analysis API endpoints for stock analysis tasks."""
 from typing import Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Depends, status
@@ -16,7 +16,7 @@ from app.models.schemas import (
     ErrorResponse,
 )
 from app.models.database import get_db, AnalysisTask, AnalysisReport
-from app.tasks.aggregate_tasks import orchestrate_analysis
+from app.services.service_bus import get_orchestrator
 
 router = APIRouter()
 
@@ -40,8 +40,8 @@ async def request_analysis(
     """
     Create a new stock analysis task.
     
-    This endpoint initiates an asynchronous analysis workflow for the specified
-    stock ticker. The analysis includes:
+    This endpoint initiates an asynchronous analysis workflow using Azure Service Bus
+    and Azure Functions. The analysis includes:
     - Fetching stock price data
     - Gathering recent news articles
     - Sentiment analysis on news
@@ -63,12 +63,12 @@ async def request_analysis(
         )
     
     try:
-        # Start the Celery task
-        celery_result = orchestrate_analysis.delay(ticker)
+        # Generate task ID
+        task_id = str(uuid4())
         
         # Create task record in database
         task = AnalysisTask(
-            celery_task_id=celery_result.id,
+            id=task_id,
             ticker=ticker,
             status="pending",
             progress=0,
@@ -77,6 +77,15 @@ async def request_analysis(
         db.add(task)
         db.commit()
         db.refresh(task)
+        
+        # Start the analysis workflow via Service Bus
+        orchestrator = get_orchestrator()
+        orchestrator.start_analysis(ticker=ticker, task_id=task_id)
+        
+        # Update task status
+        task.status = "processing"
+        task.current_step = "Fetching stock data and news"
+        db.commit()
         
         return AnalysisTaskResponse(
             task_id=task.id,

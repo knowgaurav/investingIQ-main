@@ -34,20 +34,20 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
 
 - [x] 2. Database and Infrastructure Setup
   - [x] 2.1 Set up PostgreSQL with pgvector
-    - Create Docker Compose for local development (PostgreSQL, Redis)
+    - Create Docker Compose for local development (PostgreSQL, MLflow)
     - Write SQLAlchemy models for AnalysisReport, ChatConversation, ChatMessage, AnalysisTask
     - Create Alembic migrations
     - _Requirements: 9.2_
 
-  - [x] 2.2 Set up Redis and Celery infrastructure
-    - Configure Celery with multiple queues (data, llm, embed, aggregate, dead_letter)
-    - Create worker startup scripts
-    - Add Celery Flower for monitoring
+  - [x] 2.2 Set up Azure Service Bus and Azure Functions
+    - Configure Azure Service Bus with queues (data, llm, embed, aggregate, dead_letter)
+    - Create Azure Functions for each queue processor
+    - Add Azurite for local development
     - _Requirements: 11.1, 11.5_
 
   - [x] 2.3 Checkpoint - Commit infrastructure setup
     - Ensure Docker Compose starts all services
-    - Git commit: "feat: add database models and Celery queue infrastructure"
+    - Git commit: "feat: add database models and Azure Service Bus infrastructure"
 
 - [x] 3. Stock Data Service
   - [x] 3.1 Implement stock search with autocomplete
@@ -145,10 +145,10 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
   - [x] 6.6 Checkpoint - Commit RAG pipeline
     - Git commit: "feat: implement RAG pipeline with pgvector"
 
-- [x] 7. Celery Task Orchestration
+- [x] 7. Azure Functions Task Orchestration
   - [x] 7.1 Implement parallel task workflow
-    - Create orchestrator using Celery Canvas (group, chord, chain)
-    - Implement `run_stock_analysis` workflow
+    - Create orchestrator using Azure Service Bus
+    - Implement `run_stock_analysis` workflow via message passing
     - Add progress tracking across parallel tasks
     - _Requirements: 2.1, 2.2, 2.3, 2.8_
 
@@ -157,7 +157,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - **Validates: Requirements 2.1, 2.2**
 
   - [x] 7.3 Implement aggregation and report saving
-    - Create `finalize_analysis` task in aggregate_queue
+    - Create `aggregate_functions` Azure Function
     - Save complete AnalysisReport to database
     - _Requirements: 2.5, 6.2_
 
@@ -166,7 +166,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - **Validates: Requirements 2.3, 2.5, 6.2**
 
   - [x] 7.5 Implement retry and dead letter queue
-    - Add exponential backoff retry logic
+    - Add retry logic in Azure Functions
     - Route failed tasks to dead_letter queue
     - _Requirements: 2.6, 2.7, 11.7_
 
@@ -175,7 +175,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - **Validates: Requirements 11.7**
 
   - [x] 7.7 Checkpoint - Commit task orchestration
-    - Git commit: "feat: implement Celery task orchestration with parallel queues"
+    - Git commit: "feat: implement Azure Functions task orchestration"
 
 - [x] 8. Analysis API Endpoints
   - [x] 8.1 Implement analysis request endpoint

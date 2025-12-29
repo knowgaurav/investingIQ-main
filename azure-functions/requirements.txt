@@ -1,0 +1,25 @@
+# Azure Functions dependencies
+azure-functions
+azure-servicebus
+
+# Data processing
+yfinance
+pandas
+requests
+
+# LLM
+langchain
+langchain-openai
+openai
+
+# Database
+sqlalchemy
+psycopg2-binary
+pgvector
+
+# MLflow
+mlflow
+
+# Utilities
+pydantic
+python-dotenv

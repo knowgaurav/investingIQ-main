@@ -2,6 +2,7 @@
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
 python-multipart==0.0.6
+websockets==12.0
 
 # Database
 sqlalchemy==2.0.25
@@ -9,10 +10,9 @@ psycopg2-binary==2.9.9
 alembic==1.13.1
 pgvector==0.2.4
 
-# Celery and Redis
-celery==5.3.6
-redis==5.0.1
-flower==2.0.1
+# Azure Service Bus (replaces Celery/Redis)
+azure-servicebus==7.11.4
+azure-identity==1.15.0
 
 # LangChain and LLM
 langchain==0.1.4
@@ -42,7 +42,6 @@ pydantic-settings==2.1.0
 pytest==7.4.4
 pytest-asyncio==0.23.3
 hypothesis==6.92.2
-httpx==0.26.0
 
 # Rate limiting
 slowapi==0.1.9

@@ -1,0 +1,19 @@
+{
+    "scriptFile": "__init__.py",
+    "bindings": [
+        {
+            "name": "msg",
+            "type": "serviceBusTrigger",
+            "direction": "in",
+            "queueName": "llm-queue",
+            "connection": "AzureServiceBusConnectionString"
+        },
+        {
+            "name": "outputSbMsg",
+            "type": "serviceBus",
+            "direction": "out",
+            "queueName": "aggregate-queue",
+            "connection": "AzureServiceBusConnectionString"
+        }
+    ]
+}

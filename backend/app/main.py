@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.api.routes import health, stocks, analysis, chat
 from app.api.websocket import analysis_websocket_handler
+from app.api.middleware import RateLimitMiddleware, parse_rate_limit
 
 settings = get_settings()
 
@@ -22,6 +23,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate limiting middleware
+calls, period = parse_rate_limit(settings.rate_limit)
+app.add_middleware(RateLimitMiddleware, calls=calls, period=period)
 
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["health"])

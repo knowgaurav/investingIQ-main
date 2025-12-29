@@ -13,10 +13,8 @@ class Settings(BaseSettings):
     # Database
     database_url: str = "postgresql://postgres:postgres@localhost:5432/investingiq"
     
-    # Redis
-    redis_url: str = "redis://localhost:6379/0"
-    celery_broker_url: str = "redis://localhost:6379/0"
-    celery_result_backend: str = "redis://localhost:6379/1"
+    # Azure Service Bus (replaces Redis/Celery)
+    azure_servicebus_connection_string: str = ""
     
     # LLM (OhMyGPT)
     ohmygpt_api_key: str = ""
