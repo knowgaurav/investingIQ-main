@@ -132,11 +132,58 @@ def save_analysis_report(
     insights: str
 ) -> str:
     """Save analysis report to database."""
-    # Will be fully implemented when database is connected
-    import uuid
-    report_id = str(uuid.uuid4())
-    logger.info(f"Saved analysis report {report_id} for {ticker}")
-    return report_id
+    from app.models.database import SessionLocal, AnalysisReport
+    from datetime import datetime
+    
+    db = SessionLocal()
+    try:
+        # Extract company name from stock data
+        company_name = stock_data.get("company_info", {}).get("name", ticker)
+        
+        # Convert price history to JSON-serializable format
+        price_data = []
+        if stock_data.get("price_history"):
+            for point in stock_data["price_history"]:
+                price_data.append({
+                    "date": point.get("date", datetime.now().isoformat()),
+                    "open": point.get("open", 0),
+                    "high": point.get("high", 0),
+                    "low": point.get("low", 0),
+                    "close": point.get("close", 0),
+                    "volume": point.get("volume", 0)
+                })
+        
+        # Extract sentiment details
+        sentiment_score = sentiment.get("overall_score", 0.0)
+        sentiment_breakdown = sentiment.get("breakdown", {})
+        sentiment_details = sentiment.get("details", [])
+        
+        report = AnalysisReport(
+            ticker=ticker.upper(),
+            company_name=company_name,
+            analyzed_at=datetime.utcnow(),
+            price_data=price_data,
+            news_summary=summary,
+            sentiment_score=sentiment_score,
+            sentiment_breakdown=sentiment_breakdown,
+            sentiment_details=sentiment_details,
+            ai_insights=insights
+        )
+        
+        db.add(report)
+        db.commit()
+        db.refresh(report)
+        
+        report_id = str(report.id)
+        logger.info(f"Saved analysis report {report_id} for {ticker}")
+        return report_id
+        
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error saving analysis report for {ticker}: {e}")
+        raise
+    finally:
+        db.close()
 
 
 @celery_app.task(bind=True, queue="dead_letter")

@@ -1,9 +1,10 @@
 """FastAPI application entry point."""
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.api.routes import health, stocks
+from app.api.routes import health, stocks, analysis, chat
+from app.api.websocket import analysis_websocket_handler
 
 settings = get_settings()
 
@@ -25,6 +26,29 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(stocks.router, prefix="/api", tags=["stocks"])
+app.include_router(analysis.router, prefix="/api", tags=["analysis"])
+app.include_router(chat.router, prefix="/api", tags=["chat"])
+
+
+# WebSocket endpoint for real-time analysis updates
+@app.websocket("/ws/analysis/{task_id}")
+async def websocket_analysis(websocket: WebSocket, task_id: str):
+    """
+    WebSocket endpoint for real-time analysis task progress updates.
+    
+    Connect to this endpoint with a task_id to receive live updates
+    about the analysis progress.
+    
+    Messages sent to client:
+    - status_update: Contains task status, progress, and current_step
+    - error: Contains error information
+    - connection_closing: Sent before closing the connection
+    
+    Messages accepted from client:
+    - {"type": "ping"}: Responds with {"type": "pong"}
+    - {"type": "request_status"}: Sends current status immediately
+    """
+    await analysis_websocket_handler(websocket, task_id)
 
 
 @app.get("/")
