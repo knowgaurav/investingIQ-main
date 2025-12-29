@@ -1,14 +1,11 @@
-version: '3.8'
-
 services:
-  # PostgreSQL with pgvector extension
   postgres:
     image: pgvector/pgvector:pg16
     container_name: investingiq-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: investingiq
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-investingiq}
     ports:
       - "5432:5432"
     volumes:
@@ -19,48 +16,63 @@ services:
       timeout: 5s
       retries: 5
 
-  # Redis for Celery broker and result backend
-  redis:
-    image: redis:7-alpine
-    container_name: investingiq-redis
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: investingiq-mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong@Passw0rd}
     ports:
-      - "6379:6379"
+      - "1433:1433"
     volumes:
-      - redis_data:/data
+      - mssql_data:/var/opt/mssql
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrong@Passw0rd" -C -Q "SELECT 1" || exit 1
+      interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 60s
 
-  # MLflow tracking server
+  servicebus-emulator:
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    container_name: investingiq-servicebus
+    ports:
+      - "5672:5672"
+    volumes:
+      - ./config/servicebus-config.json:/ServiceBus_Emulator/ConfigFiles/Config.json
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong@Passw0rd}
+      SQL_SERVER: mssql
+    depends_on:
+      mssql:
+        condition: service_healthy
+
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.10.0
     container_name: investingiq-mlflow
     ports:
       - "5000:5000"
-    environment:
-      MLFLOW_BACKEND_STORE_URI: postgresql://postgres:postgres@postgres:5432/mlflow
-    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri postgresql://postgres:postgres@postgres:5432/mlflow --default-artifact-root /mlflow/artifacts
+    command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/artifacts
     volumes:
       - mlflow_data:/mlflow/artifacts
-    depends_on:
-      postgres:
-        condition: service_healthy
+      - mlflow_db:/mlflow
+    working_dir: /mlflow
 
-  # Celery Flower for monitoring
-  flower:
-    image: mher/flower:2.0
-    container_name: investingiq-flower
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: investingiq-azurite
     ports:
-      - "5555:5555"
-    environment:
-      CELERY_BROKER_URL: redis://redis:6379/0
-      FLOWER_PORT: 5555
-    depends_on:
-      - redis
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite_data:/data
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
 
 volumes:
   postgres_data:
-  redis_data:
+  mssql_data:
   mlflow_data:
+  mlflow_db:
+  azurite_data:

@@ -83,13 +83,11 @@ def upgrade() -> None:
         sa.Column('ticker', sa.String(10), nullable=False, index=True),
         sa.Column('doc_type', sa.String(50), nullable=False),
         sa.Column('content', sa.Text, nullable=False),
-        sa.Column('metadata', postgresql.JSON),
-        sa.Column('embedding', sa.Column('embedding', sa.LargeBinary)),  # Will be vector(1536)
+        sa.Column('doc_metadata', postgresql.JSON),
         sa.Column('created_at', sa.DateTime, default=sa.func.now()),
     )
     
-    # Create vector column separately (pgvector specific)
-    op.execute('ALTER TABLE financial_documents DROP COLUMN IF EXISTS embedding')
+    # Add vector column separately (pgvector specific)
     op.execute('ALTER TABLE financial_documents ADD COLUMN embedding vector(1536)')
     
     # Create vector index for similarity search

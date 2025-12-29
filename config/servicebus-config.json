@@ -2,7 +2,7 @@
     "UserConfig": {
         "Namespaces": [
             {
-                "Name": "investingiq",
+                "Name": "sbemulatorns",
                 "Queues": [
                     {
                         "Name": "data-queue",
@@ -39,7 +39,7 @@
                     {
                         "Name": "dead-letter-queue",
                         "Properties": {
-                            "DefaultMessageTimeToLive": "P7D",
+                            "DefaultMessageTimeToLive": "PT1H",
                             "MaxDeliveryCount": 1
                         }
                     }

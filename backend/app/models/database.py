@@ -111,7 +111,7 @@ class FinancialDocument(Base):
     ticker = Column(String(10), nullable=False, index=True)
     doc_type = Column(String(50), nullable=False)  # 'news', 'price_history', 'company_info'
     content = Column(Text, nullable=False)
-    metadata = Column(JSON)
+    doc_metadata = Column(JSON)  # renamed from 'metadata' to avoid SQLAlchemy conflict
     embedding = Column(Vector(1536))  # OpenAI embedding dimension
     created_at = Column(DateTime, default=datetime.utcnow)
 
