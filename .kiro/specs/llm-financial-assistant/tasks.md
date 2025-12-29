@@ -6,7 +6,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
 
 ## Tasks
 
-- [-] 1. Project Setup and Git Workflow
+- [x] 1. Project Setup and Git Workflow
   - [x] 1.1 Create feature branch and initialize project structure
     - Create branch `feature/llm-financial-assistant`
     - Set up monorepo structure with `backend/` and `frontend/` directories
@@ -28,24 +28,24 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - Create basic page structure (`/`, `/analyze/[ticker]`, `/chat`)
     - _Requirements: 8.1_
 
-  - [-] 1.5 Checkpoint - Commit project skeleton
+  - [x] 1.5 Checkpoint - Commit project skeleton
     - Ensure backend and frontend run independently
     - Git commit: "feat: initialize project structure with FastAPI and Next.js"
 
-- [ ] 2. Database and Infrastructure Setup
-  - [ ] 2.1 Set up PostgreSQL with pgvector
+- [-] 2. Database and Infrastructure Setup
+  - [x] 2.1 Set up PostgreSQL with pgvector
     - Create Docker Compose for local development (PostgreSQL, Redis)
     - Write SQLAlchemy models for AnalysisReport, ChatConversation, ChatMessage, AnalysisTask
     - Create Alembic migrations
     - _Requirements: 9.2_
 
-  - [ ] 2.2 Set up Redis and Celery infrastructure
+  - [x] 2.2 Set up Redis and Celery infrastructure
     - Configure Celery with multiple queues (data, llm, embed, aggregate, dead_letter)
     - Create worker startup scripts
     - Add Celery Flower for monitoring
     - _Requirements: 11.1, 11.5_
 
-  - [ ] 2.3 Checkpoint - Commit infrastructure setup
+  - [-] 2.3 Checkpoint - Commit infrastructure setup
     - Ensure Docker Compose starts all services
     - Git commit: "feat: add database models and Celery queue infrastructure"
 
