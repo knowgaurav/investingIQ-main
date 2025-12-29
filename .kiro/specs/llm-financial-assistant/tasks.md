@@ -237,13 +237,13 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
   - [x] 9.5 Checkpoint - Commit chat API
     - Git commit: "feat: implement chat API with RAG integration"
 
-- [ ] 10. MLflow Integration
-  - [ ] 10.1 Set up MLflow tracking
+- [x] 10. MLflow Integration
+  - [x] 10.1 Set up MLflow tracking
     - Configure MLflow server
     - Create MLflowTracker utility class
     - _Requirements: 10.1_
 
-  - [ ] 10.2 Implement experiment logging
+  - [x] 10.2 Implement experiment logging
     - Log LLM calls with tokens, latency, cost
     - Version prompt templates
     - _Requirements: 10.1, 10.2, 10.3_
@@ -252,16 +252,16 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - **Property 18: MLflow Experiment Tracking Completeness**
     - **Validates: Requirements 10.1, 10.2, 10.3**
 
-  - [ ] 10.4 Checkpoint - Commit MLflow integration
+  - [x] 10.4 Checkpoint - Commit MLflow integration
     - Git commit: "feat: integrate MLflow for experiment tracking"
 
-- [ ] 11. Next.js Frontend - Stock Search
-  - [ ] 11.1 Implement stock search component
+- [x] 11. Next.js Frontend - Stock Search
+  - [x] 11.1 Implement stock search component
     - Create autocomplete search with debouncing
     - Display suggestions from API
     - _Requirements: 1.1, 8.1_
 
-  - [ ] 11.2 Implement recent searches
+  - [x] 11.2 Implement recent searches
     - Store recent searches in localStorage
     - Display for quick access
     - _Requirements: 1.5_
@@ -270,48 +270,48 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - **Property 3: Recent Searches Persistence**
     - **Validates: Requirements 1.5**
 
-  - [ ] 11.4 Checkpoint - Commit stock search UI
+  - [x] 11.4 Checkpoint - Commit stock search UI
     - Git commit: "feat: implement stock search UI with autocomplete"
 
-- [ ] 12. Next.js Frontend - Analysis Flow
-  - [ ] 12.1 Implement analysis request flow
+- [x] 12. Next.js Frontend - Analysis Flow
+  - [x] 12.1 Implement analysis request flow
     - Create analysis request on stock selection
     - Show progress indicator with WebSocket updates
     - _Requirements: 2.4, 8.6_
 
-  - [ ] 12.2 Implement analysis report page
+  - [x] 12.2 Implement analysis report page
     - Create `/analyze/[ticker]` page
     - Display price chart, news summary, sentiment, insights
     - _Requirements: 6.1, 6.2, 6.3, 8.4_
 
-  - [ ] 12.3 Implement stock price chart
+  - [x] 12.3 Implement stock price chart
     - Use Recharts for interactive price visualization
     - _Requirements: 8.3_
 
-  - [ ] 12.4 Implement sentiment visualization
+  - [x] 12.4 Implement sentiment visualization
     - Display sentiment breakdown chart
     - Show contributing headlines
     - _Requirements: 5.4, 5.5_
 
-  - [ ] 12.5 Checkpoint - Commit analysis UI
+  - [x] 12.5 Checkpoint - Commit analysis UI
     - Git commit: "feat: implement analysis report UI"
 
-- [ ] 13. Next.js Frontend - Chat Interface
-  - [ ] 13.1 Implement chat interface
+- [x] 13. Next.js Frontend - Chat Interface
+  - [x] 13.1 Implement chat interface
     - Create chat component with message history
     - Connect to chat API
     - _Requirements: 3.1, 8.2_
 
-  - [ ] 13.2 Display source citations
+  - [x] 13.2 Display source citations
     - Show sources for each AI response
     - Link to original documents
     - _Requirements: 3.4_
 
-  - [ ] 13.3 Integrate chat with analysis page
+  - [x] 13.3 Integrate chat with analysis page
     - Allow follow-up questions on analysis report
     - _Requirements: 6.6_
 
-  - [ ] 13.4 Checkpoint - Commit chat UI
+  - [x] 13.4 Checkpoint - Commit chat UI
     - Git commit: "feat: implement chat interface with source citations"
 
 - [ ] 14. Error Handling and Polish

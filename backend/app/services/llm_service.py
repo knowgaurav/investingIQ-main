@@ -1,6 +1,7 @@
 """LLM Service for InvestingIQ using OhMyGPT API via LangChain."""
 import json
 import logging
+import time
 from typing import List, Optional
 
 from langchain_openai import ChatOpenAI
@@ -8,6 +9,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 
 from app.config import get_settings
+from app.utils.mlflow_tracker import get_mlflow_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +29,8 @@ class LLMService:
             max_tokens=2048,
         )
         self._parser = StrOutputParser()
+        self._model_name = settings.llm_model
+        self._tracker = get_mlflow_tracker()
     
     @property
     def llm(self) -> ChatOpenAI:
@@ -61,8 +65,27 @@ class LLMService:
             messages.append(SystemMessage(content=system_content))
             messages.append(HumanMessage(content=query))
             
+            start_time = time.time()
             response = self._llm.invoke(messages)
-            return self._parser.invoke(response)
+            latency_ms = (time.time() - start_time) * 1000
+            
+            result = self._parser.invoke(response)
+            
+            # Track LLM call with MLflow
+            input_tokens = response.usage_metadata.get("input_tokens", 0) if response.usage_metadata else 0
+            output_tokens = response.usage_metadata.get("output_tokens", 0) if response.usage_metadata else 0
+            
+            self._tracker.log_llm_call(
+                operation="chat",
+                model_name=self._model_name,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                latency_ms=latency_ms,
+                prompt_template="chat_system_prompt",
+                metadata={"has_context": bool(context)}
+            )
+            
+            return result
             
         except Exception as e:
             logger.error(f"Chat completion error: {e}")
@@ -109,8 +132,25 @@ For each headline, provide your analysis in the following JSON format:
 
 Respond ONLY with valid JSON, no additional text.""")
             
+            start_time = time.time()
             response = self._llm.invoke([system_message, human_message])
+            latency_ms = (time.time() - start_time) * 1000
+            
             response_text = self._parser.invoke(response)
+            
+            # Track LLM call with MLflow
+            input_tokens = response.usage_metadata.get("input_tokens", 0) if response.usage_metadata else 0
+            output_tokens = response.usage_metadata.get("output_tokens", 0) if response.usage_metadata else 0
+            
+            self._tracker.log_llm_call(
+                operation="sentiment_analysis",
+                model_name=self._model_name,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                latency_ms=latency_ms,
+                prompt_template="sentiment_analysis_prompt",
+                metadata={"headline_count": len(headlines)}
+            )
             
             # Parse JSON response
             parsed = json.loads(response_text)
@@ -178,8 +218,27 @@ Provide a comprehensive but concise summary (2-3 paragraphs) that covers:
 
 Focus on the most important and recent information.""")
             
+            start_time = time.time()
             response = self._llm.invoke([system_message, human_message])
-            return self._parser.invoke(response)
+            latency_ms = (time.time() - start_time) * 1000
+            
+            result = self._parser.invoke(response)
+            
+            # Track LLM call with MLflow
+            input_tokens = response.usage_metadata.get("input_tokens", 0) if response.usage_metadata else 0
+            output_tokens = response.usage_metadata.get("output_tokens", 0) if response.usage_metadata else 0
+            
+            self._tracker.log_llm_call(
+                operation="news_summarization",
+                model_name=self._model_name,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                latency_ms=latency_ms,
+                prompt_template="news_summarization_prompt",
+                metadata={"ticker": ticker, "article_count": len(articles)}
+            )
+            
+            return result
             
         except Exception as e:
             logger.error(f"News summarization error: {e}")
@@ -238,8 +297,27 @@ Provide comprehensive insights covering:
 
 End with a reminder that this is AI-generated analysis and not financial advice.""")
             
+            start_time = time.time()
             response = self._llm.invoke([system_message, human_message])
-            return self._parser.invoke(response)
+            latency_ms = (time.time() - start_time) * 1000
+            
+            result = self._parser.invoke(response)
+            
+            # Track LLM call with MLflow
+            input_tokens = response.usage_metadata.get("input_tokens", 0) if response.usage_metadata else 0
+            output_tokens = response.usage_metadata.get("output_tokens", 0) if response.usage_metadata else 0
+            
+            self._tracker.log_llm_call(
+                operation="insights_generation",
+                model_name=self._model_name,
+                input_tokens=input_tokens,
+                output_tokens=output_tokens,
+                latency_ms=latency_ms,
+                prompt_template="insights_generation_prompt",
+                metadata={"ticker": ticker}
+            )
+            
+            return result
             
         except Exception as e:
             logger.error(f"Insights generation error: {e}")

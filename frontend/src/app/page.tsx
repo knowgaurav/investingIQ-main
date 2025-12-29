@@ -1,34 +1,161 @@
-export default function Home() {
-    return (
-        <main className="min-h-screen bg-white">
-            <div className="container mx-auto px-4 py-16">
-                <div className="text-center">
-                    <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                        InvestingIQ
-                    </h1>
-                    <p className="text-xl text-gray-600 mb-8">
-                        AI-Powered Stock Analysis Platform
-                    </p>
+'use client';
 
-                    {/* Stock Search - To be implemented */}
-                    <div className="max-w-xl mx-auto">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Search for any stock (e.g., AAPL, TSLA, NVDA)..."
-                                className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-full focus:border-primary focus:outline-none"
-                            />
-                            <button className="absolute right-2 top-1/2 -translate-y-1/2 bg-primary text-white px-6 py-2 rounded-full hover:bg-blue-600 transition">
-                                Analyze
-                            </button>
-                        </div>
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import StockSearch from '@/components/StockSearch';
+import { StockSearchResult } from '@/lib/api';
+
+const RECENT_SEARCHES_KEY = 'investingiq_recent_searches';
+
+export default function Home() {
+    const router = useRouter();
+    const [recentSearches, setRecentSearches] = useState<StockSearchResult[]>([]);
+
+    // Load recent searches on mount
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+            if (stored) {
+                setRecentSearches(JSON.parse(stored));
+            }
+        } catch {
+            // Ignore localStorage errors
+        }
+    }, []);
+
+    const handleRecentClick = (ticker: string) => {
+        router.push(`/analyze/${ticker}`);
+    };
+
+    const clearRecentSearches = () => {
+        localStorage.removeItem(RECENT_SEARCHES_KEY);
+        setRecentSearches([]);
+    };
+
+    return (
+        <main className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+            {/* Hero Section */}
+            <div className="container mx-auto px-4 pt-20 pb-16">
+                <div className="text-center">
+                    {/* Logo/Brand */}
+                    <div className="mb-6">
+                        <span className="inline-flex items-center justify-center w-16 h-16 bg-blue-500 rounded-2xl shadow-lg mb-4">
+                            <svg
+                                className="w-8 h-8 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                                />
+                            </svg>
+                        </span>
                     </div>
 
-                    <p className="mt-8 text-gray-500">
-                        Powered by AI • Real-time Analysis • Any Stock Worldwide
+                    {/* Title */}
+                    <h1 className="text-5xl font-bold text-gray-900 mb-4">
+                        InvestingIQ
+                    </h1>
+                    <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+                        AI-Powered Stock Analysis Platform. Get instant insights,
+                        sentiment analysis, and intelligent recommendations for any stock.
                     </p>
+
+                    {/* Stock Search */}
+                    <StockSearch onRecentSearchesChange={setRecentSearches} />
+
+                    {/* Features */}
+                    <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            Real-time Analysis
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            AI-Powered Insights
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            Sentiment Analysis
+                        </span>
+                        <span className="flex items-center gap-1">
+                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            Any Stock Worldwide
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Recent Searches Section */}
+            {recentSearches.length > 0 && (
+                <div className="container mx-auto px-4 pb-16">
+                    <div className="max-w-xl mx-auto">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-gray-700">
+                                Recent Searches
+                            </h2>
+                            <button
+                                onClick={clearRecentSearches}
+                                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                Clear all
+                            </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                            {recentSearches.map((stock: StockSearchResult) => (
+                                <button
+                                    key={stock.ticker}
+                                    onClick={() => handleRecentClick(stock.ticker)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+                                >
+                                    <span className="font-semibold text-gray-900 group-hover:text-blue-600">
+                                        {stock.ticker}
+                                    </span>
+                                    <span className="text-sm text-gray-500 group-hover:text-blue-500">
+                                        {stock.name.length > 20
+                                            ? `${stock.name.substring(0, 20)}...`
+                                            : stock.name}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Popular Stocks Section */}
+            <div className="container mx-auto px-4 pb-20">
+                <div className="max-w-3xl mx-auto">
+                    <h2 className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                        Popular Stocks
+                    </h2>
+                    <div className="flex flex-wrap justify-center gap-3">
+                        {['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META', 'JPM'].map(
+                            (ticker) => (
+                                <button
+                                    key={ticker}
+                                    onClick={() => handleRecentClick(ticker)}
+                                    className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-colors font-medium"
+                                >
+                                    {ticker}
+                                </button>
+                            )
+                        )}
+                    </div>
                 </div>
             </div>
         </main>
-    )
+    );
 }

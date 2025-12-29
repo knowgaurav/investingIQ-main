@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     
     # MLflow
     mlflow_tracking_uri: str = "http://localhost:5000"
+    mlflow_experiment_name: str = "investingiq-llm"
     
     # Rate limiting
     rate_limit: str = "100/minute"
