@@ -32,7 +32,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - Ensure backend and frontend run independently
     - Git commit: "feat: initialize project structure with FastAPI and Next.js"
 
-- [-] 2. Database and Infrastructure Setup
+- [x] 2. Database and Infrastructure Setup
   - [x] 2.1 Set up PostgreSQL with pgvector
     - Create Docker Compose for local development (PostgreSQL, Redis)
     - Write SQLAlchemy models for AnalysisReport, ChatConversation, ChatMessage, AnalysisTask
@@ -45,12 +45,12 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - Add Celery Flower for monitoring
     - _Requirements: 11.1, 11.5_
 
-  - [-] 2.3 Checkpoint - Commit infrastructure setup
+  - [x] 2.3 Checkpoint - Commit infrastructure setup
     - Ensure Docker Compose starts all services
     - Git commit: "feat: add database models and Celery queue infrastructure"
 
-- [ ] 3. Stock Data Service
-  - [ ] 3.1 Implement stock search with autocomplete
+- [-] 3. Stock Data Service
+  - [x] 3.1 Implement stock search with autocomplete
     - Create `stock_service.py` with yfinance integration
     - Implement ticker validation and autocomplete
     - Add API endpoint `GET /api/stocks/search`
@@ -64,7 +64,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - **Property 2: Ticker Validation Correctness**
     - **Validates: Requirements 1.2**
 
-  - [ ] 3.4 Implement stock data fetching task
+  - [x] 3.4 Implement stock data fetching task
     - Create `fetch_stock_data_task` in data_queue
     - Fetch price history, company info from yfinance
     - _Requirements: 2.3_
@@ -73,7 +73,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - Git commit: "feat: implement stock search and data fetching service"
 
 - [ ] 4. News Service
-  - [ ] 4.1 Implement news fetching service
+  - [x] 4.1 Implement news fetching service
     - Create `news_service.py` with News API integration
     - Implement `fetch_news_task` in data_queue
     - Handle rate limiting and errors gracefully
@@ -83,13 +83,13 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - Git commit: "feat: implement news fetching service"
 
 - [ ] 5. LLM Service with OhMyGPT
-  - [ ] 5.1 Implement LLM service core
+  - [x] 5.1 Implement LLM service core
     - Create `llm_service.py` with OhMyGPT integration
     - Configure LangChain with `gemini-3-flash-preview` model
     - Implement base chat completion method
     - _Requirements: 3.3_
 
-  - [ ] 5.2 Implement sentiment analysis
+  - [x] 5.2 Implement sentiment analysis
     - Create `sentiment_service.py` using LLM
     - Implement `analyze_sentiment_task` in llm_queue
     - Return sentiment (BULLISH/BEARISH/NEUTRAL) with confidence
@@ -99,7 +99,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - **Property 11: Sentiment Classification Validity**
     - **Validates: Requirements 5.2**
 
-  - [ ] 5.4 Implement news summarization
+  - [x] 5.4 Implement news summarization
     - Create `summarizer_service.py`
     - Implement `generate_summary_task` in llm_queue
     - Include sentiment indicator in summary
@@ -109,7 +109,7 @@ This plan transforms InvestingIQ from a Streamlit app into a modern LLM-powered 
     - **Property 12: News Summary Sentiment Indicator**
     - **Validates: Requirements 4.4**
 
-  - [ ] 5.6 Implement AI insights generation
+  - [x] 5.6 Implement AI insights generation
     - Create `generate_insights_task` in llm_queue
     - Combine stock data, sentiment, and summary for insights
     - _Requirements: 6.2_
