@@ -70,7 +70,7 @@ export default function LLMAnalysisView({
     return (
         <div className="space-y-6">
             {/* News Summary */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6 border border-theme">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📰</span> News Summary (LLM Generated)
                 </h3>
@@ -84,7 +84,7 @@ export default function LLMAnalysisView({
             </div>
 
             {/* AI Sentiment */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6 border border-theme">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>🧠</span> AI Sentiment Analysis
                 </h3>
@@ -144,7 +144,7 @@ export default function LLMAnalysisView({
             </div>
 
             {/* AI Insights */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6 border border-theme">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>💡</span> AI Investment Insights
                 </h3>
@@ -168,7 +168,7 @@ export default function LLMAnalysisView({
 
 function LoadingCard({ title }: { title: string }) {
     return (
-        <div className="bg-theme-card rounded-xl shadow-sm p-6 border border-theme">
+        <div className="bg-theme-card rounded-xl shadow-sm p-6">
             <h3 className="text-lg font-semibold text-theme mb-4">{title}</h3>
             <div className="animate-pulse space-y-3">
                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>

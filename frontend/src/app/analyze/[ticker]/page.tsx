@@ -145,7 +145,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
             <main className="min-h-screen bg-theme">
                 <Header ticker={ticker} />
                 <div className="container mx-auto px-4 py-16">
-                    <div className="max-w-md mx-auto bg-theme-card rounded-xl shadow-lg p-8 border border-theme">
+                    <div className="max-w-md mx-auto bg-theme-card rounded-xl shadow-lg p-8">
                         <div className="text-center">
                             <div className="w-16 h-16 border-4 border-theme border-t-primary rounded-full animate-spin mx-auto mb-6" />
                             <h2 className="text-xl font-semibold text-theme mb-2">
@@ -178,7 +178,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
             <main className="min-h-screen bg-theme">
                 <Header ticker={ticker} />
                 <div className="container mx-auto px-4 py-16">
-                    <div className="max-w-md mx-auto bg-theme-card rounded-xl shadow-lg p-8 border border-theme">
+                    <div className="max-w-md mx-auto bg-theme-card rounded-xl shadow-lg p-8">
                         <div className="text-center">
                             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <svg
@@ -242,7 +242,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 </div>
 
                 {/* Price Chart - Always visible */}
-                <div className="bg-theme-card rounded-xl shadow-sm p-6 mb-6 border border-theme">
+                <div className="bg-theme-card rounded-xl shadow-sm p-6 mb-6">
                     <h2 className="text-xl font-semibold text-theme mb-4">
                         Price History
                     </h2>
