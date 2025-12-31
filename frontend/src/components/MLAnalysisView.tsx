@@ -149,7 +149,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
             </div>
 
             {/* Price Predictions */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6 border border-theme">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📈</span> Price Forecast
                     {prediction?.models_used && (
@@ -347,7 +347,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
             </div>
 
             {/* Technical Indicators */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6 border border-theme">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📊</span> Technical Indicators
                 </h3>
@@ -449,7 +449,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
             </div>
 
             {/* ML Sentiment */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6 border border-theme">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>💬</span> News Sentiment Analysis
                 </h3>
