@@ -1,5 +1,6 @@
 """Pydantic schemas for API request/response models."""
 from datetime import datetime
+from enum import Enum
 from typing import Optional, List
 from uuid import UUID
 from pydantic import BaseModel, Field
@@ -11,13 +12,95 @@ class StockSearchResult(BaseModel):
     ticker: str
     name: str
     exchange: str
-    type: str = "stock"  # stock, etf, etc.
+    type: str = "stock"
+
+
+# LLM Configuration
+class LLMProvider(str, Enum):
+    OPENAI = "openai"
+    ANTHROPIC = "anthropic"
+    GOOGLE = "google"
+    OPENROUTER = "openrouter"
+    MEGALLM = "megallm"
+    AGENTROUTER = "agentrouter"
+
+
+class LLMConfig(BaseModel):
+    """User's LLM provider configuration."""
+    provider: LLMProvider
+    api_key: str = Field(..., min_length=1)
+    model: Optional[str] = None
+
+
+class LLMVerifyRequest(BaseModel):
+    """Request to verify an LLM API key."""
+    provider: LLMProvider
+    api_key: str = Field(..., min_length=1)
+    model: Optional[str] = None
+
+
+class LLMVerifyResponse(BaseModel):
+    """Response from LLM key verification."""
+    valid: bool
+    error: Optional[str] = None
+
+
+# ML Analysis Results (Non-LLM)
+class PredictionResult(BaseModel):
+    """Prophet/ARIMA prediction results."""
+    forecast_7d: Optional[float] = None
+    forecast_7d_change: Optional[float] = None
+    forecast_30d: Optional[float] = None
+    forecast_30d_change: Optional[float] = None
+    trend: str = "sideways"
+    confidence: float = 0.0
+
+
+class TechnicalIndicators(BaseModel):
+    """Technical analysis indicators."""
+    rsi: Optional[float] = None
+    rsi_signal: str = "neutral"
+    macd: Optional[float] = None
+    macd_signal: str = "neutral"
+    macd_histogram: Optional[float] = None
+    bollinger_upper: Optional[float] = None
+    bollinger_middle: Optional[float] = None
+    bollinger_lower: Optional[float] = None
+    bollinger_position: str = "middle"
+    support_levels: List[float] = []
+    resistance_levels: List[float] = []
+    volume_signal: str = "normal"
+
+
+class MLSentimentDetail(BaseModel):
+    """Single headline sentiment from VADER/TextBlob."""
+    headline: str
+    score: float
+    label: str
+
+
+class MLSentimentResult(BaseModel):
+    """VADER + TextBlob sentiment analysis."""
+    overall_score: float = 0.0
+    label: str = "neutral"
+    positive_pct: float = 0.0
+    neutral_pct: float = 0.0
+    negative_pct: float = 0.0
+    details: List[MLSentimentDetail] = []
+
+
+class MLAnalysisResult(BaseModel):
+    """Combined ML analysis results."""
+    prediction: Optional[PredictionResult] = None
+    technical: Optional[TechnicalIndicators] = None
+    sentiment: Optional[MLSentimentResult] = None
 
 
 # Analysis
 class AnalysisRequest(BaseModel):
     """Request to analyze a stock."""
     ticker: str = Field(..., min_length=1, max_length=10)
+    llm_config: Optional[LLMConfig] = None
 
 
 class AnalysisTaskStatus(BaseModel):
@@ -62,11 +145,14 @@ class AnalysisReportResponse(BaseModel):
     company_name: Optional[str]
     analyzed_at: datetime
     price_data: List[PriceDataPoint]
-    news_summary: Optional[str]
-    sentiment_score: Optional[float]
-    sentiment_breakdown: Optional[dict]
-    sentiment_details: Optional[List[SentimentResult]]
-    ai_insights: Optional[str]
+    # ML Analysis (always available)
+    ml_analysis: Optional[MLAnalysisResult] = None
+    # LLM Analysis (requires API key)
+    news_summary: Optional[str] = None
+    sentiment_score: Optional[float] = None
+    sentiment_breakdown: Optional[dict] = None
+    sentiment_details: Optional[List[SentimentResult]] = None
+    ai_insights: Optional[str] = None
     
     class Config:
         from_attributes = True

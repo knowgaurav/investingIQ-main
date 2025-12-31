@@ -28,6 +28,9 @@ class Settings:
     
     # Azure Storage
     storage_connection: str
+    
+    # Alpha Vantage
+    alpha_vantage_api_key: str
 
 
 @lru_cache()
@@ -41,4 +44,5 @@ def get_settings() -> Settings:
         backend_callback_url=os.environ.get("BACKEND_CALLBACK_URL", "http://localhost:8000"),
         servicebus_connection=os.environ.get("AZURE_SERVICEBUS_CONNECTION_STRING", ""),
         storage_connection=os.environ.get("AZURE_STORAGE_CONNECTION_STRING", "UseDevelopmentStorage=true"),
+        alpha_vantage_api_key=os.environ.get("ALPHA_VANTAGE_API_KEY", ""),
     )

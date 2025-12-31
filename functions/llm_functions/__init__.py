@@ -1,88 +1,85 @@
 """LLM processing Azure Functions - handles sentiment, summary, and insights."""
 import json
 import logging
-import os
 from datetime import datetime
 
 import azure.functions as func
-from langchain_openai import ChatOpenAI
-from langchain_core.messages import HumanMessage, SystemMessage
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-# Initialize LLM
-def get_llm():
-    return ChatOpenAI(
-        api_key=os.environ.get("OHMYGPT_API_KEY"),
-        base_url=os.environ.get("OHMYGPT_API_BASE", "https://api.ohmygpt.com/v1"),
-        model=os.environ.get("LLM_MODEL", "gemini-3-flash-preview"),
-        temperature=0.7,
-        max_tokens=2048,
-    )
 
 
 def main(msg: func.ServiceBusMessage):
     """
-    Process LLM queue messages - sentiment+summary analysis, then insights.
+    Process LLM queue messages using user-provided API key.
     
     Triggered by: llm-queue
-    Outputs to: aggregate-queue (via Service Bus client for multiple messages)
+    Outputs to: aggregate-queue
+    
+    IMPORTANT: Only processes if llm_config is present in message.
+    Uses Factory pattern to create provider based on user's config.
     """
     from shared.webpubsub_utils import send_progress
-    from azure.servicebus import ServiceBusClient, ServiceBusMessage
+    from shared.llm_factory import LLMProviderFactory
+    from azure.servicebus import ServiceBusClient, ServiceBusMessage as SBMessage
     from shared.config import get_settings
     
     try:
-        message_body = msg.get_body().decode('utf-8')
-        message = json.loads(message_body)
+        message = json.loads(msg.get_body().decode('utf-8'))
         
         task_type = message.get("task_type")
         task_id = message.get("task_id")
         ticker = message.get("ticker")
         data = message.get("data", {})
+        llm_config = message.get("llm_config")
         
-        logger.info(f"Processing {task_type} for {ticker}, task_id: {task_id}")
-        send_progress(task_id, 50, f"Running {task_type.replace('_', ' ')}")
+        if not llm_config:
+            logger.info(f"No LLM config for {task_id}, skipping LLM processing")
+            return
         
-        llm = get_llm()
+        logger.info(f"Processing {task_type} for {ticker} with {llm_config.get('provider')}")
+        send_progress(task_id, 50, f"Running {task_type.replace('_', ' ')} (LLM)")
+        
+        provider = LLMProviderFactory.create(
+            provider=llm_config.get("provider"),
+            api_key=llm_config.get("api_key"),
+            model=llm_config.get("model"),
+        )
+        
         settings = get_settings()
-        
         messages_to_send = []
         
         if task_type == "analyze_sentiment":
-            # Do BOTH sentiment and summary in Phase 1
-            sentiment_result = analyze_sentiment(llm, data.get("headlines", []))
-            summary_result = generate_summary(llm, ticker, data.get("headlines", []))
+            headlines = data.get("headlines", [])
+            sentiment_result = provider.analyze_sentiment(headlines)
+            summary_result = provider.generate_summary(headlines, ticker)
             
             messages_to_send = [
-                {"task_type": "sentiment_ready", "task_id": task_id, "ticker": ticker, 
+                {"task_type": "llm_sentiment_ready", "task_id": task_id, "ticker": ticker, 
                  "data": sentiment_result, "timestamp": datetime.utcnow().isoformat()},
-                {"task_type": "summary_ready", "task_id": task_id, "ticker": ticker,
+                {"task_type": "llm_summary_ready", "task_id": task_id, "ticker": ticker,
                  "data": summary_result, "timestamp": datetime.utcnow().isoformat()},
             ]
             
         elif task_type == "generate_insights":
-            result = generate_insights(
-                llm, ticker,
-                data.get("stock_data", {}),
-                data.get("sentiment", {}),
-                data.get("summary", "")
+            result = provider.generate_insights(
+                ticker=ticker,
+                stock_data=data.get("stock_data", {}),
+                sentiment=data.get("sentiment", {}),
+                summary=data.get("summary", ""),
             )
             messages_to_send = [
-                {"task_type": "insights_ready", "task_id": task_id, "ticker": ticker,
+                {"task_type": "llm_insights_ready", "task_id": task_id, "ticker": ticker,
                  "data": result, "timestamp": datetime.utcnow().isoformat()},
             ]
         else:
             logger.error(f"Unknown task type: {task_type}")
             return
         
-        # Send messages to aggregate-queue
         with ServiceBusClient.from_connection_string(settings.servicebus_connection) as client:
             with client.get_queue_sender("aggregate-queue") as sender:
                 for msg_data in messages_to_send:
-                    sender.send_messages(ServiceBusMessage(json.dumps(msg_data)))
+                    sender.send_messages(SBMessage(json.dumps(msg_data)))
                     logger.info(f"Sent {msg_data['task_type']} to aggregate-queue")
         
         logger.info(f"Completed {task_type} for {ticker}")
@@ -92,6 +89,7 @@ def main(msg: func.ServiceBusMessage):
         raise
 
 
+# Legacy functions kept for backward compatibility
 def analyze_sentiment(llm, headlines: list) -> dict:
     """Analyze sentiment of news headlines."""
     if not headlines:

@@ -1,4 +1,4 @@
-"""Aggregate Azure Function - combines results and sends to frontend."""
+"""Aggregate Azure Function - combines ML and LLM results."""
 import json
 import logging
 from datetime import datetime
@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 REDIS_URL = "redis://localhost:6379/0"
-TASK_TTL = 3600  # 1 hour
+TASK_TTL = 3600
 
 
 def get_redis():
@@ -24,7 +24,17 @@ def get_task_results(r: redis.Redis, task_id: str) -> Dict[str, Any]:
     data = r.get(f"task:{task_id}")
     if data:
         return json.loads(data)
-    return {"stock_data": None, "news": None, "sentiment": None, "summary": None, "insights": None}
+    return {
+        "stock_data": None, 
+        "news": None,
+        "ml_prediction": None,
+        "ml_technical": None,
+        "ml_sentiment": None,
+        "llm_sentiment": None,
+        "llm_summary": None,
+        "llm_insights": None,
+        "llm_config": None,
+    }
 
 
 def update_task_results(r: redis.Redis, task_id: str, results: Dict[str, Any]):
@@ -32,16 +42,18 @@ def update_task_results(r: redis.Redis, task_id: str, results: Dict[str, Any]):
     r.setex(f"task:{task_id}", TASK_TTL, json.dumps(results))
 
 
-def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
-    """Aggregate partial results and proceed to next phase when ready."""
+def main(msg: func.ServiceBusMessage):
+    """Aggregate partial results from ML and LLM functions."""
+    from shared.webpubsub_utils import send_progress
+    
     try:
-        message_body = msg.get_body().decode('utf-8')
-        message = json.loads(message_body)
+        message = json.loads(msg.get_body().decode('utf-8'))
         
         task_type = message.get("task_type")
         task_id = message.get("task_id")
         ticker = message.get("ticker")
         data = message.get("data")
+        llm_config = message.get("llm_config")
         
         logger.info(f"Aggregating {task_type} for {ticker}, task_id: {task_id}")
         
@@ -49,70 +61,86 @@ def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
         results = get_task_results(r, task_id)
         results["ticker"] = ticker
         
+        if llm_config:
+            results["llm_config"] = llm_config
+        
         if task_type == "stock_data_ready":
             results["stock_data"] = data
         elif task_type == "news_ready":
             results["news"] = data
-        elif task_type == "sentiment_ready":
-            results["sentiment"] = data
-        elif task_type == "summary_ready":
-            results["summary"] = data
-        elif task_type == "insights_ready":
-            results["insights"] = data
+        elif task_type == "ml_prediction_ready":
+            results["ml_prediction"] = data
+            send_progress(task_id, 40, "ML predictions complete")
+        elif task_type == "ml_technical_ready":
+            results["ml_technical"] = data
+            send_progress(task_id, 45, "Technical analysis complete")
+        elif task_type == "ml_sentiment_ready":
+            results["ml_sentiment"] = data
+            send_progress(task_id, 50, "Sentiment analysis complete")
+        elif task_type == "llm_sentiment_ready":
+            results["llm_sentiment"] = data
+            send_progress(task_id, 60, "LLM sentiment complete")
+        elif task_type == "llm_summary_ready":
+            results["llm_summary"] = data
+            send_progress(task_id, 70, "News summary complete")
+        elif task_type == "llm_insights_ready":
+            results["llm_insights"] = data
+            send_progress(task_id, 90, "AI insights complete")
         
         update_task_results(r, task_id, results)
-        
-        next_message = check_and_proceed(r, task_id, results)
-        if next_message:
-            outputSbMsg.set(json.dumps(next_message))
+        check_completion(r, task_id, results)
         
     except Exception as e:
         logger.error(f"Error in aggregate function: {e}")
         raise
 
 
-def check_and_proceed(r: redis.Redis, task_id: str, results: Dict) -> Optional[Dict]:
-    """Check if we have enough data to proceed to next phase."""
-    from shared.webpubsub_utils import send_progress
-    ticker = results["ticker"]
+def check_completion(r: redis.Redis, task_id: str, results: Dict):
+    """Check if analysis is complete and send results."""
+    from shared.webpubsub_utils import send_completed_with_data
     
-    # Phase 1: Stock data + news ready -> trigger sentiment analysis
-    if results["stock_data"] is not None and results["news"] is not None and results["sentiment"] is None:
-        logger.info(f"Phase 1 complete for {ticker}, triggering LLM analysis")
-        send_progress(task_id, 20, "Analyzing sentiment...")
-        
-        headlines = [a.get("title", "") for a in (results["news"] or [])]
-        return {
-            "task_type": "analyze_sentiment",
-            "task_id": task_id,
-            "ticker": ticker,
-            "data": {"headlines": headlines, "stock_data": results["stock_data"]},
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+    ticker = results.get("ticker")
+    has_llm_config = results.get("llm_config") is not None
     
-    # Phase 2: Sentiment + summary ready -> generate insights
-    if results["sentiment"] is not None and results["summary"] is not None and results["insights"] is None:
-        logger.info(f"Phase 2 complete for {ticker}, generating insights")
-        send_progress(task_id, 70, "Generating insights...")
-        
-        return {
-            "task_type": "generate_insights",
-            "task_id": task_id,
-            "ticker": ticker,
-            "data": {
-                "stock_data": results["stock_data"],
-                "sentiment": results["sentiment"],
-                "summary": results["summary"],
-            },
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+    ml_complete = all([
+        results.get("stock_data") is not None,
+        results.get("news") is not None,
+        results.get("ml_prediction") is not None,
+        results.get("ml_technical") is not None,
+        results.get("ml_sentiment") is not None,
+    ])
     
-    # All phases complete -> send results to frontend via SSE
-    if all([results.get(k) is not None for k in ["stock_data", "news", "sentiment", "summary", "insights"]]):
-        logger.info(f"All phases complete for {ticker}, sending results")
-        from shared.webpubsub_utils import send_completed_with_data
+    if has_llm_config:
+        llm_complete = all([
+            results.get("llm_sentiment") is not None,
+            results.get("llm_summary") is not None,
+            results.get("llm_insights") is not None,
+        ])
+        all_complete = ml_complete and llm_complete
+    else:
+        all_complete = ml_complete
+    
+    if all_complete:
+        logger.info(f"Analysis complete for {ticker}")
+        logger.info(f"Stock data has {len(results.get('stock_data', {}).get('price_history', []))} price records")
+        logger.info(f"ML prediction: {results.get('ml_prediction', {}).get('trend', 'N/A')}")
         send_completed_with_data(task_id, ticker, results)
-        r.delete(f"task:{task_id}")  # Clean up
-        return None
-    
-    return None
+        r.delete(f"task:{task_id}")
+    else:
+        missing = []
+        if not results.get("stock_data"):
+            missing.append("stock_data")
+        if not results.get("ml_prediction"):
+            missing.append("ml_prediction")
+        if not results.get("ml_technical"):
+            missing.append("ml_technical")
+        if not results.get("ml_sentiment"):
+            missing.append("ml_sentiment")
+        if has_llm_config:
+            if not results.get("llm_sentiment"):
+                missing.append("llm_sentiment")
+            if not results.get("llm_summary"):
+                missing.append("llm_summary")
+            if not results.get("llm_insights"):
+                missing.append("llm_insights")
+        logger.info(f"Waiting for: {missing}")

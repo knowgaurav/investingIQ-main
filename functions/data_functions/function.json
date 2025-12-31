@@ -6,14 +6,7 @@
             "type": "serviceBusTrigger",
             "direction": "in",
             "queueName": "data-queue",
-            "connection": "AzureServiceBusConnectionString"
-        },
-        {
-            "name": "outputSbMsg",
-            "type": "serviceBus",
-            "direction": "out",
-            "queueName": "aggregate-queue",
-            "connection": "AzureServiceBusConnectionString"
+            "connection": "AZURE_SERVICEBUS_CONNECTION_STRING"
         }
     ]
 }

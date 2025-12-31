@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { sendChatMessage, ChatResponse } from '@/lib/api';
@@ -13,7 +13,7 @@ interface Message {
     timestamp: Date;
 }
 
-export default function ChatPage() {
+function ChatContent() {
     const searchParams = useSearchParams();
     const initialTicker = searchParams.get('ticker') || '';
 
@@ -239,5 +239,18 @@ export default function ChatPage() {
                 </div>
             </div>
         </main>
+    );
+}
+
+
+export default function ChatPage() {
+    return (
+        <Suspense fallback={
+            <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+            </main>
+        }>
+            <ChatContent />
+        </Suspense>
     );
 }

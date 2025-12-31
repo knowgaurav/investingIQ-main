@@ -1,0 +1,19 @@
+{
+  "scriptFile": "__init__.py",
+  "bindings": [
+    {
+      "name": "msg",
+      "type": "serviceBusTrigger",
+      "direction": "in",
+      "queueName": "ml-technical-queue",
+      "connection": "AZURE_SERVICEBUS_CONNECTION_STRING"
+    },
+    {
+      "name": "outputSbMsg",
+      "type": "serviceBus",
+      "direction": "out",
+      "queueName": "aggregate-queue",
+      "connection": "AZURE_SERVICEBUS_CONNECTION_STRING"
+    }
+  ]
+}
