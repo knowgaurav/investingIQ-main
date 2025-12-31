@@ -3,11 +3,41 @@
 @tailwind utilities;
 
 :root {
-    --foreground-rgb: 0, 0, 0;
-    --background-rgb: 255, 255, 255;
+    /* Light mode colors */
+    --color-bg: 255, 255, 255;
+    --color-bg-secondary: 249, 250, 251;
+    --color-card: 255, 255, 255;
+    --color-border: 229, 231, 235;
+    --color-text: 17, 24, 39;
+    --color-text-secondary: 107, 114, 128;
+    --color-text-muted: 156, 163, 175;
+    
+    /* Chart colors (hex for recharts) */
+    --chart-grid: #E5E7EB;
+    --chart-tooltip-bg: #FFFFFF;
+    --chart-tooltip-border: #E5E7EB;
+    --chart-axis-text: #6B7280;
+}
+
+.dark {
+    /* Dark mode colors - bluish grey palette */
+    --color-bg: 15, 23, 42;
+    --color-bg-secondary: 30, 41, 59;
+    --color-card: 30, 41, 59;
+    --color-border: 51, 65, 85;
+    --color-text: 226, 232, 240;
+    --color-text-secondary: 148, 163, 184;
+    --color-text-muted: 100, 116, 139;
+    
+    /* Chart colors (hex for recharts) */
+    --chart-grid: #334155;
+    --chart-tooltip-bg: #1e293b;
+    --chart-tooltip-border: #475569;
+    --chart-axis-text: #94a3b8;
 }
 
 body {
-    color: rgb(var(--foreground-rgb));
-    background: rgb(var(--background-rgb));
+    color: rgb(var(--color-text));
+    background: rgb(var(--color-bg));
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
