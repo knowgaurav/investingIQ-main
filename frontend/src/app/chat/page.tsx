@@ -89,7 +89,7 @@ function ChatContent() {
     return (
         <main className="min-h-screen bg-theme flex flex-col">
             {/* Header */}
-            <header className="bg-theme-card border-b border-theme">
+            <header className="bg-theme-card shadow-sm">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
                         <Link
@@ -129,12 +129,12 @@ function ChatContent() {
                         value={ticker}
                         onChange={(e) => setTicker(e.target.value.toUpperCase())}
                         placeholder="Enter ticker (e.g., AAPL)"
-                        className="w-full max-w-xs px-4 py-2 border border-theme bg-theme-card text-theme rounded-lg focus:border-primary focus:outline-none"
+                        className="w-full max-w-xs px-4 py-2 bg-theme-secondary text-theme rounded-lg focus:ring-2 focus:ring-primary focus:outline-none"
                     />
                 </div>
 
                 {/* Messages Container */}
-                <div className="flex-1 bg-theme-card rounded-xl shadow-sm border border-theme flex flex-col min-h-[500px]">
+                <div className="flex-1 bg-theme-card rounded-xl shadow-md flex flex-col min-h-[500px]">
                     {/* Messages */}
                     <div className="flex-1 p-6 overflow-y-auto">
                         {messages.length === 0 ? (
@@ -180,7 +180,7 @@ function ChatContent() {
                                         >
                                             <p className="whitespace-pre-wrap">{message.content}</p>
                                             {message.sources && message.sources.length > 0 && (
-                                                <div className="mt-3 pt-3 border-t border-theme">
+                                                <div className="mt-3 pt-3 border-t border-white/20">
                                                     <p className="text-xs text-theme-muted mb-1">Sources:</p>
                                                     <div className="flex flex-wrap gap-1">
                                                         {message.sources.map((source, i) => (
@@ -214,7 +214,7 @@ function ChatContent() {
                     </div>
 
                     {/* Input */}
-                    <div className="border-t border-theme p-4">
+                    <div className="border-t border-theme/30 p-4">
                         <div className="flex gap-2">
                             <input
                                 type="text"
@@ -223,7 +223,7 @@ function ChatContent() {
                                 onKeyDown={handleKeyDown}
                                 placeholder={ticker ? `Ask about ${ticker}...` : 'Enter a ticker first...'}
                                 disabled={!ticker.trim() || isLoading}
-                                className="flex-1 px-4 py-3 border border-theme bg-theme rounded-xl text-theme focus:border-primary focus:outline-none disabled:opacity-50"
+                                className="flex-1 px-4 py-3 bg-theme-secondary rounded-xl text-theme focus:ring-2 focus:ring-primary focus:outline-none disabled:opacity-50"
                             />
                             <button
                                 onClick={handleSend}

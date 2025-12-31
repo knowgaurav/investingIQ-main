@@ -20,10 +20,10 @@ export default function PriceChart({ data, height = 300 }: PriceChartProps) {
     if (!data || data.length === 0) {
         return (
             <div
-                className="flex items-center justify-center bg-gray-50 rounded-lg"
+                className="flex items-center justify-center bg-theme-secondary rounded-lg"
                 style={{ height }}
             >
-                <p className="text-gray-500">No price data available</p>
+                <p className="text-theme-muted">No price data available</p>
             </div>
         );
     }
@@ -122,20 +122,20 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
     const data = payload[0].payload;
 
     return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-            <p className="text-sm font-medium text-gray-900 mb-1">{label}</p>
+        <div className="bg-theme-card rounded-lg shadow-lg p-3">
+            <p className="text-sm font-medium text-theme mb-1">{label}</p>
             <div className="space-y-1 text-sm">
-                <p className="text-gray-600">
-                    Close: <span className="font-medium text-gray-900">${data.close.toFixed(2)}</span>
+                <p className="text-theme-secondary">
+                    Close: <span className="font-medium text-theme">${data.close.toFixed(2)}</span>
                 </p>
-                <p className="text-gray-600">
-                    High: <span className="font-medium text-gray-900">${data.high.toFixed(2)}</span>
+                <p className="text-theme-secondary">
+                    High: <span className="font-medium text-theme">${data.high.toFixed(2)}</span>
                 </p>
-                <p className="text-gray-600">
-                    Low: <span className="font-medium text-gray-900">${data.low.toFixed(2)}</span>
+                <p className="text-theme-secondary">
+                    Low: <span className="font-medium text-theme">${data.low.toFixed(2)}</span>
                 </p>
-                <p className="text-gray-600">
-                    Volume: <span className="font-medium text-gray-900">{formatVolume(data.volume)}</span>
+                <p className="text-theme-secondary">
+                    Volume: <span className="font-medium text-theme">{formatVolume(data.volume)}</span>
                 </p>
             </div>
         </div>

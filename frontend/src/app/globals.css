@@ -3,31 +3,31 @@
 @tailwind utilities;
 
 :root {
-    /* Light mode colors */
-    --color-bg: 255, 255, 255;
-    --color-bg-secondary: 249, 250, 251;
+    /* Light mode colors - gray page, white cards */
+    --color-bg: 248, 250, 252;
+    --color-bg-secondary: 241, 245, 249;
     --color-card: 255, 255, 255;
-    --color-border: 229, 231, 235;
-    --color-text: 17, 24, 39;
-    --color-text-secondary: 107, 114, 128;
-    --color-text-muted: 156, 163, 175;
+    --color-border: 226, 232, 240;
+    --color-text: 15, 23, 42;
+    --color-text-secondary: 71, 85, 105;
+    --color-text-muted: 148, 163, 184;
     
     /* Chart colors (hex for recharts) */
-    --chart-grid: #E5E7EB;
+    --chart-grid: #E2E8F0;
     --chart-tooltip-bg: #FFFFFF;
-    --chart-tooltip-border: #E5E7EB;
-    --chart-axis-text: #6B7280;
+    --chart-tooltip-border: #E2E8F0;
+    --chart-axis-text: #64748B;
 }
 
 .dark {
-    /* Dark mode colors - bluish grey palette */
+    /* Dark mode colors - deep page, lighter cards */
     --color-bg: 15, 23, 42;
     --color-bg-secondary: 30, 41, 59;
-    --color-card: 36, 48, 68;
+    --color-card: 30, 41, 59;
     --color-border: 51, 65, 85;
-    --color-text: 226, 232, 240;
-    --color-text-secondary: 148, 163, 184;
-    --color-text-muted: 100, 116, 139;
+    --color-text: 241, 245, 249;
+    --color-text-secondary: 203, 213, 225;
+    --color-text-muted: 148, 163, 184;
     
     /* Chart colors (hex for recharts) */
     --chart-grid: #334155;

@@ -242,7 +242,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 </div>
 
                 {/* Price Chart - Always visible */}
-                <div className="bg-theme-card rounded-xl shadow-sm p-6 mb-6">
+                <div className="bg-theme-card rounded-xl shadow-md p-6 mb-6">
                     <h2 className="text-xl font-semibold text-theme mb-4">
                         Price History
                     </h2>
@@ -251,7 +251,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
 
                 {/* Analysis Tabs */}
                 <div className="mb-6">
-                    <div className="flex border-b border-theme">
+                    <div className="flex border-b border-theme/30">
                         <button
                             onClick={() => setActiveTab('overview')}
                             className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
@@ -346,7 +346,7 @@ function Header({
     onLLMSettingsClick?: () => void;
 }) {
     return (
-        <header className="bg-theme-card border-b border-theme">
+        <header className="bg-theme-card shadow-sm">
             <div className="container mx-auto px-4 py-4">
                 <div className="flex items-center justify-between">
                     <Link

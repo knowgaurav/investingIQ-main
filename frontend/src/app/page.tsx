@@ -148,7 +148,7 @@ export default function Home() {
                                 <button
                                     key={stock.ticker}
                                     onClick={() => handleRecentClick(stock.ticker)}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme rounded-full hover:border-primary transition-colors group"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card rounded-full shadow-sm hover:shadow-md transition-all group"
                                 >
                                     <span className="font-semibold text-theme group-hover:text-primary">
                                         {stock.ticker}
@@ -177,7 +177,7 @@ export default function Home() {
                                 <button
                                     key={ticker}
                                     onClick={() => handleRecentClick(ticker)}
-                                    className="px-5 py-2.5 bg-theme-card border border-theme text-theme rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-colors font-medium"
+                                    className="px-5 py-2.5 bg-theme-card text-theme rounded-lg shadow-sm hover:bg-primary hover:text-white hover:shadow-md transition-all font-medium"
                                 >
                                     {ticker}
                                 </button>

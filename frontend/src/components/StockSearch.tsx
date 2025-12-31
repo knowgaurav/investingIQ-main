@@ -153,7 +153,7 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
                     onFocus={() => setShowSuggestions(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="Search for any stock (e.g., AAPL, TSLA, NVDA)..."
-                    className="w-full px-6 py-4 text-lg border-2 border-theme bg-theme-card text-theme rounded-full focus:border-primary focus:outline-none transition-colors"
+                    className="w-full px-6 py-4 text-lg bg-theme-card text-theme rounded-full shadow-md focus:ring-2 focus:ring-primary focus:outline-none transition-all"
                     autoComplete="off"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
@@ -177,7 +177,7 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
             {showSuggestions && suggestions.length > 0 && (
                 <div
                     ref={suggestionsRef}
-                    className="absolute z-50 w-full mt-2 bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden"
+                    className="absolute z-50 w-full mt-2 bg-theme-card rounded-xl shadow-lg overflow-hidden"
                 >
                     {suggestions.map((stock: StockSearchResult, index: number) => (
                         <button

@@ -149,11 +149,11 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
             </div>
 
             {/* Price Predictions */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+            <div className="bg-theme-card rounded-xl shadow-md p-6">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📈</span> Price Forecast
                     {prediction?.models_used && (
-                        <span className="text-xs bg-blue-100 text-blue-400 px-2 py-1 rounded-full">
+                        <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
                             {prediction.models_used}
                         </span>
                     )}
@@ -347,7 +347,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
             </div>
 
             {/* Technical Indicators */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+            <div className="bg-theme-card rounded-xl shadow-md p-6">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📊</span> Technical Indicators
                 </h3>
@@ -449,7 +449,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
             </div>
 
             {/* ML Sentiment */}
-            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+            <div className="bg-theme-card rounded-xl shadow-md p-6">
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>💬</span> News Sentiment Analysis
                 </h3>
@@ -592,8 +592,8 @@ function TechnicalIndicatorRow({ name, value, signal, explanation }: {
         oversold: { bg: 'bg-green-500/100/20', text: 'text-green-500', label: 'Oversold' },
         neutral: { bg: 'bg-theme-secondary', text: 'text-theme-secondary', label: 'Neutral' },
         normal: { bg: 'bg-theme-secondary', text: 'text-theme-secondary', label: 'Normal' },
-        high: { bg: 'bg-yellow-100', text: 'text-yellow-400', label: 'High' },
-        low: { bg: 'bg-blue-100', text: 'text-blue-400', label: 'Low' },
+        high: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', label: 'High' },
+        low: { bg: 'bg-blue-500/20', text: 'text-blue-400', label: 'Low' },
         alert: { bg: 'bg-red-500/100/20', text: 'text-red-500', label: 'Alert' },
     };
     
@@ -604,7 +604,7 @@ function TechnicalIndicatorRow({ name, value, signal, explanation }: {
             <div className="flex items-center justify-between mb-1">
                 <span className="font-medium text-theme">{name}</span>
                 <div className="flex items-center gap-2">
-                    <span className="text-lg font-semibold text-gray-800 capitalize">{value}</span>
+                    <span className="text-lg font-semibold text-theme capitalize">{value}</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.text}`}>
                         {config.label}
                     </span>
