@@ -153,12 +153,12 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
                     onFocus={() => setShowSuggestions(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="Search for any stock (e.g., AAPL, TSLA, NVDA)..."
-                    className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-full focus:border-blue-500 focus:outline-none transition-colors"
+                    className="w-full px-6 py-4 text-lg border-2 border-theme bg-theme-card text-theme rounded-full focus:border-primary focus:outline-none transition-colors"
                     autoComplete="off"
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
                     {isLoading && (
-                        <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+                        <div className="w-5 h-5 border-2 border-theme border-t-primary rounded-full animate-spin" />
                     )}
                     <button
                         onClick={() => {
@@ -166,7 +166,7 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
                                 router.push(`/analyze/${query.trim().toUpperCase()}`);
                             }
                         }}
-                        className="bg-blue-500 text-white px-6 py-2 rounded-full hover:bg-blue-600 transition-colors font-medium"
+                        className="bg-primary text-white px-6 py-2 rounded-full hover:opacity-90 transition-opacity font-medium"
                     >
                         Analyze
                     </button>
@@ -177,25 +177,25 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
             {showSuggestions && suggestions.length > 0 && (
                 <div
                     ref={suggestionsRef}
-                    className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden"
+                    className="absolute z-50 w-full mt-2 bg-theme-card border border-theme rounded-xl shadow-lg overflow-hidden"
                 >
                     {suggestions.map((stock: StockSearchResult, index: number) => (
                         <button
                             key={stock.ticker}
                             onClick={() => handleSelect(stock)}
                             onMouseEnter={() => setSelectedIndex(index)}
-                            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50 transition-colors ${index === selectedIndex ? 'bg-blue-50' : ''
+                            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-theme-secondary transition-colors ${index === selectedIndex ? 'bg-theme-secondary' : ''
                                 }`}
                         >
                             <div>
-                                <span className="font-semibold text-gray-900">
+                                <span className="font-semibold text-theme">
                                     {stock.ticker}
                                 </span>
-                                <span className="ml-2 text-gray-600">
+                                <span className="ml-2 text-theme-secondary">
                                     {stock.name}
                                 </span>
                             </div>
-                            <span className="text-sm text-gray-400">
+                            <span className="text-sm text-theme-muted">
                                 {stock.exchange}
                             </span>
                         </button>

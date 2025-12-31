@@ -14,6 +14,7 @@ import CompanyOverview from '@/components/CompanyOverview';
 import MLAnalysisView from '@/components/MLAnalysisView';
 import LLMAnalysisView from '@/components/LLMAnalysisView';
 import LLMSettings from '@/components/LLMSettings';
+import DarkModeToggle from '@/components/DarkModeToggle';
 import { useLLMConfig } from '@/hooks/useLLMConfig';
 
 interface AnalyzePageProps {
@@ -127,11 +128,11 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
     // Loading state
     if (pageState === 'loading') {
         return (
-            <main className="min-h-screen bg-gray-50">
+            <main className="min-h-screen bg-theme">
                 <div className="container mx-auto px-4 py-16">
                     <div className="flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mb-4" />
-                        <p className="text-gray-600">Loading...</p>
+                        <div className="w-12 h-12 border-4 border-theme border-t-primary rounded-full animate-spin mb-4" />
+                        <p className="text-theme-secondary">Loading...</p>
                     </div>
                 </div>
             </main>
@@ -141,27 +142,27 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
     // Analyzing state
     if (pageState === 'analyzing') {
         return (
-            <main className="min-h-screen bg-gray-50">
+            <main className="min-h-screen bg-theme">
                 <Header ticker={ticker} />
                 <div className="container mx-auto px-4 py-16">
-                    <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
+                    <div className="max-w-md mx-auto bg-theme-card rounded-xl shadow-lg p-8">
                         <div className="text-center">
-                            <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-6" />
-                            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                            <div className="w-16 h-16 border-4 border-theme border-t-primary rounded-full animate-spin mx-auto mb-6" />
+                            <h2 className="text-xl font-semibold text-theme mb-2">
                                 Analyzing {ticker}
                             </h2>
-                            <p className="text-gray-600 mb-6">
+                            <p className="text-theme-secondary mb-6">
                                 {taskStatus?.current_step || 'Initializing analysis...'}
                             </p>
 
                             {/* Progress bar */}
-                            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                            <div className="w-full bg-theme-secondary rounded-full h-2 mb-2">
                                 <div
-                                    className="bg-blue-500 h-2 rounded-full transition-all duration-500"
+                                    className="bg-primary h-2 rounded-full transition-all duration-500"
                                     style={{ width: `${taskStatus?.progress || 0}%` }}
                                 />
                             </div>
-                            <p className="text-sm text-gray-500">
+                            <p className="text-sm text-theme-muted">
                                 {taskStatus?.progress || 0}% complete
                             </p>
                         </div>
@@ -174,12 +175,12 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
     // Error state
     if (pageState === 'error') {
         return (
-            <main className="min-h-screen bg-gray-50">
+            <main className="min-h-screen bg-theme">
                 <Header ticker={ticker} />
                 <div className="container mx-auto px-4 py-16">
-                    <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
+                    <div className="max-w-md mx-auto bg-theme-card rounded-xl shadow-lg p-8">
                         <div className="text-center">
-                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                                 <svg
                                     className="w-8 h-8 text-red-500"
                                     fill="none"
@@ -194,13 +195,13 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                                     />
                                 </svg>
                             </div>
-                            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                            <h2 className="text-xl font-semibold text-theme mb-2">
                                 Analysis Failed
                             </h2>
-                            <p className="text-gray-600 mb-6">{error}</p>
+                            <p className="text-theme-secondary mb-6">{error}</p>
                             <button
                                 onClick={() => window.location.reload()}
-                                className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                className="px-6 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity"
                             >
                                 Try Again
                             </button>
@@ -217,7 +218,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
     }
 
     return (
-        <main className="min-h-screen bg-gray-50">
+        <main className="min-h-screen bg-theme">
             <Header 
                 ticker={ticker} 
                 companyName={report.company_name} 
@@ -228,21 +229,21 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 {/* Company Header */}
                 <div className="mb-6">
                     <div className="flex items-center gap-4 mb-2">
-                        <h1 className="text-3xl font-bold text-gray-900">
+                        <h1 className="text-3xl font-bold text-theme">
                             {report.company_name || ticker}
                         </h1>
-                        <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
+                        <span className="px-3 py-1 bg-primary/20 text-primary rounded-full font-semibold">
                             {ticker}
                         </span>
                     </div>
-                    <p className="text-gray-500">
+                    <p className="text-theme-muted">
                         Last analyzed: {new Date(report.analyzed_at).toLocaleString()}
                     </p>
                 </div>
 
                 {/* Price Chart - Always visible */}
-                <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                <div className="bg-theme-card rounded-xl shadow-sm p-6 mb-6">
+                    <h2 className="text-xl font-semibold text-theme mb-4">
                         Price History
                     </h2>
                     <PriceChart data={report.price_data} height={300} />
@@ -250,13 +251,13 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
 
                 {/* Analysis Tabs */}
                 <div className="mb-6">
-                    <div className="flex border-b border-gray-200">
+                    <div className="flex border-b border-theme">
                         <button
                             onClick={() => setActiveTab('overview')}
                             className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
                                 activeTab === 'overview'
-                                    ? 'border-blue-500 text-blue-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-theme-muted hover:text-theme'
                             }`}
                         >
                             <span className="flex items-center gap-2">
@@ -267,8 +268,8 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                             onClick={() => setActiveTab('ml')}
                             className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
                                 activeTab === 'ml'
-                                    ? 'border-green-500 text-green-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'border-green-500 text-green-500'
+                                    : 'border-transparent text-theme-muted hover:text-theme'
                             }`}
                         >
                             <span className="flex items-center gap-2">
@@ -279,14 +280,14 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                             onClick={() => setActiveTab('llm')}
                             className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
                                 activeTab === 'llm'
-                                    ? 'border-purple-500 text-purple-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                                    ? 'border-blue-400 text-blue-400'
+                                    : 'border-transparent text-theme-muted hover:text-theme'
                             }`}
                         >
                             <span className="flex items-center gap-2">
                                 <span>🤖</span> LLM Analysis
                                 {!hasLLMConfig && (
-                                    <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 text-xs rounded">
+                                    <span className="px-1.5 py-0.5 bg-theme-secondary text-theme-muted text-xs rounded">
                                         Locked
                                     </span>
                                 )}
@@ -345,12 +346,12 @@ function Header({
     onLLMSettingsClick?: () => void;
 }) {
     return (
-        <header className="bg-white border-b border-gray-200">
+        <header className="bg-theme-card border-b border-theme">
             <div className="container mx-auto px-4 py-4">
                 <div className="flex items-center justify-between">
                     <Link
                         href="/"
-                        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+                        className="flex items-center gap-2 text-theme-secondary hover:text-theme transition-colors"
                     >
                         <svg
                             className="w-5 h-5"
@@ -368,10 +369,11 @@ function Header({
                         Back to Search
                     </Link>
                     <div className="flex items-center gap-4">
+                        <DarkModeToggle />
                         {onLLMSettingsClick && (
                             <button
                                 onClick={onLLMSettingsClick}
-                                className="flex items-center gap-1 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                                className="flex items-center gap-1 px-3 py-1.5 text-sm text-theme-secondary hover:text-theme hover:bg-theme-secondary rounded-lg transition-colors"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -380,7 +382,7 @@ function Header({
                                 LLM
                             </button>
                         )}
-                        <Link href="/" className="text-xl font-bold text-blue-600">
+                        <Link href="/" className="text-xl font-bold text-primary">
                             InvestingIQ
                         </Link>
                     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import StockSearch from '@/components/StockSearch';
 import LLMSettings from '@/components/LLMSettings';
+import DarkModeToggle from '@/components/DarkModeToggle';
 import { StockSearchResult } from '@/lib/api';
 import { useLLMConfig, PROVIDER_NAMES } from '@/hooks/useLLMConfig';
 
@@ -37,15 +38,16 @@ export default function Home() {
     };
 
     return (
-        <main className="min-h-screen bg-gradient-to-b from-white to-gray-50">
-            {/* LLM Settings Button - Top Right */}
-            <div className="absolute top-4 right-4">
+        <main className="min-h-screen bg-theme">
+            {/* Top Right Controls */}
+            <div className="absolute top-4 right-4 flex items-center gap-2">
+                <DarkModeToggle />
                 <button
                     onClick={() => setShowLLMSettings(true)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                         hasLLMConfig
-                            ? 'bg-green-50 text-green-700 hover:bg-green-100'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50'
+                            : 'bg-theme-secondary text-theme-secondary hover:opacity-80'
                     }`}
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -67,7 +69,7 @@ export default function Home() {
                 <div className="text-center">
                     {/* Logo/Brand */}
                     <div className="mb-6">
-                        <span className="inline-flex items-center justify-center w-16 h-16 bg-blue-500 rounded-2xl shadow-lg mb-4">
+                        <span className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-lg mb-4">
                             <svg
                                 className="w-8 h-8 text-white"
                                 fill="none"
@@ -85,10 +87,10 @@ export default function Home() {
                     </div>
 
                     {/* Title */}
-                    <h1 className="text-5xl font-bold text-gray-900 mb-4">
+                    <h1 className="text-5xl font-bold text-theme mb-4">
                         InvestingIQ
                     </h1>
-                    <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto">
+                    <p className="text-xl text-theme-secondary mb-10 max-w-2xl mx-auto">
                         AI-Powered Stock Analysis Platform. Get instant insights,
                         sentiment analysis, and intelligent recommendations for any stock.
                     </p>
@@ -97,7 +99,7 @@ export default function Home() {
                     <StockSearch onRecentSearchesChange={setRecentSearches} />
 
                     {/* Features */}
-                    <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-gray-500">
+                    <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-theme-muted">
                         <span className="flex items-center gap-1">
                             <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -131,12 +133,12 @@ export default function Home() {
                 <div className="container mx-auto px-4 pb-16">
                     <div className="max-w-xl mx-auto">
                         <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-700">
+                            <h2 className="text-lg font-semibold text-theme-secondary">
                                 Recent Searches
                             </h2>
                             <button
                                 onClick={clearRecentSearches}
-                                className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+                                className="text-sm text-theme-muted hover:text-theme transition-colors"
                             >
                                 Clear all
                             </button>
@@ -146,12 +148,12 @@ export default function Home() {
                                 <button
                                     key={stock.ticker}
                                     onClick={() => handleRecentClick(stock.ticker)}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full hover:border-blue-300 hover:bg-blue-50 transition-colors group"
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme rounded-full hover:border-primary transition-colors group"
                                 >
-                                    <span className="font-semibold text-gray-900 group-hover:text-blue-600">
+                                    <span className="font-semibold text-theme group-hover:text-primary">
                                         {stock.ticker}
                                     </span>
-                                    <span className="text-sm text-gray-500 group-hover:text-blue-500">
+                                    <span className="text-sm text-theme-muted group-hover:text-primary">
                                         {stock.name.length > 20
                                             ? `${stock.name.substring(0, 20)}...`
                                             : stock.name}
@@ -166,16 +168,16 @@ export default function Home() {
             {/* Popular Stocks Section */}
             <div className="container mx-auto px-4 pb-20">
                 <div className="max-w-3xl mx-auto">
-                    <h2 className="text-lg font-semibold text-gray-700 mb-4 text-center">
+                    <h2 className="text-lg font-semibold text-theme-secondary mb-4 text-center">
                         Popular Stocks
                     </h2>
                     <div className="flex flex-wrap justify-center gap-3">
-                        {['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META', 'JPM'].map(
+                        {['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META', 'JPM', 'V', 'WMT', 'JNJ', 'UNH'].map(
                             (ticker) => (
                                 <button
                                     key={ticker}
                                     onClick={() => handleRecentClick(ticker)}
-                                    className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-colors font-medium"
+                                    className="px-5 py-2.5 bg-theme-card border border-theme text-theme rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-colors font-medium"
                                 >
                                     {ticker}
                                 </button>
