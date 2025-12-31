@@ -13,6 +13,30 @@
                         }
                     },
                     {
+                        "Name": "ml-prediction-queue",
+                        "Properties": {
+                            "DeadLetteringOnMessageExpiration": true,
+                            "DefaultMessageTimeToLive": "PT1H",
+                            "MaxDeliveryCount": 3
+                        }
+                    },
+                    {
+                        "Name": "ml-technical-queue",
+                        "Properties": {
+                            "DeadLetteringOnMessageExpiration": true,
+                            "DefaultMessageTimeToLive": "PT1H",
+                            "MaxDeliveryCount": 3
+                        }
+                    },
+                    {
+                        "Name": "ml-sentiment-queue",
+                        "Properties": {
+                            "DeadLetteringOnMessageExpiration": true,
+                            "DefaultMessageTimeToLive": "PT1H",
+                            "MaxDeliveryCount": 3
+                        }
+                    },
+                    {
                         "Name": "llm-queue",
                         "Properties": {
                             "DeadLetteringOnMessageExpiration": true,

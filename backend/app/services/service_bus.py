@@ -17,6 +17,7 @@ class ServiceBusService:
     
     # Queue names
     QUEUE_DATA = "data-queue"
+    QUEUE_ML = "ml-queue"
     QUEUE_LLM = "llm-queue"
     QUEUE_EMBED = "embed-queue"
     QUEUE_AGGREGATE = "aggregate-queue"
@@ -133,39 +134,40 @@ class AnalysisOrchestrator:
     def __init__(self, service_bus: ServiceBusService):
         self._service_bus = service_bus
     
-    def start_analysis(self, ticker: str, task_id: str) -> Dict[str, str]:
+    def start_analysis(
+        self, 
+        ticker: str, 
+        task_id: str,
+        llm_config: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, str]:
         """
-        Start the analysis workflow by sending messages to data queue.
+        Start the analysis workflow by sending messages to queues.
         
         The workflow:
         1. Send fetch_stock_data and fetch_news to data-queue (parallel)
-        2. Azure Functions process and send results to llm-queue
-        3. LLM functions process sentiment/summary and send to aggregate-queue
+        2. ML functions run prediction/technical/sentiment (always)
+        3. If llm_config provided, LLM functions run sentiment/summary/insights
         4. Aggregate function combines results and saves report
         
         Args:
             ticker: Stock ticker symbol
             task_id: UUID for tracking the analysis task
+            llm_config: Optional LLM configuration (provider, api_key, model)
             
         Returns:
             Dict with task_id and status
         """
+        base_payload = {
+            "task_id": task_id,
+            "ticker": ticker,
+            "timestamp": datetime.utcnow().isoformat(),
+            "llm_config": llm_config,
+        }
+        
         # Send parallel data fetch tasks
-        stock_message = {
-            "task_type": "fetch_stock_data",
-            "task_id": task_id,
-            "ticker": ticker,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        stock_message = {**base_payload, "task_type": "fetch_stock_data"}
+        news_message = {**base_payload, "task_type": "fetch_news"}
         
-        news_message = {
-            "task_type": "fetch_news",
-            "task_id": task_id,
-            "ticker": ticker,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
-        
-        # Send both to data queue with same correlation ID
         self._service_bus.send_message(
             queue_name=ServiceBusService.QUEUE_DATA,
             message_body=stock_message,
@@ -178,12 +180,16 @@ class AnalysisOrchestrator:
             correlation_id=task_id,
         )
         
-        logger.info(f"Started analysis workflow for {ticker}, task_id: {task_id}")
+        logger.info(
+            f"Started analysis for {ticker}, task_id: {task_id}, "
+            f"llm_enabled: {llm_config is not None}"
+        )
         
         return {
             "task_id": task_id,
             "ticker": ticker,
             "status": "started",
+            "llm_enabled": llm_config is not None,
         }
     
     def send_to_llm_queue(

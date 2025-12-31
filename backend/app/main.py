@@ -6,7 +6,7 @@ from fastapi import FastAPI, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
-from app.api.routes import health, stocks, analysis, chat, websocket
+from app.api.routes import health, stocks, analysis, chat, websocket, llm
 from app.api.websocket import analysis_websocket_handler
 from app.api.middleware import RateLimitMiddleware, parse_rate_limit
 from app.utils.logging import setup_logging, RequestLoggingMiddleware
@@ -91,6 +91,7 @@ app.include_router(stocks.router, prefix=API_V1_PREFIX, tags=["stocks"])
 app.include_router(analysis.router, prefix=API_V1_PREFIX, tags=["analysis"])
 app.include_router(chat.router, prefix=API_V1_PREFIX, tags=["chat"])
 app.include_router(websocket.router, prefix=API_V1_PREFIX, tags=["websocket"])
+app.include_router(llm.router, prefix=API_V1_PREFIX, tags=["llm"])
 
 # Also keep /api routes for backward compatibility
 app.include_router(stocks.router, prefix="/api", tags=["stocks"], include_in_schema=False)

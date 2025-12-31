@@ -1,64 +1,124 @@
 """Data processing Azure Functions - handles stock and news data fetching."""
 import json
 import logging
-import os
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import azure.functions as func
-import yfinance as yf
-import requests
 
-# Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
+def main(msg: func.ServiceBusMessage):
     """
     Process data queue messages - fetch stock data or news.
+    Then route to ML queue (always) and LLM queue (if configured).
     
     Triggered by: data-queue
-    Outputs to: llm-queue (for sentiment/summary) and embed-queue (for embeddings)
+    Outputs to: ml-queue (always), llm-queue (if llm_config present), aggregate-queue
     """
     from shared.webpubsub_utils import send_progress
+    from azure.servicebus import ServiceBusClient, ServiceBusMessage as SBMessage
+    from shared.config import get_settings
     
     try:
-        # Parse message
-        message_body = msg.get_body().decode('utf-8')
-        message = json.loads(message_body)
+        message = json.loads(msg.get_body().decode('utf-8'))
         
         task_type = message.get("task_type")
         task_id = message.get("task_id")
         ticker = message.get("ticker")
+        llm_config = message.get("llm_config")
         
         logger.info(f"Processing {task_type} for {ticker}, task_id: {task_id}")
         send_progress(task_id, 10, f"Fetching {task_type.replace('fetch_', '')}")
         
+        settings = get_settings()
+        messages_to_send = []
+        
         if task_type == "fetch_stock_data":
             result = fetch_stock_data(ticker)
-            output_message = {
-                "task_type": "stock_data_ready",
-                "task_id": task_id,
-                "ticker": ticker,
-                "data": result,
-                "timestamp": datetime.utcnow().isoformat(),
-            }
+            
+            messages_to_send.append({
+                "queue": "aggregate-queue",
+                "message": {
+                    "task_type": "stock_data_ready",
+                    "task_id": task_id,
+                    "ticker": ticker,
+                    "data": result,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            })
+            
+            messages_to_send.append({
+                "queue": "ml-prediction-queue",
+                "message": {
+                    "task_type": "ml_prediction",
+                    "task_id": task_id,
+                    "ticker": ticker,
+                    "data": {"price_history": result.get("price_history", [])},
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            })
+            
+            messages_to_send.append({
+                "queue": "ml-technical-queue",
+                "message": {
+                    "task_type": "ml_technical",
+                    "task_id": task_id,
+                    "ticker": ticker,
+                    "data": {"price_history": result.get("price_history", [])},
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            })
             
         elif task_type == "fetch_news":
             result = fetch_news(ticker)
-            output_message = {
-                "task_type": "news_ready",
-                "task_id": task_id,
-                "ticker": ticker,
-                "data": result,
-                "timestamp": datetime.utcnow().isoformat(),
-            }
+            headlines = [{"title": a.get("title", "")} for a in result]
+            
+            messages_to_send.append({
+                "queue": "aggregate-queue",
+                "message": {
+                    "task_type": "news_ready",
+                    "task_id": task_id,
+                    "ticker": ticker,
+                    "data": result,
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            })
+            
+            messages_to_send.append({
+                "queue": "ml-sentiment-queue",
+                "message": {
+                    "task_type": "ml_sentiment",
+                    "task_id": task_id,
+                    "ticker": ticker,
+                    "data": {"headlines": headlines},
+                    "timestamp": datetime.utcnow().isoformat(),
+                }
+            })
+            
+            if llm_config:
+                messages_to_send.append({
+                    "queue": "llm-queue",
+                    "message": {
+                        "task_type": "analyze_sentiment",
+                        "task_id": task_id,
+                        "ticker": ticker,
+                        "data": {"headlines": result},
+                        "llm_config": llm_config,
+                        "timestamp": datetime.utcnow().isoformat(),
+                    }
+                })
         else:
             logger.error(f"Unknown task type: {task_type}")
             return
         
-        # Send to aggregate queue for collection
-        outputSbMsg.set(json.dumps(output_message))
+        with ServiceBusClient.from_connection_string(settings.servicebus_connection) as client:
+            for item in messages_to_send:
+                with client.get_queue_sender(item["queue"]) as sender:
+                    sender.send_messages(SBMessage(json.dumps(item["message"])))
+                    logger.info(f"Sent {item['message']['task_type']} to {item['queue']}")
+        
         logger.info(f"Completed {task_type} for {ticker}")
         
     except Exception as e:
@@ -67,98 +127,16 @@ def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
 
 
 def fetch_stock_data(ticker: str) -> dict:
-    """Fetch stock data from yfinance."""
-    try:
-        stock = yf.Ticker(ticker)
-        
-        # Get historical data (30 days)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=30)
-        history = stock.history(start=start_date, end=end_date)
-        
-        # Convert to list of dicts
-        price_data = []
-        for date, row in history.iterrows():
-            price_data.append({
-                "date": date.isoformat(),
-                "open": float(row["Open"]),
-                "high": float(row["High"]),
-                "low": float(row["Low"]),
-                "close": float(row["Close"]),
-                "volume": int(row["Volume"]),
-            })
-        
-        # Get company info
-        info = stock.info
-        company_info = {
-            "name": info.get("longName", ticker),
-            "sector": info.get("sector", "Unknown"),
-            "industry": info.get("industry", "Unknown"),
-            "description": info.get("longBusinessSummary", ""),
-            "market_cap": info.get("marketCap"),
-            "pe_ratio": info.get("trailingPE"),
-            "52_week_high": info.get("fiftyTwoWeekHigh"),
-            "52_week_low": info.get("fiftyTwoWeekLow"),
-        }
-        
-        return {
-            "ticker": ticker,
-            "price_history": price_data,
-            "company_info": company_info,
-            "current_price": price_data[-1]["close"] if price_data else None,
-        }
-        
-    except Exception as e:
-        logger.error(f"Error fetching stock data for {ticker}: {e}")
-        return {
-            "ticker": ticker,
-            "price_history": [],
-            "company_info": {"name": ticker},
-            "error": str(e),
-        }
+    """Fetch stock data and earnings from Alpha Vantage."""
+    from shared.alpha_vantage import fetch_stock_data as av_fetch_stock, fetch_earnings
+    
+    stock_data = av_fetch_stock(ticker)
+    earnings = fetch_earnings(ticker)
+    stock_data["earnings"] = earnings
+    return stock_data
 
 
-def fetch_news(ticker: str, max_articles: int = 10) -> list:
-    """Fetch news articles from News API."""
-    api_key = os.environ.get("NEWS_API_KEY")
-    
-    if not api_key:
-        logger.warning("NEWS_API_KEY not set, returning empty news")
-        return []
-    
-    try:
-        # Get company name for better search
-        stock = yf.Ticker(ticker)
-        company_name = stock.info.get("longName", ticker)
-        
-        # Search for news
-        url = "https://newsapi.org/v2/everything"
-        params = {
-            "q": f"{ticker} OR {company_name}",
-            "language": "en",
-            "sortBy": "publishedAt",
-            "pageSize": max_articles,
-            "apiKey": api_key,
-        }
-        
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        
-        data = response.json()
-        articles = []
-        
-        for article in data.get("articles", []):
-            articles.append({
-                "title": article.get("title", ""),
-                "description": article.get("description", ""),
-                "content": article.get("content", ""),
-                "source": article.get("source", {}).get("name", "Unknown"),
-                "url": article.get("url", ""),
-                "published_at": article.get("publishedAt", ""),
-            })
-        
-        return articles
-        
-    except Exception as e:
-        logger.error(f"Error fetching news for {ticker}: {e}")
-        return []
+def fetch_news(ticker: str, max_articles: int = 20) -> list:
+    """Fetch news with sentiment from Alpha Vantage."""
+    from shared.alpha_vantage import fetch_news as av_fetch_news
+    return av_fetch_news(ticker, max_articles)
