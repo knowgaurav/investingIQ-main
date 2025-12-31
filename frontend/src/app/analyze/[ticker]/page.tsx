@@ -156,7 +156,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                             </p>
 
                             {/* Progress bar */}
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
+                            <div className="w-full bg-theme-secondary rounded-full h-2 mb-2">
                                 <div
                                     className="bg-primary h-2 rounded-full transition-all duration-500"
                                     style={{ width: `${taskStatus?.progress || 0}%` }}
