@@ -156,7 +156,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                             </p>
 
                             {/* Progress bar */}
-                            <div className="w-full bg-theme-secondary rounded-full h-2 mb-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-2">
                                 <div
                                     className="bg-primary h-2 rounded-full transition-all duration-500"
                                     style={{ width: `${taskStatus?.progress || 0}%` }}
@@ -402,7 +402,7 @@ function SentimentDisplay({
     if (score === null) {
         return (
             <div className="flex items-center justify-center h-48">
-                <p className="text-gray-500">No sentiment data available</p>
+                <p className="text-theme-muted">No sentiment data available</p>
             </div>
         );
     }
@@ -413,16 +413,10 @@ function SentimentDisplay({
         score > 0.2 ? 'Positive' : score < -0.2 ? 'Negative' : 'Neutral';
     const sentimentColor =
         score > 0.2
-            ? 'text-green-600'
+            ? 'text-green-500'
             : score < -0.2
-                ? 'text-red-600'
-                : 'text-gray-600';
-    const bgColor =
-        score > 0.2
-            ? 'bg-green-500'
-            : score < -0.2
-                ? 'bg-red-500'
-                : 'bg-gray-500';
+                ? 'text-red-500'
+                : 'text-theme-secondary';
 
     return (
         <div className="space-y-6">
@@ -434,7 +428,7 @@ function SentimentDisplay({
                             cx="64"
                             cy="64"
                             r="56"
-                            stroke="#E5E7EB"
+                            className="stroke-gray-200 dark:stroke-gray-700"
                             strokeWidth="12"
                             fill="none"
                         />
@@ -464,43 +458,43 @@ function SentimentDisplay({
             {breakdown && (
                 <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Positive</span>
+                        <span className="text-sm text-theme-secondary">Positive</span>
                         <div className="flex items-center gap-2">
-                            <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                 <div
                                     className="bg-green-500 h-2 rounded-full"
                                     style={{ width: `${breakdown.positive}%` }}
                                 />
                             </div>
-                            <span className="text-sm font-medium text-gray-900 w-12 text-right">
+                            <span className="text-sm font-medium text-theme w-12 text-right">
                                 {breakdown.positive}%
                             </span>
                         </div>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Neutral</span>
+                        <span className="text-sm text-theme-secondary">Neutral</span>
                         <div className="flex items-center gap-2">
-                            <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                 <div
                                     className="bg-gray-500 h-2 rounded-full"
                                     style={{ width: `${breakdown.neutral}%` }}
                                 />
                             </div>
-                            <span className="text-sm font-medium text-gray-900 w-12 text-right">
+                            <span className="text-sm font-medium text-theme w-12 text-right">
                                 {breakdown.neutral}%
                             </span>
                         </div>
                     </div>
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">Negative</span>
+                        <span className="text-sm text-theme-secondary">Negative</span>
                         <div className="flex items-center gap-2">
-                            <div className="w-32 bg-gray-200 rounded-full h-2">
+                            <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                 <div
                                     className="bg-red-500 h-2 rounded-full"
                                     style={{ width: `${breakdown.negative}%` }}
                                 />
                             </div>
-                            <span className="text-sm font-medium text-gray-900 w-12 text-right">
+                            <span className="text-sm font-medium text-theme w-12 text-right">
                                 {breakdown.negative}%
                             </span>
                         </div>
@@ -513,9 +507,9 @@ function SentimentDisplay({
 
 function SentimentBadge({ sentiment }: { sentiment: string }) {
     const colors: Record<string, string> = {
-        positive: 'bg-green-100 text-green-700',
-        negative: 'bg-red-100 text-red-700',
-        neutral: 'bg-gray-100 text-gray-700',
+        positive: 'bg-green-500/20 text-green-500',
+        negative: 'bg-red-500/20 text-red-500',
+        neutral: 'bg-gray-500/20 text-theme-secondary',
     };
 
     return (
