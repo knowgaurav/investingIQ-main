@@ -177,7 +177,7 @@ export default function Home() {
                                 <button
                                     key={ticker}
                                     onClick={() => handleRecentClick(ticker)}
-                                    className="px-5 py-2.5 bg-theme-secondary text-theme rounded-lg hover:bg-primary hover:text-white transition-colors font-medium"
+                                    className="px-5 py-2.5 bg-theme-card border border-theme text-theme rounded-lg hover:bg-primary hover:text-white hover:border-primary transition-colors font-medium"
                                 >
                                     {ticker}
                                 </button>
