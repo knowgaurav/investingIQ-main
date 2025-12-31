@@ -53,9 +53,12 @@ def send_completed_with_data(task_id: str, ticker: str, results: dict):
         "data": {
             "stock_data": results.get("stock_data"),
             "news": results.get("news"),
-            "sentiment": results.get("sentiment"),
-            "summary": results.get("summary"),
-            "insights": results.get("insights"),
+            "ml_prediction": results.get("ml_prediction"),
+            "ml_technical": results.get("ml_technical"),
+            "ml_sentiment": results.get("ml_sentiment"),
+            "llm_sentiment": results.get("llm_sentiment"),
+            "llm_summary": results.get("llm_summary"),
+            "llm_insights": results.get("llm_insights"),
         }
     })
 

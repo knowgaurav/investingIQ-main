@@ -326,25 +326,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                     />
                 )}
 
-                {/* Chat CTA */}
-                <div className="mt-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl p-6 text-white">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="text-xl font-semibold mb-2">
-                                Have questions about {ticker}?
-                            </h3>
-                            <p className="text-blue-100">
-                                Chat with our AI assistant for deeper insights and analysis.
-                            </p>
-                        </div>
-                        <Link
-                            href={`/chat?ticker=${ticker}`}
-                            className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
-                        >
-                            Start Chat
-                        </Link>
-                    </div>
-                </div>
+
             </div>
 
             {/* LLM Settings Modal */}

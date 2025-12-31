@@ -16,14 +16,33 @@ vader_analyzer = SentimentIntensityAnalyzer()
 BULLISH_KEYWORDS = {
     'surge', 'soar', 'rally', 'gain', 'rise', 'jump', 'climb', 'boost',
     'record', 'high', 'growth', 'profit', 'beat', 'exceed', 'strong',
-    'upgrade', 'buy', 'bullish', 'outperform', 'positive', 'upside'
+    'upgrade', 'buy', 'bullish', 'outperform', 'positive', 'upside',
+    'breakout', 'momentum', 'winner', 'success', 'boom', 'skyrocket',
+    'optimistic', 'recovery', 'rebound', 'opportunity', 'overweight'
 }
 
 BEARISH_KEYWORDS = {
     'fall', 'drop', 'decline', 'plunge', 'crash', 'loss', 'miss', 'weak',
     'downgrade', 'sell', 'bearish', 'underperform', 'negative', 'risk',
-    'concern', 'warning', 'cut', 'slash', 'layoff', 'recession'
+    'concern', 'warning', 'cut', 'slash', 'layoff', 'recession',
+    'slip', 'slips', 'slipped', 'slide', 'slides', 'tumble', 'sink',
+    'fear', 'worry', 'trouble', 'struggle', 'fails', 'failure', 'down',
+    'loses', 'losing', 'lost', 'underweight', 'avoid', 'cautious',
+    'thins', 'thin', 'slump', 'plummets', 'tanks', 'dumps', 'selloff'
 }
+
+# Phrase patterns that strongly indicate sentiment
+BEARISH_PHRASES = [
+    'sell rating', 'maintains sell', 'downgrade', 'price target cut',
+    'stock slips', 'shares fall', 'stock drops', 'loses ground',
+    'trading thins', 'year-end selling', 'profit taking'
+]
+
+BULLISH_PHRASES = [
+    'buy rating', 'maintains buy', 'upgrade', 'price target raised',
+    'stock surges', 'shares rise', 'stock jumps', 'gains ground',
+    'all-time high', 'record high', 'strong buy'
+]
 
 
 def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
@@ -41,8 +60,11 @@ def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
         ticker = message.get("ticker")
         headlines = message.get("data", {}).get("headlines", [])
         
-        logger.info(f"Running ML sentiment for {ticker}, task_id: {task_id}")
+        logger.info(f"Running ML sentiment for {ticker}, task_id: {task_id}, headlines count: {len(headlines)}")
         send_progress(task_id, 35, "Analyzing news sentiment")
+        
+        if not headlines:
+            logger.warning(f"No headlines received for {ticker}")
         
         result = analyze_sentiment(headlines)
         
@@ -132,12 +154,29 @@ def analyze_textblob(text: str) -> float:
 
 
 def analyze_keywords(text: str) -> float:
-    """Analyze text for bullish/bearish keywords (returns -1 to 1)."""
+    """Analyze text for bullish/bearish keywords and phrases (returns -1 to 1)."""
     text_lower = text.lower()
-    words = set(text_lower.split())
     
-    bullish_count = len(words & BULLISH_KEYWORDS)
-    bearish_count = len(words & BEARISH_KEYWORDS)
+    # Check for strong phrase patterns first (higher weight)
+    phrase_score = 0.0
+    for phrase in BEARISH_PHRASES:
+        if phrase in text_lower:
+            phrase_score -= 0.5
+    for phrase in BULLISH_PHRASES:
+        if phrase in text_lower:
+            phrase_score += 0.5
+    
+    # If we found phrases, they dominate
+    if phrase_score != 0:
+        return max(-1.0, min(1.0, phrase_score))
+    
+    # Otherwise check individual keywords
+    # Use word boundaries to catch words in different forms
+    import re
+    words_in_text = set(re.findall(r'\b\w+\b', text_lower))
+    
+    bullish_count = len(words_in_text & BULLISH_KEYWORDS)
+    bearish_count = len(words_in_text & BEARISH_KEYWORDS)
     
     total = bullish_count + bearish_count
     if total == 0:
@@ -148,9 +187,9 @@ def analyze_keywords(text: str) -> float:
 
 def score_to_label(score: float) -> str:
     """Convert score to sentiment label."""
-    if score > 0.1:
+    if score > 0.05:
         return "positive"
-    elif score < -0.1:
+    elif score < -0.05:
         return "negative"
     return "neutral"
 

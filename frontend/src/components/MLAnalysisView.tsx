@@ -1,5 +1,7 @@
 'use client';
 
+import ForecastChart from './ForecastChart';
+
 interface MLAnalysisViewProps {
     prediction?: {
         forecast_7d: number | null;
@@ -9,6 +11,19 @@ interface MLAnalysisViewProps {
         trend: string;
         confidence: number;
         current_price?: number;
+        models_used?: string;
+        reasoning?: string[];
+        daily_forecast?: number[];
+        arima_forecast?: { '7d': number | null; '30d': number | null; daily?: number[] | null } | null;
+        prophet_forecast?: { '7d': number | null; '30d': number | null; daily?: number[] | null } | null;
+        ets_forecast?: { '7d': number | null; '30d': number | null; daily?: number[] | null } | null;
+        rf_signal?: {
+            signal: 'buy' | 'hold';
+            buy_probability: number;
+            precision: number;
+            accuracy: number;
+            top_features: string[];
+        } | null;
     };
     technical?: {
         rsi: number | null;
@@ -23,6 +38,7 @@ interface MLAnalysisViewProps {
         support_levels: number[];
         resistance_levels: number[];
         volume_signal: string;
+        volume_ratio?: number;
     };
     sentiment?: {
         overall_score: number;
@@ -34,39 +50,296 @@ interface MLAnalysisViewProps {
     };
 }
 
+function calculateOverallSignal(prediction?: MLAnalysisViewProps['prediction'], technical?: MLAnalysisViewProps['technical'], sentiment?: MLAnalysisViewProps['sentiment']): { signal: 'BUY' | 'HOLD' | 'SELL'; score: number; reasons: string[] } {
+    let score = 0;
+    const reasons: string[] = [];
+    
+    // Prediction signals (weight: 40%)
+    if (prediction?.forecast_30d_change !== null && prediction?.forecast_30d_change !== undefined) {
+        if (prediction.forecast_30d_change > 5) { score += 2; reasons.push('Strong upward price prediction'); }
+        else if (prediction.forecast_30d_change > 2) { score += 1; reasons.push('Moderate upward price prediction'); }
+        else if (prediction.forecast_30d_change < -5) { score -= 2; reasons.push('Strong downward price prediction'); }
+        else if (prediction.forecast_30d_change < -2) { score -= 1; reasons.push('Moderate downward price prediction'); }
+    }
+    
+    // Technical signals (weight: 40%)
+    if (technical) {
+        if (technical.rsi_signal === 'oversold') { score += 1; reasons.push('Momentum indicator (RSI) shows oversold - potential buying opportunity'); }
+        else if (technical.rsi_signal === 'overbought') { score -= 1; reasons.push('Momentum indicator (RSI) shows overbought - price may decline'); }
+        
+        if (technical.macd_signal === 'bullish') { score += 1; reasons.push('Trend indicator (MACD) shows upward momentum'); }
+        else if (technical.macd_signal === 'bearish') { score -= 1; reasons.push('Trend indicator (MACD) shows downward momentum'); }
+        
+        if (technical.bollinger_position === 'lower') { score += 1; reasons.push('Price near support level - potential bounce up'); }
+        else if (technical.bollinger_position === 'upper') { score -= 1; reasons.push('Price near resistance level - potential pullback'); }
+    }
+    
+    // Sentiment signals (weight: 20%)
+    if (sentiment) {
+        if (sentiment.overall_score > 0.3) { score += 1; reasons.push('Positive news sentiment'); }
+        else if (sentiment.overall_score < -0.3) { score -= 1; reasons.push('Negative news sentiment'); }
+    }
+    
+    const signal: 'BUY' | 'HOLD' | 'SELL' = score >= 2 ? 'BUY' : score <= -2 ? 'SELL' : 'HOLD';
+    return { signal, score, reasons };
+}
+
 export default function MLAnalysisView({ prediction, technical, sentiment }: MLAnalysisViewProps) {
+    const { signal, score, reasons } = calculateOverallSignal(prediction, technical, sentiment);
+    
     return (
         <div className="space-y-6">
-            {/* Predictions Section */}
+            {/* Overall Signal Card */}
+            <div className={`rounded-xl shadow-sm p-6 ${
+                signal === 'BUY' ? 'bg-green-50 border-2 border-green-200' :
+                signal === 'SELL' ? 'bg-red-50 border-2 border-red-200' :
+                'bg-yellow-50 border-2 border-yellow-200'
+            }`}>
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">ML Analysis Signal</h3>
+                    <span className={`px-4 py-2 rounded-full text-lg font-bold ${
+                        signal === 'BUY' ? 'bg-green-500 text-white' :
+                        signal === 'SELL' ? 'bg-red-500 text-white' :
+                        'bg-yellow-500 text-white'
+                    }`}>
+                        {signal}
+                    </span>
+                </div>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <p className="text-sm text-gray-600 mb-2">Signal Strength: <span className="font-semibold">{Math.abs(score)}/6</span></p>
+                        <div className="space-y-1">
+                            {reasons.length > 0 ? reasons.map((reason, i) => (
+                                <p key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                                    <span className="text-green-500">•</span> {reason}
+                                </p>
+                            )) : (
+                                <p className="text-sm text-gray-500">No strong signals detected - indicators are mixed</p>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Profit Projection */}
+                    {prediction?.current_price && prediction?.forecast_30d_change !== null && (
+                        <div className="bg-white/50 rounded-lg p-4">
+                            <p className="text-sm text-gray-600 mb-2">Investment Projection (30 days)</p>
+                            <div className="space-y-2">
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">If you invest:</span>
+                                    <span className="font-semibold">$1,000</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-gray-600">Predicted value:</span>
+                                    <span className={`font-semibold ${prediction.forecast_30d_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        ${(1000 * (1 + prediction.forecast_30d_change / 100)).toFixed(2)}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between border-t pt-2">
+                                    <span className="text-gray-600">Projected {prediction.forecast_30d_change >= 0 ? 'profit' : 'loss'}:</span>
+                                    <span className={`font-bold ${prediction.forecast_30d_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        {prediction.forecast_30d_change >= 0 ? '+' : ''}{(1000 * prediction.forecast_30d_change / 100).toFixed(2)} ({prediction.forecast_30d_change >= 0 ? '+' : ''}{prediction.forecast_30d_change.toFixed(2)}%)
+                                    </span>
+                                </div>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-2">*Based on {prediction.models_used || 'combined'} prediction. Not financial advice.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Price Predictions */}
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <span>🔮</span> ML Predictions (Prophet/ARIMA)
+                    <span>📈</span> Price Forecast
+                    {prediction?.models_used && (
+                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                            {prediction.models_used}
+                        </span>
+                    )}
                 </h3>
                 
                 {prediction ? (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <PredictionCard
-                            label="7-Day Forecast"
-                            value={prediction.forecast_7d}
-                            change={prediction.forecast_7d_change}
-                        />
-                        <PredictionCard
-                            label="30-Day Forecast"
-                            value={prediction.forecast_30d}
-                            change={prediction.forecast_30d_change}
-                        />
+                    <div className="space-y-4">
+                        {/* Combined Forecast */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <ForecastCard
+                                label="7-Day Forecast (Combined)"
+                                currentPrice={prediction.current_price}
+                                forecastPrice={prediction.forecast_7d}
+                                change={prediction.forecast_7d_change}
+                            />
+                            <ForecastCard
+                                label="30-Day Forecast (Combined)"
+                                currentPrice={prediction.current_price}
+                                forecastPrice={prediction.forecast_30d}
+                                change={prediction.forecast_30d_change}
+                            />
+                        </div>
+                        
+                        {/* Forecast Chart */}
+                        {prediction.daily_forecast && prediction.daily_forecast.length > 0 && prediction.current_price && (
+                            <div className="border-t pt-4">
+                                <p className="text-sm font-medium text-gray-900 mb-3">30-Day Price Forecast</p>
+                                <ForecastChart
+                                    currentPrice={prediction.current_price}
+                                    dailyForecast={prediction.daily_forecast}
+                                    arimaDaily={prediction.arima_forecast?.daily}
+                                    prophetDaily={prediction.prophet_forecast?.daily}
+                                    etsDaily={prediction.ets_forecast?.daily}
+                                />
+                            </div>
+                        )}
+                        
+                        {/* Model Summary Cards */}
+                        {(prediction.arima_forecast || prediction.prophet_forecast || prediction.ets_forecast) && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {/* ARIMA */}
+                                <div className="bg-blue-50 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-blue-700 mb-2">ARIMA</p>
+                                    {prediction.arima_forecast ? (
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-gray-500">7-Day:</span>
+                                                <span className="font-medium">${prediction.arima_forecast['7d']?.toFixed(2) || 'N/A'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">30-Day:</span>
+                                                <span className="font-semibold">${prediction.arima_forecast['30d']?.toFixed(2) || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-gray-500">Failed</p>
+                                    )}
+                                </div>
+                                
+                                {/* Prophet */}
+                                <div className="bg-purple-50 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-purple-700 mb-2">Prophet</p>
+                                    {prediction.prophet_forecast ? (
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-gray-500">7-Day:</span>
+                                                <span className="font-medium">${prediction.prophet_forecast['7d']?.toFixed(2) || 'N/A'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">30-Day:</span>
+                                                <span className="font-semibold">${prediction.prophet_forecast['30d']?.toFixed(2) || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-gray-500">Failed</p>
+                                    )}
+                                </div>
+                                
+                                {/* ETS */}
+                                <div className="bg-green-50 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-green-700 mb-2">ETS (Holt-Winters)</p>
+                                    {prediction.ets_forecast ? (
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-xs">
+                                                <span className="text-gray-500">7-Day:</span>
+                                                <span className="font-medium">${prediction.ets_forecast['7d']?.toFixed(2) || 'N/A'}</span>
+                                            </div>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-gray-600">30-Day:</span>
+                                                <span className="font-semibold">${prediction.ets_forecast['30d']?.toFixed(2) || 'N/A'}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="text-xs text-gray-500">Failed</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        
+                        {/* Random Forest Signal Card */}
+                        {prediction.rf_signal && (
+                            <div className={`rounded-lg p-4 border-2 ${
+                                prediction.rf_signal.signal === 'buy' 
+                                    ? 'bg-green-50 border-green-300' 
+                                    : 'bg-yellow-50 border-yellow-300'
+                            }`}>
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-2xl">{prediction.rf_signal.signal === 'buy' ? '🌲' : '⏸️'}</span>
+                                        <div>
+                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Random Forest Signal</p>
+                                            <p className={`text-xl font-bold uppercase ${
+                                                prediction.rf_signal.signal === 'buy' ? 'text-green-700' : 'text-yellow-700'
+                                            }`}>
+                                                {prediction.rf_signal.signal === 'buy' ? 'BUY' : 'HOLD'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-gray-500">Buy Probability</p>
+                                        <p className="text-2xl font-bold text-gray-900">
+                                            {(prediction.rf_signal.buy_probability * 100).toFixed(0)}%
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3 text-sm">
+                                    <div className="bg-white/50 rounded p-2">
+                                        <p className="text-xs text-gray-500">Model Precision</p>
+                                        <p className="font-semibold">{(prediction.rf_signal.precision * 100).toFixed(1)}%</p>
+                                    </div>
+                                    <div className="bg-white/50 rounded p-2">
+                                        <p className="text-xs text-gray-500">Backtest Accuracy</p>
+                                        <p className="font-semibold">{(prediction.rf_signal.accuracy * 100).toFixed(1)}%</p>
+                                    </div>
+                                </div>
+                                {prediction.rf_signal.top_features && (
+                                    <p className="text-xs text-gray-500 mt-2">
+                                        Key factors: {prediction.rf_signal.top_features.join(', ')}
+                                    </p>
+                                )}
+                            </div>
+                        )}
+                        
                         <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-sm text-gray-500 mb-1">Trend</p>
-                            <p className={`text-lg font-semibold capitalize ${getTrendColor(prediction.trend)}`}>
-                                {prediction.trend}
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-500">Overall Trend</p>
+                                    <p className={`text-xl font-bold capitalize ${getTrendColor(prediction.trend)}`}>
+                                        {prediction.trend === 'strong_upward' ? '⬆ Strong Upward' :
+                                         prediction.trend === 'upward' ? '↗ Upward' : 
+                                         prediction.trend === 'strong_downward' ? '⬇ Strong Downward' :
+                                         prediction.trend === 'downward' ? '↘ Downward' : '→ Sideways'}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-500">Model Confidence</p>
+                                    <p className="text-xl font-bold text-gray-900">{(prediction.confidence * 100).toFixed(0)}%</p>
+                                </div>
+                            </div>
+                            <p className="text-sm text-gray-600 mt-2">
+                                {prediction.trend === 'strong_upward' 
+                                    ? 'Both models strongly predict the price will increase significantly over the next 30 days.'
+                                    : prediction.trend === 'upward' 
+                                    ? 'The models predict the price will increase over the next 30 days.'
+                                    : prediction.trend === 'strong_downward'
+                                    ? 'Both models strongly predict the price will decrease significantly over the next 30 days.'
+                                    : prediction.trend === 'downward'
+                                    ? 'The models predict the price will decrease over the next 30 days.'
+                                    : 'The models predict the price will remain relatively stable.'}
                             </p>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-4">
-                            <p className="text-sm text-gray-500 mb-1">Confidence</p>
-                            <p className="text-lg font-semibold text-gray-900">
-                                {(prediction.confidence * 100).toFixed(0)}%
-                            </p>
-                        </div>
+                        
+                        {/* ML Reasoning */}
+                        {prediction.reasoning && prediction.reasoning.length > 0 && (
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <p className="text-sm font-semibold text-blue-800 mb-2">🔍 Model Analysis Reasoning</p>
+                                <ul className="space-y-1">
+                                    {prediction.reasoning.map((reason, i) => (
+                                        <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
+                                            <span className="text-blue-400">•</span>
+                                            {reason}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                     </div>
                 ) : (
                     <p className="text-gray-500">Loading predictions...</p>
@@ -81,55 +354,90 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                 
                 {technical ? (
                     <div className="space-y-4">
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <IndicatorCard
-                                label="RSI"
-                                value={technical.rsi?.toFixed(1) || 'N/A'}
-                                signal={technical.rsi_signal}
-                            />
-                            <IndicatorCard
-                                label="MACD"
-                                value={technical.macd?.toFixed(4) || 'N/A'}
-                                signal={technical.macd_signal}
-                            />
-                            <IndicatorCard
-                                label="Bollinger"
-                                value={technical.bollinger_position}
-                                signal={technical.bollinger_position === 'upper' ? 'overbought' : technical.bollinger_position === 'lower' ? 'oversold' : 'neutral'}
-                            />
-                            <IndicatorCard
-                                label="Volume"
-                                value={technical.volume_signal}
-                                signal={technical.volume_signal === 'unusual_spike' ? 'alert' : technical.volume_signal}
-                            />
-                        </div>
+                        {/* RSI */}
+                        <TechnicalIndicatorRow
+                            name="RSI (Relative Strength Index)"
+                            value={technical.rsi !== null ? technical.rsi.toFixed(1) : 'N/A'}
+                            signal={technical.rsi_signal}
+                            explanation={
+                                technical.rsi_signal === 'overbought' 
+                                    ? `RSI at ${technical.rsi?.toFixed(0)} (above 70) suggests the stock may be overbought. Consider waiting for a pullback.`
+                                    : technical.rsi_signal === 'oversold'
+                                    ? `RSI at ${technical.rsi?.toFixed(0)} (below 30) suggests the stock may be oversold. Could be a buying opportunity.`
+                                    : `RSI at ${technical.rsi?.toFixed(0)} is in neutral territory (30-70). No extreme buying or selling pressure.`
+                            }
+                        />
                         
+                        {/* MACD */}
+                        <TechnicalIndicatorRow
+                            name="MACD (Trend Direction)"
+                            value={technical.macd !== null ? technical.macd.toFixed(4) : 'N/A'}
+                            signal={technical.macd_signal}
+                            explanation={
+                                technical.macd_signal === 'bullish'
+                                    ? 'MACD shows the price trend is moving upward. This is a buy signal suggesting momentum is positive.'
+                                    : technical.macd_signal === 'bearish'
+                                    ? 'MACD shows the price trend is moving downward. This is a sell signal suggesting momentum is negative.'
+                                    : 'MACD shows no clear trend direction. The market is indecisive.'
+                            }
+                        />
+                        
+                        {/* Bollinger Bands */}
+                        <TechnicalIndicatorRow
+                            name="Bollinger Bands"
+                            value={technical.bollinger_position}
+                            signal={technical.bollinger_position === 'upper' ? 'overbought' : technical.bollinger_position === 'lower' ? 'oversold' : 'neutral'}
+                            explanation={
+                                technical.bollinger_position === 'upper'
+                                    ? 'Price is near the upper band, suggesting potential overbought conditions. May see a pullback.'
+                                    : technical.bollinger_position === 'lower'
+                                    ? 'Price is near the lower band, suggesting potential oversold conditions. May see a bounce.'
+                                    : 'Price is within normal range between the bands.'
+                            }
+                        />
+                        
+                        {/* Volume */}
+                        <TechnicalIndicatorRow
+                            name="Trading Volume"
+                            value={technical.volume_ratio ? `${technical.volume_ratio.toFixed(1)}x avg` : technical.volume_signal}
+                            signal={technical.volume_signal === 'unusual_spike' ? 'alert' : technical.volume_signal === 'high' ? 'bullish' : 'neutral'}
+                            explanation={
+                                technical.volume_signal === 'unusual_spike'
+                                    ? 'Unusual volume spike detected! This could indicate significant news or institutional activity.'
+                                    : technical.volume_signal === 'high'
+                                    ? 'Higher than average trading volume suggests increased interest in the stock.'
+                                    : technical.volume_signal === 'low'
+                                    ? 'Lower than average volume may indicate reduced interest or consolidation.'
+                                    : 'Trading volume is at normal levels.'
+                            }
+                        />
+                        
+                        {/* Support/Resistance */}
                         {(technical.support_levels.length > 0 || technical.resistance_levels.length > 0) && (
-                            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-2">Support Levels</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {technical.support_levels.map((level, i) => (
-                                            <span key={i} className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm">
-                                                ${level.toFixed(2)}
-                                            </span>
-                                        ))}
-                                        {technical.support_levels.length === 0 && (
-                                            <span className="text-gray-400 text-sm">None detected</span>
-                                        )}
+                            <div className="pt-4 border-t">
+                                <p className="text-sm font-medium text-gray-900 mb-3">Key Price Levels</p>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-green-50 rounded-lg p-3">
+                                        <p className="text-xs text-green-700 font-medium mb-2">Support (Buy Zones)</p>
+                                        <p className="text-xs text-green-600 mb-2">Price tends to bounce up from these levels</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {technical.support_levels.length > 0 ? technical.support_levels.map((level, i) => (
+                                                <span key={i} className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm font-medium">
+                                                    ${level.toFixed(2)}
+                                                </span>
+                                            )) : <span className="text-gray-400 text-xs">None nearby</span>}
+                                        </div>
                                     </div>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium text-gray-700 mb-2">Resistance Levels</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {technical.resistance_levels.map((level, i) => (
-                                            <span key={i} className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm">
-                                                ${level.toFixed(2)}
-                                            </span>
-                                        ))}
-                                        {technical.resistance_levels.length === 0 && (
-                                            <span className="text-gray-400 text-sm">None detected</span>
-                                        )}
+                                    <div className="bg-red-50 rounded-lg p-3">
+                                        <p className="text-xs text-red-700 font-medium mb-2">Resistance (Sell Zones)</p>
+                                        <p className="text-xs text-red-600 mb-2">Price tends to face selling pressure here</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {technical.resistance_levels.length > 0 ? technical.resistance_levels.map((level, i) => (
+                                                <span key={i} className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm font-medium">
+                                                    ${level.toFixed(2)}
+                                                </span>
+                                            )) : <span className="text-gray-400 text-xs">None nearby</span>}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -143,43 +451,74 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
             {/* ML Sentiment */}
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <span>💬</span> Sentiment Analysis (VADER + TextBlob)
+                    <span>💬</span> News Sentiment Analysis
                 </h3>
                 
                 {sentiment ? (
                     <div className="space-y-4">
-                        <div className="flex items-center gap-6">
-                            <div>
-                                <p className="text-sm text-gray-500">Overall Score</p>
-                                <p className={`text-2xl font-bold ${getSentimentColor(sentiment.label)}`}>
-                                    {sentiment.overall_score.toFixed(2)}
-                                </p>
-                                <p className={`text-sm font-medium capitalize ${getSentimentColor(sentiment.label)}`}>
-                                    {sentiment.label}
-                                </p>
+                        {/* Sentiment Summary */}
+                        <div className={`rounded-lg p-4 ${
+                            sentiment.label === 'positive' ? 'bg-green-50' :
+                            sentiment.label === 'negative' ? 'bg-red-50' : 'bg-gray-50'
+                        }`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <div>
+                                    <p className="text-sm text-gray-600">Market Sentiment</p>
+                                    <p className={`text-2xl font-bold capitalize ${getSentimentColor(sentiment.label)}`}>
+                                        {sentiment.label === 'positive' ? '📈 Bullish' : 
+                                         sentiment.label === 'negative' ? '📉 Bearish' : '➡️ Neutral'}
+                                    </p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-600">Score</p>
+                                    <p className={`text-2xl font-bold ${getSentimentColor(sentiment.label)}`}>
+                                        {(sentiment.overall_score * 100).toFixed(0)}%
+                                    </p>
+                                </div>
                             </div>
-                            
-                            <div className="flex-1 space-y-2">
-                                <SentimentBar label="Positive" pct={sentiment.positive_pct} color="bg-green-500" />
-                                <SentimentBar label="Neutral" pct={sentiment.neutral_pct} color="bg-gray-400" />
-                                <SentimentBar label="Negative" pct={sentiment.negative_pct} color="bg-red-500" />
+                            <p className="text-sm text-gray-700">
+                                {sentiment.label === 'positive' 
+                                    ? `News sentiment is positive with ${sentiment.positive_pct.toFixed(0)}% of headlines showing bullish indicators. This suggests favorable market perception.`
+                                    : sentiment.label === 'negative'
+                                    ? `News sentiment is negative with ${sentiment.negative_pct.toFixed(0)}% of headlines showing bearish indicators. Exercise caution.`
+                                    : 'News sentiment is mixed with no strong directional bias. The market appears undecided.'}
+                            </p>
+                        </div>
+                        
+                        {/* Sentiment Breakdown */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="bg-green-50 rounded-lg p-3 text-center">
+                                <p className="text-2xl font-bold text-green-600">{sentiment.positive_pct.toFixed(0)}%</p>
+                                <p className="text-xs text-green-700">Positive</p>
+                            </div>
+                            <div className="bg-gray-100 rounded-lg p-3 text-center">
+                                <p className="text-2xl font-bold text-gray-600">{sentiment.neutral_pct.toFixed(0)}%</p>
+                                <p className="text-xs text-gray-700">Neutral</p>
+                            </div>
+                            <div className="bg-red-50 rounded-lg p-3 text-center">
+                                <p className="text-2xl font-bold text-red-600">{sentiment.negative_pct.toFixed(0)}%</p>
+                                <p className="text-xs text-red-700">Negative</p>
                             </div>
                         </div>
                         
+                        {/* Headlines */}
                         {sentiment.details.length > 0 && (
                             <div className="pt-4 border-t">
-                                <p className="text-sm font-medium text-gray-700 mb-2">Headlines</p>
-                                <div className="space-y-2 max-h-48 overflow-y-auto">
-                                    {sentiment.details.slice(0, 5).map((detail, i) => (
-                                        <div key={i} className="flex items-start gap-2 text-sm">
-                                            <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${
-                                                detail.label === 'positive' ? 'bg-green-100 text-green-700' :
-                                                detail.label === 'negative' ? 'bg-red-100 text-red-700' :
-                                                'bg-gray-100 text-gray-700'
+                                <p className="text-sm font-medium text-gray-900 mb-3">Analyzed Headlines</p>
+                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                    {sentiment.details.slice(0, 8).map((detail, i) => (
+                                        <div key={i} className={`flex items-start gap-3 p-2 rounded-lg ${
+                                            detail.label === 'positive' ? 'bg-green-50' :
+                                            detail.label === 'negative' ? 'bg-red-50' : 'bg-gray-50'
+                                        }`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                                detail.label === 'positive' ? 'bg-green-500 text-white' :
+                                                detail.label === 'negative' ? 'bg-red-500 text-white' :
+                                                'bg-gray-400 text-white'
                                             }`}>
-                                                {detail.score.toFixed(2)}
+                                                {detail.label === 'positive' ? '↑' : detail.label === 'negative' ? '↓' : '−'}
                                             </span>
-                                            <span className="text-gray-700">{detail.headline}</span>
+                                            <span className="text-sm text-gray-700 flex-1">{detail.headline}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -190,71 +529,97 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                     <p className="text-gray-500">Loading sentiment analysis...</p>
                 )}
             </div>
+            
+            {/* Disclaimer */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-sm text-yellow-800">
+                    <strong>Disclaimer:</strong> This ML analysis is for informational purposes only and should not be considered financial advice. 
+                    Always do your own research and consult with a qualified financial advisor before making investment decisions.
+                </p>
+            </div>
         </div>
     );
 }
 
-function PredictionCard({ label, value, change }: { label: string; value: number | null; change: number | null }) {
+function ForecastCard({ label, currentPrice, forecastPrice, change }: { 
+    label: string; 
+    currentPrice?: number;
+    forecastPrice: number | null; 
+    change: number | null;
+}) {
     const isPositive = change !== null && change >= 0;
     
     return (
-        <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm text-gray-500 mb-1">{label}</p>
-            {value !== null ? (
-                <>
-                    <p className="text-lg font-semibold text-gray-900">${value.toFixed(2)}</p>
+        <div className={`rounded-lg p-4 ${isPositive ? 'bg-green-50' : change !== null ? 'bg-red-50' : 'bg-gray-50'}`}>
+            <p className="text-sm text-gray-600 mb-2">{label}</p>
+            {forecastPrice !== null && currentPrice ? (
+                <div className="space-y-2">
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-sm text-gray-500">From</span>
+                        <span className="text-lg font-medium text-gray-700">${currentPrice.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-sm text-gray-500">To</span>
+                        <span className={`text-2xl font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                            ${forecastPrice.toFixed(2)}
+                        </span>
+                    </div>
                     {change !== null && (
-                        <p className={`text-sm ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                            {isPositive ? '+' : ''}{change.toFixed(2)}%
+                        <p className={`text-sm font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                            {isPositive ? '↑' : '↓'} {isPositive ? '+' : ''}{change.toFixed(2)}%
                         </p>
                     )}
-                </>
+                </div>
+            ) : forecastPrice !== null ? (
+                <p className="text-2xl font-bold text-gray-900">${forecastPrice.toFixed(2)}</p>
             ) : (
-                <p className="text-gray-400">N/A</p>
+                <p className="text-gray-400">Insufficient data</p>
             )}
         </div>
     );
 }
 
-function IndicatorCard({ label, value, signal }: { label: string; value: string; signal: string }) {
-    const signalColors: Record<string, string> = {
-        bullish: 'text-green-600',
-        bearish: 'text-red-600',
-        overbought: 'text-red-600',
-        oversold: 'text-green-600',
-        neutral: 'text-gray-600',
-        normal: 'text-gray-600',
-        high: 'text-yellow-600',
-        unusual_spike: 'text-red-600',
-        alert: 'text-red-600',
+function TechnicalIndicatorRow({ name, value, signal, explanation }: { 
+    name: string; 
+    value: string; 
+    signal: string;
+    explanation: string;
+}) {
+    const signalConfig: Record<string, { bg: string; text: string; label: string }> = {
+        bullish: { bg: 'bg-green-100', text: 'text-green-700', label: 'Bullish' },
+        bearish: { bg: 'bg-red-100', text: 'text-red-700', label: 'Bearish' },
+        overbought: { bg: 'bg-red-100', text: 'text-red-700', label: 'Overbought' },
+        oversold: { bg: 'bg-green-100', text: 'text-green-700', label: 'Oversold' },
+        neutral: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Neutral' },
+        normal: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Normal' },
+        high: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'High' },
+        low: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Low' },
+        alert: { bg: 'bg-red-100', text: 'text-red-700', label: 'Alert' },
     };
     
+    const config = signalConfig[signal.toLowerCase()] || signalConfig.neutral;
+    
     return (
-        <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm text-gray-500 mb-1">{label}</p>
-            <p className="text-lg font-semibold text-gray-900 capitalize">{value}</p>
-            <p className={`text-sm capitalize ${signalColors[signal.toLowerCase()] || 'text-gray-600'}`}>
-                {signal}
-            </p>
-        </div>
-    );
-}
-
-function SentimentBar({ label, pct, color }: { label: string; pct: number; color: string }) {
-    return (
-        <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 w-16">{label}</span>
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                <div className={`${color} h-2 rounded-full`} style={{ width: `${pct}%` }} />
+        <div className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+            <div className="flex items-center justify-between mb-1">
+                <span className="font-medium text-gray-900">{name}</span>
+                <div className="flex items-center gap-2">
+                    <span className="text-lg font-semibold text-gray-800 capitalize">{value}</span>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.text}`}>
+                        {config.label}
+                    </span>
+                </div>
             </div>
-            <span className="text-xs text-gray-700 w-10 text-right">{pct.toFixed(0)}%</span>
+            <p className="text-sm text-gray-600">{explanation}</p>
         </div>
     );
 }
 
 function getTrendColor(trend: string): string {
     switch (trend.toLowerCase()) {
+        case 'strong_upward': return 'text-green-700';
         case 'upward': return 'text-green-600';
+        case 'strong_downward': return 'text-red-700';
         case 'downward': return 'text-red-600';
         default: return 'text-gray-600';
     }

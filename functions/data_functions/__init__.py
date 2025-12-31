@@ -37,6 +37,10 @@ def main(msg: func.ServiceBusMessage):
         
         if task_type == "fetch_stock_data":
             result = fetch_stock_data(ticker)
+            price_count = len(result.get("price_history", []))
+            logger.info(f"Fetched {price_count} price records for {ticker}")
+            if result.get("error"):
+                logger.error(f"Alpha Vantage error for {ticker}: {result.get('error')}")
             
             messages_to_send.append({
                 "queue": "aggregate-queue",
@@ -131,6 +135,10 @@ def fetch_stock_data(ticker: str) -> dict:
     from shared.alpha_vantage import fetch_stock_data as av_fetch_stock, fetch_earnings
     
     stock_data = av_fetch_stock(ticker)
+    logger.info(f"Stock data for {ticker}: price_history has {len(stock_data.get('price_history', []))} items")
+    if stock_data.get("error"):
+        logger.error(f"Stock data error: {stock_data.get('error')}")
+    
     earnings = fetch_earnings(ticker)
     stock_data["earnings"] = earnings
     return stock_data

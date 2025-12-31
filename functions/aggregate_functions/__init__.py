@@ -122,6 +122,8 @@ def check_completion(r: redis.Redis, task_id: str, results: Dict):
     
     if all_complete:
         logger.info(f"Analysis complete for {ticker}")
+        logger.info(f"Stock data has {len(results.get('stock_data', {}).get('price_history', []))} price records")
+        logger.info(f"ML prediction: {results.get('ml_prediction', {}).get('trend', 'N/A')}")
         send_completed_with_data(task_id, ticker, results)
         r.delete(f"task:{task_id}")
     else:
