@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, use } from 'react';
 import Link from 'next/link';
 import {
     requestAnalysis,
-    getAnalysisStatus,
-    getAnalysisReport,
     AnalysisReport,
     AnalysisTaskStatus,
     SentimentResult,
@@ -13,67 +11,79 @@ import {
 import PriceChart from '@/components/PriceChart';
 
 interface AnalyzePageProps {
-    params: { ticker: string };
+    params: Promise<{ ticker: string }>;
 }
 
 type PageState = 'loading' | 'analyzing' | 'complete' | 'error';
 
 export default function AnalyzePage({ params }: AnalyzePageProps) {
-    const ticker = params.ticker.toUpperCase();
+    const { ticker: rawTicker } = use(params);
+    const ticker = rawTicker.toUpperCase();
     const [pageState, setPageState] = useState<PageState>('loading');
     const [taskStatus, setTaskStatus] = useState<AnalysisTaskStatus | null>(null);
     const [report, setReport] = useState<AnalysisReport | null>(null);
     const [error, setError] = useState<string | null>(null);
 
-    // Poll for analysis status
-    const pollStatus = useCallback(async (taskId: string) => {
-        try {
-            const status = await getAnalysisStatus(taskId);
-            setTaskStatus(status);
-
-            if (status.status === 'completed') {
-                // Fetch the report
-                const reportData = await getAnalysisReport(ticker);
-                setReport(reportData);
+    // Connect to SSE for real-time updates
+    const connectSSE = useCallback((taskId: string) => {
+        const eventSource = new EventSource(`http://localhost:8000/api/v1/events/${taskId}`);
+        
+        eventSource.addEventListener('connected', () => {
+            console.log('SSE connected for task:', taskId);
+        });
+        
+        eventSource.addEventListener('progress', (event) => {
+            const data = JSON.parse(event.data);
+            setTaskStatus({
+                task_id: data.task_id,
+                ticker: data.ticker,
+                status: data.status,
+                progress: data.progress,
+                current_step: data.current_step,
+            });
+            
+            if (data.status === 'completed' && data.data) {
+                // Got analysis results directly from SSE
+                const analysisData = data.data;
+                setReport({
+                    id: taskId,
+                    ticker: data.ticker,
+                    company_name: analysisData.stock_data?.company_info?.name || data.ticker,
+                    analyzed_at: new Date().toISOString(),
+                    price_data: analysisData.stock_data?.price_history || [],
+                    news_summary: analysisData.summary || '',
+                    sentiment_score: analysisData.sentiment?.overall_score || 0,
+                    sentiment_breakdown: analysisData.sentiment?.breakdown || { positive: 0, negative: 0, neutral: 0 },
+                    sentiment_details: analysisData.sentiment?.details || [],
+                    ai_insights: analysisData.insights || '',
+                });
                 setPageState('complete');
-            } else if (status.status === 'failed') {
-                setError(status.error_message || 'Analysis failed');
+                eventSource.close();
+            } else if (data.status === 'failed') {
+                setError(data.error || 'Analysis failed');
                 setPageState('error');
-            } else {
-                // Continue polling
-                setTimeout(() => pollStatus(taskId), 2000);
+                eventSource.close();
             }
-        } catch (err) {
-            console.error('Error polling status:', err);
-            setError('Failed to get analysis status');
-            setPageState('error');
-        }
-    }, [ticker]);
+        });
+        
+        eventSource.addEventListener('error', () => {
+            console.error('SSE connection error');
+            eventSource.close();
+        });
+        
+        return eventSource;
+    }, []);
 
     // Start analysis on mount
     useEffect(() => {
+        let eventSource: EventSource | null = null;
+        
         const startAnalysis = async () => {
             try {
-                // First, try to get existing report
-                try {
-                    const existingReport = await getAnalysisReport(ticker);
-                    // Check if report is recent (within last hour)
-                    const reportAge = Date.now() - new Date(existingReport.analyzed_at).getTime();
-                    const oneHour = 60 * 60 * 1000;
-
-                    if (reportAge < oneHour) {
-                        setReport(existingReport);
-                        setPageState('complete');
-                        return;
-                    }
-                } catch {
-                    // No existing report, continue with new analysis
-                }
-
-                // Request new analysis
+                // Always request fresh analysis (no caching)
                 setPageState('analyzing');
                 const response = await requestAnalysis(ticker);
-                pollStatus(response.task_id);
+                eventSource = connectSSE(response.task_id);
             } catch (err: any) {
                 console.error('Error starting analysis:', err);
                 setError(err.message || 'Failed to start analysis');
@@ -82,7 +92,13 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
         };
 
         startAnalysis();
-    }, [ticker, pollStatus]);
+        
+        return () => {
+            if (eventSource) {
+                eventSource.close();
+            }
+        };
+    }, [ticker, connectSSE]);
 
     // Loading state
     if (pageState === 'loading') {

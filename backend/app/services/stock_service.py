@@ -1,4 +1,4 @@
-"""Stock data service using yfinance."""
+"""Stock data service using yfinance with caching and circuit breaker."""
 import logging
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -6,8 +6,14 @@ from datetime import datetime, timedelta
 import yfinance as yf
 
 from app.models.schemas import StockSearchResult, PriceDataPoint
+from app.utils.cache import cached, CacheService
+from app.utils.circuit_breaker import get_circuit, CircuitOpenError as CBOpenError
 
 logger = logging.getLogger(__name__)
+
+# Circuit breaker for yfinance API
+yfinance_circuit = get_circuit("yfinance", failure_threshold=5, recovery_timeout=60)
+
 
 
 # Common stock exchanges for reference
@@ -130,9 +136,12 @@ def autocomplete(query: str, limit: int = 10) -> List[StockSearchResult]:
     return results[:limit]
 
 
+@cached("stock_data", ttl=CacheService.TTL_MEDIUM)  # Cache for 5 minutes
 def fetch_stock_data(ticker: str, period: str = "1y") -> dict:
     """
     Fetch stock price history and company information from yfinance.
+    
+    Results are cached for 5 minutes to reduce API calls.
     
     Args:
         ticker: Stock ticker symbol (e.g., 'AAPL')

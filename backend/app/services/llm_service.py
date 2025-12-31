@@ -15,18 +15,18 @@ logger = logging.getLogger(__name__)
 
 
 class LLMService:
-    """Service for LLM operations using OhMyGPT API (OpenAI-compatible)."""
+    """Service for LLM operations using OpenAI-compatible API."""
     
     def __init__(self):
-        """Initialize the LLM service with OhMyGPT configuration."""
+        """Initialize the LLM service."""
         settings = get_settings()
         
         self._llm = ChatOpenAI(
-            api_key=settings.ohmygpt_api_key,
-            base_url=settings.ohmygpt_api_base,
+            api_key=settings.openai_api_key,
+            base_url=settings.openai_base_url,
             model=settings.llm_model,
             temperature=0.7,
-            max_tokens=2048,
+            max_tokens=4000,
         )
         self._parser = StrOutputParser()
         self._model_name = settings.llm_model
@@ -72,8 +72,9 @@ class LLMService:
             result = self._parser.invoke(response)
             
             # Track LLM call with MLflow
-            input_tokens = response.usage_metadata.get("input_tokens", 0) if response.usage_metadata else 0
-            output_tokens = response.usage_metadata.get("output_tokens", 0) if response.usage_metadata else 0
+            usage = getattr(response, 'usage_metadata', None) or {}
+            input_tokens = usage.get("input_tokens", 0) if isinstance(usage, dict) else 0
+            output_tokens = usage.get("output_tokens", 0) if isinstance(usage, dict) else 0
             
             self._tracker.log_llm_call(
                 operation="chat",
@@ -139,8 +140,8 @@ Respond ONLY with valid JSON, no additional text.""")
             response_text = self._parser.invoke(response)
             
             # Track LLM call with MLflow
-            input_tokens = response.usage_metadata.get("input_tokens", 0) if response.usage_metadata else 0
-            output_tokens = response.usage_metadata.get("output_tokens", 0) if response.usage_metadata else 0
+            usage = getattr(response, "usage_metadata", None) or {}; input_tokens = usage.get("input_tokens", 0) if isinstance(usage, dict) else 0
+            output_tokens = usage.get("output_tokens", 0) if isinstance(usage, dict) else 0
             
             self._tracker.log_llm_call(
                 operation="sentiment_analysis",
@@ -152,7 +153,13 @@ Respond ONLY with valid JSON, no additional text.""")
                 metadata={"headline_count": len(headlines)}
             )
             
-            # Parse JSON response
+            # Parse JSON response - handle markdown code blocks
+            response_text = response_text.strip()
+            if response_text.startswith("```"):
+                # Remove markdown code block
+                lines = response_text.split("\n")
+                response_text = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+            
             parsed = json.loads(response_text)
             return parsed.get("results", [])
             
@@ -225,8 +232,8 @@ Focus on the most important and recent information.""")
             result = self._parser.invoke(response)
             
             # Track LLM call with MLflow
-            input_tokens = response.usage_metadata.get("input_tokens", 0) if response.usage_metadata else 0
-            output_tokens = response.usage_metadata.get("output_tokens", 0) if response.usage_metadata else 0
+            usage = getattr(response, "usage_metadata", None) or {}; input_tokens = usage.get("input_tokens", 0) if isinstance(usage, dict) else 0
+            output_tokens = usage.get("output_tokens", 0) if isinstance(usage, dict) else 0
             
             self._tracker.log_llm_call(
                 operation="news_summarization",
@@ -304,8 +311,8 @@ End with a reminder that this is AI-generated analysis and not financial advice.
             result = self._parser.invoke(response)
             
             # Track LLM call with MLflow
-            input_tokens = response.usage_metadata.get("input_tokens", 0) if response.usage_metadata else 0
-            output_tokens = response.usage_metadata.get("output_tokens", 0) if response.usage_metadata else 0
+            usage = getattr(response, "usage_metadata", None) or {}; input_tokens = usage.get("input_tokens", 0) if isinstance(usage, dict) else 0
+            output_tokens = usage.get("output_tokens", 0) if isinstance(usage, dict) else 0
             
             self._tracker.log_llm_call(
                 operation="insights_generation",

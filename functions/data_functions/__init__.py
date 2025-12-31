@@ -20,6 +20,8 @@ def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
     Triggered by: data-queue
     Outputs to: llm-queue (for sentiment/summary) and embed-queue (for embeddings)
     """
+    from shared.webpubsub_utils import send_progress
+    
     try:
         # Parse message
         message_body = msg.get_body().decode('utf-8')
@@ -30,6 +32,7 @@ def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
         ticker = message.get("ticker")
         
         logger.info(f"Processing {task_type} for {ticker}, task_id: {task_id}")
+        send_progress(task_id, 10, f"Fetching {task_type.replace('fetch_', '')}")
         
         if task_type == "fetch_stock_data":
             result = fetch_stock_data(ticker)

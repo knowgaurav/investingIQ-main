@@ -23,13 +23,17 @@ def get_llm():
     )
 
 
-def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
+def main(msg: func.ServiceBusMessage):
     """
-    Process LLM queue messages - sentiment analysis, summarization, insights.
+    Process LLM queue messages - sentiment+summary analysis, then insights.
     
     Triggered by: llm-queue
-    Outputs to: aggregate-queue
+    Outputs to: aggregate-queue (via Service Bus client for multiple messages)
     """
+    from shared.webpubsub_utils import send_progress
+    from azure.servicebus import ServiceBusClient, ServiceBusMessage
+    from shared.config import get_settings
+    
     try:
         message_body = msg.get_body().decode('utf-8')
         message = json.loads(message_body)
@@ -40,39 +44,47 @@ def main(msg: func.ServiceBusMessage, outputSbMsg: func.Out[str]):
         data = message.get("data", {})
         
         logger.info(f"Processing {task_type} for {ticker}, task_id: {task_id}")
+        send_progress(task_id, 50, f"Running {task_type.replace('_', ' ')}")
         
         llm = get_llm()
+        settings = get_settings()
+        
+        messages_to_send = []
         
         if task_type == "analyze_sentiment":
-            result = analyze_sentiment(llm, data.get("headlines", []))
-            result_type = "sentiment"
+            # Do BOTH sentiment and summary in Phase 1
+            sentiment_result = analyze_sentiment(llm, data.get("headlines", []))
+            summary_result = generate_summary(llm, ticker, data.get("headlines", []))
             
-        elif task_type == "generate_summary":
-            result = generate_summary(llm, ticker, data.get("articles", []))
-            result_type = "summary"
+            messages_to_send = [
+                {"task_type": "sentiment_ready", "task_id": task_id, "ticker": ticker, 
+                 "data": sentiment_result, "timestamp": datetime.utcnow().isoformat()},
+                {"task_type": "summary_ready", "task_id": task_id, "ticker": ticker,
+                 "data": summary_result, "timestamp": datetime.utcnow().isoformat()},
+            ]
             
         elif task_type == "generate_insights":
             result = generate_insights(
-                llm,
-                ticker,
+                llm, ticker,
                 data.get("stock_data", {}),
                 data.get("sentiment", {}),
                 data.get("summary", "")
             )
-            result_type = "insights"
+            messages_to_send = [
+                {"task_type": "insights_ready", "task_id": task_id, "ticker": ticker,
+                 "data": result, "timestamp": datetime.utcnow().isoformat()},
+            ]
         else:
             logger.error(f"Unknown task type: {task_type}")
             return
         
-        output_message = {
-            "task_type": f"{result_type}_ready",
-            "task_id": task_id,
-            "ticker": ticker,
-            "data": result,
-            "timestamp": datetime.utcnow().isoformat(),
-        }
+        # Send messages to aggregate-queue
+        with ServiceBusClient.from_connection_string(settings.servicebus_connection) as client:
+            with client.get_queue_sender("aggregate-queue") as sender:
+                for msg_data in messages_to_send:
+                    sender.send_messages(ServiceBusMessage(json.dumps(msg_data)))
+                    logger.info(f"Sent {msg_data['task_type']} to aggregate-queue")
         
-        outputSbMsg.set(json.dumps(output_message))
         logger.info(f"Completed {task_type} for {ticker}")
         
     except Exception as e:
