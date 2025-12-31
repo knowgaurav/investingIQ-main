@@ -96,7 +96,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                 'bg-yellow-50 border-2 border-yellow-200'
             }`}>
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">ML Analysis Signal</h3>
+                    <h3 className="text-lg font-semibold text-theme">ML Analysis Signal</h3>
                     <span className={`px-4 py-2 rounded-full text-lg font-bold ${
                         signal === 'BUY' ? 'bg-green-500 text-white' :
                         signal === 'SELL' ? 'bg-red-500 text-white' :
@@ -108,49 +108,49 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                 
                 <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                        <p className="text-sm text-gray-600 mb-2">Signal Strength: <span className="font-semibold">{Math.abs(score)}/6</span></p>
+                        <p className="text-sm text-theme-secondary mb-2">Signal Strength: <span className="font-semibold">{Math.abs(score)}/6</span></p>
                         <div className="space-y-1">
                             {reasons.length > 0 ? reasons.map((reason, i) => (
-                                <p key={i} className="text-sm text-gray-700 flex items-start gap-2">
+                                <p key={i} className="text-sm text-theme-secondary flex items-start gap-2">
                                     <span className="text-green-500">•</span> {reason}
                                 </p>
                             )) : (
-                                <p className="text-sm text-gray-500">No strong signals detected - indicators are mixed</p>
+                                <p className="text-sm text-theme-muted">No strong signals detected - indicators are mixed</p>
                             )}
                         </div>
                     </div>
                     
                     {/* Profit Projection */}
                     {prediction?.current_price && prediction?.forecast_30d_change !== null && (
-                        <div className="bg-white/50 rounded-lg p-4">
-                            <p className="text-sm text-gray-600 mb-2">Investment Projection (30 days)</p>
+                        <div className="bg-theme-card/50 rounded-lg p-4">
+                            <p className="text-sm text-theme-secondary mb-2">Investment Projection (30 days)</p>
                             <div className="space-y-2">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">If you invest:</span>
+                                    <span className="text-theme-secondary">If you invest:</span>
                                     <span className="font-semibold">$1,000</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">Predicted value:</span>
-                                    <span className={`font-semibold ${prediction.forecast_30d_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    <span className="text-theme-secondary">Predicted value:</span>
+                                    <span className={`font-semibold ${prediction.forecast_30d_change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                         ${(1000 * (1 + prediction.forecast_30d_change / 100)).toFixed(2)}
                                     </span>
                                 </div>
                                 <div className="flex justify-between border-t pt-2">
-                                    <span className="text-gray-600">Projected {prediction.forecast_30d_change >= 0 ? 'profit' : 'loss'}:</span>
-                                    <span className={`font-bold ${prediction.forecast_30d_change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    <span className="text-theme-secondary">Projected {prediction.forecast_30d_change >= 0 ? 'profit' : 'loss'}:</span>
+                                    <span className={`font-bold ${prediction.forecast_30d_change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                                         {prediction.forecast_30d_change >= 0 ? '+' : ''}{(1000 * prediction.forecast_30d_change / 100).toFixed(2)} ({prediction.forecast_30d_change >= 0 ? '+' : ''}{prediction.forecast_30d_change.toFixed(2)}%)
                                     </span>
                                 </div>
                             </div>
-                            <p className="text-xs text-gray-400 mt-2">*Based on {prediction.models_used || 'combined'} prediction. Not financial advice.</p>
+                            <p className="text-xs text-theme-muted mt-2">*Based on {prediction.models_used || 'combined'} prediction. Not financial advice.</p>
                         </div>
                     )}
                 </div>
             </div>
 
             {/* Price Predictions */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📈</span> Price Forecast
                     {prediction?.models_used && (
                         <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
@@ -180,7 +180,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         {/* Forecast Chart */}
                         {prediction.daily_forecast && prediction.daily_forecast.length > 0 && prediction.current_price && (
                             <div className="border-t pt-4">
-                                <p className="text-sm font-medium text-gray-900 mb-3">30-Day Price Forecast</p>
+                                <p className="text-sm font-medium text-theme mb-3">30-Day Price Forecast</p>
                                 <ForecastChart
                                     currentPrice={prediction.current_price}
                                     dailyForecast={prediction.daily_forecast}
@@ -200,16 +200,16 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                     {prediction.arima_forecast ? (
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-gray-500">7-Day:</span>
+                                                <span className="text-theme-muted">7-Day:</span>
                                                 <span className="font-medium">${prediction.arima_forecast['7d']?.toFixed(2) || 'N/A'}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
-                                                <span className="text-gray-600">30-Day:</span>
+                                                <span className="text-theme-secondary">30-Day:</span>
                                                 <span className="font-semibold">${prediction.arima_forecast['30d']?.toFixed(2) || 'N/A'}</span>
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-500">Failed</p>
+                                        <p className="text-xs text-theme-muted">Failed</p>
                                     )}
                                 </div>
                                 
@@ -219,35 +219,35 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                     {prediction.prophet_forecast ? (
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-gray-500">7-Day:</span>
+                                                <span className="text-theme-muted">7-Day:</span>
                                                 <span className="font-medium">${prediction.prophet_forecast['7d']?.toFixed(2) || 'N/A'}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
-                                                <span className="text-gray-600">30-Day:</span>
+                                                <span className="text-theme-secondary">30-Day:</span>
                                                 <span className="font-semibold">${prediction.prophet_forecast['30d']?.toFixed(2) || 'N/A'}</span>
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-500">Failed</p>
+                                        <p className="text-xs text-theme-muted">Failed</p>
                                     )}
                                 </div>
                                 
                                 {/* ETS */}
                                 <div className="bg-green-50 rounded-lg p-3">
-                                    <p className="text-xs font-semibold text-green-700 mb-2">ETS (Holt-Winters)</p>
+                                    <p className="text-xs font-semibold text-green-500 mb-2">ETS (Holt-Winters)</p>
                                     {prediction.ets_forecast ? (
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs">
-                                                <span className="text-gray-500">7-Day:</span>
+                                                <span className="text-theme-muted">7-Day:</span>
                                                 <span className="font-medium">${prediction.ets_forecast['7d']?.toFixed(2) || 'N/A'}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
-                                                <span className="text-gray-600">30-Day:</span>
+                                                <span className="text-theme-secondary">30-Day:</span>
                                                 <span className="font-semibold">${prediction.ets_forecast['30d']?.toFixed(2) || 'N/A'}</span>
                                             </div>
                                         </div>
                                     ) : (
-                                        <p className="text-xs text-gray-500">Failed</p>
+                                        <p className="text-xs text-theme-muted">Failed</p>
                                     )}
                                 </div>
                             </div>
@@ -264,43 +264,43 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                     <div className="flex items-center gap-2">
                                         <span className="text-2xl">{prediction.rf_signal.signal === 'buy' ? '🌲' : '⏸️'}</span>
                                         <div>
-                                            <p className="text-xs text-gray-500 uppercase tracking-wide">Random Forest Signal</p>
+                                            <p className="text-xs text-theme-muted uppercase tracking-wide">Random Forest Signal</p>
                                             <p className={`text-xl font-bold uppercase ${
-                                                prediction.rf_signal.signal === 'buy' ? 'text-green-700' : 'text-yellow-700'
+                                                prediction.rf_signal.signal === 'buy' ? 'text-green-500' : 'text-yellow-700'
                                             }`}>
                                                 {prediction.rf_signal.signal === 'buy' ? 'BUY' : 'HOLD'}
                                             </p>
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-xs text-gray-500">Buy Probability</p>
-                                        <p className="text-2xl font-bold text-gray-900">
+                                        <p className="text-xs text-theme-muted">Buy Probability</p>
+                                        <p className="text-2xl font-bold text-theme">
                                             {(prediction.rf_signal.buy_probability * 100).toFixed(0)}%
                                         </p>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3 text-sm">
-                                    <div className="bg-white/50 rounded p-2">
-                                        <p className="text-xs text-gray-500">Model Precision</p>
+                                    <div className="bg-theme-card/50 rounded p-2">
+                                        <p className="text-xs text-theme-muted">Model Precision</p>
                                         <p className="font-semibold">{(prediction.rf_signal.precision * 100).toFixed(1)}%</p>
                                     </div>
-                                    <div className="bg-white/50 rounded p-2">
-                                        <p className="text-xs text-gray-500">Backtest Accuracy</p>
+                                    <div className="bg-theme-card/50 rounded p-2">
+                                        <p className="text-xs text-theme-muted">Backtest Accuracy</p>
                                         <p className="font-semibold">{(prediction.rf_signal.accuracy * 100).toFixed(1)}%</p>
                                     </div>
                                 </div>
                                 {prediction.rf_signal.top_features && (
-                                    <p className="text-xs text-gray-500 mt-2">
+                                    <p className="text-xs text-theme-muted mt-2">
                                         Key factors: {prediction.rf_signal.top_features.join(', ')}
                                     </p>
                                 )}
                             </div>
                         )}
                         
-                        <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="bg-theme-secondary rounded-lg p-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-500">Overall Trend</p>
+                                    <p className="text-sm text-theme-muted">Overall Trend</p>
                                     <p className={`text-xl font-bold capitalize ${getTrendColor(prediction.trend)}`}>
                                         {prediction.trend === 'strong_upward' ? '⬆ Strong Upward' :
                                          prediction.trend === 'upward' ? '↗ Upward' : 
@@ -309,11 +309,11 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm text-gray-500">Model Confidence</p>
-                                    <p className="text-xl font-bold text-gray-900">{(prediction.confidence * 100).toFixed(0)}%</p>
+                                    <p className="text-sm text-theme-muted">Model Confidence</p>
+                                    <p className="text-xl font-bold text-theme">{(prediction.confidence * 100).toFixed(0)}%</p>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-600 mt-2">
+                            <p className="text-sm text-theme-secondary mt-2">
                                 {prediction.trend === 'strong_upward' 
                                     ? 'Both models strongly predict the price will increase significantly over the next 30 days.'
                                     : prediction.trend === 'upward' 
@@ -342,13 +342,13 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         )}
                     </div>
                 ) : (
-                    <p className="text-gray-500">Loading predictions...</p>
+                    <p className="text-theme-muted">Loading predictions...</p>
                 )}
             </div>
 
             {/* Technical Indicators */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📊</span> Technical Indicators
                 </h3>
                 
@@ -415,28 +415,28 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         {/* Support/Resistance */}
                         {(technical.support_levels.length > 0 || technical.resistance_levels.length > 0) && (
                             <div className="pt-4 border-t">
-                                <p className="text-sm font-medium text-gray-900 mb-3">Key Price Levels</p>
+                                <p className="text-sm font-medium text-theme mb-3">Key Price Levels</p>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="bg-green-50 rounded-lg p-3">
-                                        <p className="text-xs text-green-700 font-medium mb-2">Support (Buy Zones)</p>
-                                        <p className="text-xs text-green-600 mb-2">Price tends to bounce up from these levels</p>
+                                        <p className="text-xs text-green-500 font-medium mb-2">Support (Buy Zones)</p>
+                                        <p className="text-xs text-green-500 mb-2">Price tends to bounce up from these levels</p>
                                         <div className="flex flex-wrap gap-2">
                                             {technical.support_levels.length > 0 ? technical.support_levels.map((level, i) => (
-                                                <span key={i} className="px-2 py-1 bg-green-100 text-green-700 rounded text-sm font-medium">
+                                                <span key={i} className="px-2 py-1 bg-green-500/20 text-green-500 rounded text-sm font-medium">
                                                     ${level.toFixed(2)}
                                                 </span>
-                                            )) : <span className="text-gray-400 text-xs">None nearby</span>}
+                                            )) : <span className="text-theme-muted text-xs">None nearby</span>}
                                         </div>
                                     </div>
                                     <div className="bg-red-50 rounded-lg p-3">
-                                        <p className="text-xs text-red-700 font-medium mb-2">Resistance (Sell Zones)</p>
-                                        <p className="text-xs text-red-600 mb-2">Price tends to face selling pressure here</p>
+                                        <p className="text-xs text-red-500 font-medium mb-2">Resistance (Sell Zones)</p>
+                                        <p className="text-xs text-red-500 mb-2">Price tends to face selling pressure here</p>
                                         <div className="flex flex-wrap gap-2">
                                             {technical.resistance_levels.length > 0 ? technical.resistance_levels.map((level, i) => (
-                                                <span key={i} className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm font-medium">
+                                                <span key={i} className="px-2 py-1 bg-red-500/20 text-red-500 rounded text-sm font-medium">
                                                     ${level.toFixed(2)}
                                                 </span>
-                                            )) : <span className="text-gray-400 text-xs">None nearby</span>}
+                                            )) : <span className="text-theme-muted text-xs">None nearby</span>}
                                         </div>
                                     </div>
                                 </div>
@@ -444,13 +444,13 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         )}
                     </div>
                 ) : (
-                    <p className="text-gray-500">Loading technical analysis...</p>
+                    <p className="text-theme-muted">Loading technical analysis...</p>
                 )}
             </div>
 
             {/* ML Sentiment */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>💬</span> News Sentiment Analysis
                 </h3>
                 
@@ -459,24 +459,24 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         {/* Sentiment Summary */}
                         <div className={`rounded-lg p-4 ${
                             sentiment.label === 'positive' ? 'bg-green-50' :
-                            sentiment.label === 'negative' ? 'bg-red-50' : 'bg-gray-50'
+                            sentiment.label === 'negative' ? 'bg-red-50' : 'bg-theme-secondary'
                         }`}>
                             <div className="flex items-center justify-between mb-3">
                                 <div>
-                                    <p className="text-sm text-gray-600">Market Sentiment</p>
+                                    <p className="text-sm text-theme-secondary">Market Sentiment</p>
                                     <p className={`text-2xl font-bold capitalize ${getSentimentColor(sentiment.label)}`}>
                                         {sentiment.label === 'positive' ? '📈 Bullish' : 
                                          sentiment.label === 'negative' ? '📉 Bearish' : '➡️ Neutral'}
                                     </p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="text-sm text-gray-600">Score</p>
+                                    <p className="text-sm text-theme-secondary">Score</p>
                                     <p className={`text-2xl font-bold ${getSentimentColor(sentiment.label)}`}>
                                         {(sentiment.overall_score * 100).toFixed(0)}%
                                     </p>
                                 </div>
                             </div>
-                            <p className="text-sm text-gray-700">
+                            <p className="text-sm text-theme-secondary">
                                 {sentiment.label === 'positive' 
                                     ? `News sentiment is positive with ${sentiment.positive_pct.toFixed(0)}% of headlines showing bullish indicators. This suggests favorable market perception.`
                                     : sentiment.label === 'negative'
@@ -488,28 +488,28 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         {/* Sentiment Breakdown */}
                         <div className="grid grid-cols-3 gap-3">
                             <div className="bg-green-50 rounded-lg p-3 text-center">
-                                <p className="text-2xl font-bold text-green-600">{sentiment.positive_pct.toFixed(0)}%</p>
-                                <p className="text-xs text-green-700">Positive</p>
+                                <p className="text-2xl font-bold text-green-500">{sentiment.positive_pct.toFixed(0)}%</p>
+                                <p className="text-xs text-green-500">Positive</p>
                             </div>
-                            <div className="bg-gray-100 rounded-lg p-3 text-center">
-                                <p className="text-2xl font-bold text-gray-600">{sentiment.neutral_pct.toFixed(0)}%</p>
-                                <p className="text-xs text-gray-700">Neutral</p>
+                            <div className="bg-theme-secondary rounded-lg p-3 text-center">
+                                <p className="text-2xl font-bold text-theme-secondary">{sentiment.neutral_pct.toFixed(0)}%</p>
+                                <p className="text-xs text-theme-secondary">Neutral</p>
                             </div>
                             <div className="bg-red-50 rounded-lg p-3 text-center">
-                                <p className="text-2xl font-bold text-red-600">{sentiment.negative_pct.toFixed(0)}%</p>
-                                <p className="text-xs text-red-700">Negative</p>
+                                <p className="text-2xl font-bold text-red-500">{sentiment.negative_pct.toFixed(0)}%</p>
+                                <p className="text-xs text-red-500">Negative</p>
                             </div>
                         </div>
                         
                         {/* Headlines */}
                         {sentiment.details.length > 0 && (
                             <div className="pt-4 border-t">
-                                <p className="text-sm font-medium text-gray-900 mb-3">Analyzed Headlines</p>
+                                <p className="text-sm font-medium text-theme mb-3">Analyzed Headlines</p>
                                 <div className="space-y-2 max-h-60 overflow-y-auto">
                                     {sentiment.details.slice(0, 8).map((detail, i) => (
                                         <div key={i} className={`flex items-start gap-3 p-2 rounded-lg ${
                                             detail.label === 'positive' ? 'bg-green-50' :
-                                            detail.label === 'negative' ? 'bg-red-50' : 'bg-gray-50'
+                                            detail.label === 'negative' ? 'bg-red-50' : 'bg-theme-secondary'
                                         }`}>
                                             <span className={`px-2 py-1 rounded text-xs font-bold ${
                                                 detail.label === 'positive' ? 'bg-green-500 text-white' :
@@ -518,7 +518,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                             }`}>
                                                 {detail.label === 'positive' ? '↑' : detail.label === 'negative' ? '↓' : '−'}
                                             </span>
-                                            <span className="text-sm text-gray-700 flex-1">{detail.headline}</span>
+                                            <span className="text-sm text-theme-secondary flex-1">{detail.headline}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -526,7 +526,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         )}
                     </div>
                 ) : (
-                    <p className="text-gray-500">Loading sentiment analysis...</p>
+                    <p className="text-theme-muted">Loading sentiment analysis...</p>
                 )}
             </div>
             
@@ -550,30 +550,30 @@ function ForecastCard({ label, currentPrice, forecastPrice, change }: {
     const isPositive = change !== null && change >= 0;
     
     return (
-        <div className={`rounded-lg p-4 ${isPositive ? 'bg-green-50' : change !== null ? 'bg-red-50' : 'bg-gray-50'}`}>
-            <p className="text-sm text-gray-600 mb-2">{label}</p>
+        <div className={`rounded-lg p-4 ${isPositive ? 'bg-green-50' : change !== null ? 'bg-red-50' : 'bg-theme-secondary'}`}>
+            <p className="text-sm text-theme-secondary mb-2">{label}</p>
             {forecastPrice !== null && currentPrice ? (
                 <div className="space-y-2">
                     <div className="flex items-baseline gap-2">
-                        <span className="text-sm text-gray-500">From</span>
-                        <span className="text-lg font-medium text-gray-700">${currentPrice.toFixed(2)}</span>
+                        <span className="text-sm text-theme-muted">From</span>
+                        <span className="text-lg font-medium text-theme-secondary">${currentPrice.toFixed(2)}</span>
                     </div>
                     <div className="flex items-baseline gap-2">
-                        <span className="text-sm text-gray-500">To</span>
-                        <span className={`text-2xl font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                        <span className="text-sm text-theme-muted">To</span>
+                        <span className={`text-2xl font-bold ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
                             ${forecastPrice.toFixed(2)}
                         </span>
                     </div>
                     {change !== null && (
-                        <p className={`text-sm font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                        <p className={`text-sm font-semibold ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
                             {isPositive ? '↑' : '↓'} {isPositive ? '+' : ''}{change.toFixed(2)}%
                         </p>
                     )}
                 </div>
             ) : forecastPrice !== null ? (
-                <p className="text-2xl font-bold text-gray-900">${forecastPrice.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-theme">${forecastPrice.toFixed(2)}</p>
             ) : (
-                <p className="text-gray-400">Insufficient data</p>
+                <p className="text-theme-muted">Insufficient data</p>
             )}
         </div>
     );
@@ -586,23 +586,23 @@ function TechnicalIndicatorRow({ name, value, signal, explanation }: {
     explanation: string;
 }) {
     const signalConfig: Record<string, { bg: string; text: string; label: string }> = {
-        bullish: { bg: 'bg-green-100', text: 'text-green-700', label: 'Bullish' },
-        bearish: { bg: 'bg-red-100', text: 'text-red-700', label: 'Bearish' },
-        overbought: { bg: 'bg-red-100', text: 'text-red-700', label: 'Overbought' },
-        oversold: { bg: 'bg-green-100', text: 'text-green-700', label: 'Oversold' },
-        neutral: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Neutral' },
-        normal: { bg: 'bg-gray-100', text: 'text-gray-700', label: 'Normal' },
+        bullish: { bg: 'bg-green-500/20', text: 'text-green-500', label: 'Bullish' },
+        bearish: { bg: 'bg-red-500/20', text: 'text-red-500', label: 'Bearish' },
+        overbought: { bg: 'bg-red-500/20', text: 'text-red-500', label: 'Overbought' },
+        oversold: { bg: 'bg-green-500/20', text: 'text-green-500', label: 'Oversold' },
+        neutral: { bg: 'bg-theme-secondary', text: 'text-theme-secondary', label: 'Neutral' },
+        normal: { bg: 'bg-theme-secondary', text: 'text-theme-secondary', label: 'Normal' },
         high: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'High' },
         low: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Low' },
-        alert: { bg: 'bg-red-100', text: 'text-red-700', label: 'Alert' },
+        alert: { bg: 'bg-red-500/20', text: 'text-red-500', label: 'Alert' },
     };
     
     const config = signalConfig[signal.toLowerCase()] || signalConfig.neutral;
     
     return (
-        <div className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
+        <div className="border-b border-theme pb-3 last:border-0 last:pb-0">
             <div className="flex items-center justify-between mb-1">
-                <span className="font-medium text-gray-900">{name}</span>
+                <span className="font-medium text-theme">{name}</span>
                 <div className="flex items-center gap-2">
                     <span className="text-lg font-semibold text-gray-800 capitalize">{value}</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${config.bg} ${config.text}`}>
@@ -610,25 +610,25 @@ function TechnicalIndicatorRow({ name, value, signal, explanation }: {
                     </span>
                 </div>
             </div>
-            <p className="text-sm text-gray-600">{explanation}</p>
+            <p className="text-sm text-theme-secondary">{explanation}</p>
         </div>
     );
 }
 
 function getTrendColor(trend: string): string {
     switch (trend.toLowerCase()) {
-        case 'strong_upward': return 'text-green-700';
-        case 'upward': return 'text-green-600';
-        case 'strong_downward': return 'text-red-700';
-        case 'downward': return 'text-red-600';
-        default: return 'text-gray-600';
+        case 'strong_upward': return 'text-green-500';
+        case 'upward': return 'text-green-500';
+        case 'strong_downward': return 'text-red-500';
+        case 'downward': return 'text-red-500';
+        default: return 'text-theme-secondary';
     }
 }
 
 function getSentimentColor(label: string): string {
     switch (label.toLowerCase()) {
-        case 'positive': return 'text-green-600';
-        case 'negative': return 'text-red-600';
-        default: return 'text-gray-600';
+        case 'positive': return 'text-green-500';
+        case 'negative': return 'text-red-500';
+        default: return 'text-theme-secondary';
     }
 }

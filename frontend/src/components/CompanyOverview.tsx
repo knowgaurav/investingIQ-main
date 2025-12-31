@@ -53,8 +53,8 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
     return (
         <div className="space-y-6">
             {/* Company Profile */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>🏢</span> Company Profile
                 </h3>
                 
@@ -62,31 +62,31 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
                     <div className="space-y-4">
                         <div className="flex flex-wrap gap-2 mb-4">
                             {companyInfo.sector && (
-                                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                                <span className="px-3 py-1 bg-primary/20 text-primary rounded-full text-sm font-medium">
                                     {companyInfo.sector}
                                 </span>
                             )}
                             {companyInfo.industry && (
-                                <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
+                                <span className="px-3 py-1 bg-theme-secondary text-theme-secondary rounded-full text-sm font-medium">
                                     {companyInfo.industry}
                                 </span>
                             )}
                         </div>
                         
                         {companyInfo.description && (
-                            <p className="text-gray-700 text-sm leading-relaxed">
+                            <p className="text-theme-secondary text-sm leading-relaxed">
                                 {companyInfo.description}
                             </p>
                         )}
                     </div>
                 ) : (
-                    <p className="text-gray-500">Company information loading...</p>
+                    <p className="text-theme-muted">Company information loading...</p>
                 )}
             </div>
 
             {/* Key Metrics */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📈</span> Key Metrics
                 </h3>
                 
@@ -102,13 +102,13 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
                         <MetricCard label="Profit Margin" value={companyInfo.profit_margin ? `${(companyInfo.profit_margin * 100).toFixed(2)}%` : undefined} />
                     </div>
                 ) : (
-                    <p className="text-gray-500">Loading metrics...</p>
+                    <p className="text-theme-muted">Loading metrics...</p>
                 )}
             </div>
 
             {/* Price Ranges & Moving Averages */}
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <div className="bg-theme-card rounded-xl shadow-sm p-6">
+                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📊</span> Price Analysis
                 </h3>
                 
@@ -116,47 +116,47 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
                     <div className="space-y-4">
                         {/* 52-Week Range */}
                         <div>
-                            <p className="text-sm font-medium text-gray-700 mb-2">52-Week Range</p>
+                            <p className="text-sm font-medium text-theme-secondary mb-2">52-Week Range</p>
                             <div className="flex items-center gap-4">
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-theme-muted">
                                     ${companyInfo['52_week_low']?.toFixed(2) || 'N/A'}
                                 </span>
-                                <div className="flex-1 h-2 bg-gray-200 rounded-full relative">
+                                <div className="flex-1 h-2 bg-theme-secondary rounded-full relative">
                                     {companyInfo['52_week_low'] && companyInfo['52_week_high'] && currentPrice && (
                                         <div
-                                            className="absolute h-4 w-4 bg-blue-500 rounded-full top-1/2 -translate-y-1/2 border-2 border-white shadow"
+                                            className="absolute h-4 w-4 bg-primary rounded-full top-1/2 -translate-y-1/2 border-2 border-theme-card shadow"
                                             style={{
                                                 left: `${((currentPrice - companyInfo['52_week_low']) / (companyInfo['52_week_high'] - companyInfo['52_week_low'])) * 100}%`,
                                             }}
                                         />
                                     )}
                                 </div>
-                                <span className="text-sm text-gray-600">
+                                <span className="text-sm text-theme-muted">
                                     ${companyInfo['52_week_high']?.toFixed(2) || 'N/A'}
                                 </span>
                             </div>
                         </div>
 
                         {/* Moving Averages */}
-                        <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <p className="text-sm text-gray-500 mb-1">50-Day MA</p>
-                                <p className="text-lg font-semibold text-gray-900">
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-theme">
+                            <div className="bg-theme-secondary rounded-lg p-4">
+                                <p className="text-sm text-theme-muted mb-1">50-Day MA</p>
+                                <p className="text-lg font-semibold text-theme">
                                     ${companyInfo['50_day_ma']?.toFixed(2) || 'N/A'}
                                 </p>
                                 {currentPrice && companyInfo['50_day_ma'] && (
-                                    <p className={`text-sm ${currentPrice > companyInfo['50_day_ma'] ? 'text-green-600' : 'text-red-600'}`}>
+                                    <p className={`text-sm ${currentPrice > companyInfo['50_day_ma'] ? 'text-green-500' : 'text-red-500'}`}>
                                         {currentPrice > companyInfo['50_day_ma'] ? 'Above' : 'Below'} MA
                                     </p>
                                 )}
                             </div>
-                            <div className="bg-gray-50 rounded-lg p-4">
-                                <p className="text-sm text-gray-500 mb-1">200-Day MA</p>
-                                <p className="text-lg font-semibold text-gray-900">
+                            <div className="bg-theme-secondary rounded-lg p-4">
+                                <p className="text-sm text-theme-muted mb-1">200-Day MA</p>
+                                <p className="text-lg font-semibold text-theme">
                                     ${companyInfo['200_day_ma']?.toFixed(2) || 'N/A'}
                                 </p>
                                 {currentPrice && companyInfo['200_day_ma'] && (
-                                    <p className={`text-sm ${currentPrice > companyInfo['200_day_ma'] ? 'text-green-600' : 'text-red-600'}`}>
+                                    <p className={`text-sm ${currentPrice > companyInfo['200_day_ma'] ? 'text-green-500' : 'text-red-500'}`}>
                                         {currentPrice > companyInfo['200_day_ma'] ? 'Above' : 'Below'} MA
                                     </p>
                                 )}
@@ -165,15 +165,15 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
 
                         {/* Analyst Target */}
                         {companyInfo.analyst_target && (
-                            <div className="pt-4 border-t">
+                            <div className="pt-4 border-t border-theme">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-sm font-medium text-gray-700">Analyst Target Price</p>
+                                    <p className="text-sm font-medium text-theme-secondary">Analyst Target Price</p>
                                     <div className="text-right">
-                                        <p className="text-lg font-semibold text-gray-900">
+                                        <p className="text-lg font-semibold text-theme">
                                             ${companyInfo.analyst_target.toFixed(2)}
                                         </p>
                                         {currentPrice && (
-                                            <p className={`text-sm ${companyInfo.analyst_target > currentPrice ? 'text-green-600' : 'text-red-600'}`}>
+                                            <p className={`text-sm ${companyInfo.analyst_target > currentPrice ? 'text-green-500' : 'text-red-500'}`}>
                                                 {((companyInfo.analyst_target - currentPrice) / currentPrice * 100).toFixed(1)}% 
                                                 {companyInfo.analyst_target > currentPrice ? ' upside' : ' downside'}
                                             </p>
@@ -184,14 +184,14 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
                         )}
                     </div>
                 ) : (
-                    <p className="text-gray-500">Loading price data...</p>
+                    <p className="text-theme-muted">Loading price data...</p>
                 )}
             </div>
 
             {/* Earnings History */}
             {earnings && (earnings.quarterly_earnings?.length || earnings.annual_earnings?.length) ? (
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-theme-card rounded-xl shadow-sm p-6">
+                    <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                         <span>💰</span> Earnings History
                     </h3>
                     
@@ -199,27 +199,27 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b">
-                                        <th className="text-left py-2 text-gray-600 font-medium">Quarter</th>
-                                        <th className="text-right py-2 text-gray-600 font-medium">Reported EPS</th>
-                                        <th className="text-right py-2 text-gray-600 font-medium">Estimated EPS</th>
-                                        <th className="text-right py-2 text-gray-600 font-medium">Surprise</th>
+                                    <tr className="border-b border-theme">
+                                        <th className="text-left py-2 text-theme-muted font-medium">Quarter</th>
+                                        <th className="text-right py-2 text-theme-muted font-medium">Reported EPS</th>
+                                        <th className="text-right py-2 text-theme-muted font-medium">Estimated EPS</th>
+                                        <th className="text-right py-2 text-theme-muted font-medium">Surprise</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {earnings.quarterly_earnings.slice(0, 4).map((q, i) => (
-                                        <tr key={i} className="border-b border-gray-100">
-                                            <td className="py-2 text-gray-900">{q.fiscal_quarter}</td>
-                                            <td className="py-2 text-right text-gray-900">
+                                        <tr key={i} className="border-b border-theme">
+                                            <td className="py-2 text-theme">{q.fiscal_quarter}</td>
+                                            <td className="py-2 text-right text-theme">
                                                 {q.reported_eps !== null ? `$${q.reported_eps.toFixed(2)}` : 'N/A'}
                                             </td>
-                                            <td className="py-2 text-right text-gray-600">
+                                            <td className="py-2 text-right text-theme-secondary">
                                                 {q.estimated_eps !== null ? `$${q.estimated_eps.toFixed(2)}` : 'N/A'}
                                             </td>
                                             <td className={`py-2 text-right ${
                                                 q.surprise_pct !== null 
-                                                    ? q.surprise_pct >= 0 ? 'text-green-600' : 'text-red-600'
-                                                    : 'text-gray-400'
+                                                    ? q.surprise_pct >= 0 ? 'text-green-500' : 'text-red-500'
+                                                    : 'text-theme-muted'
                                             }`}>
                                                 {q.surprise_pct !== null ? `${q.surprise_pct >= 0 ? '+' : ''}${q.surprise_pct.toFixed(1)}%` : 'N/A'}
                                             </td>
@@ -234,14 +234,14 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
 
             {/* Recent News */}
             {news && news.length > 0 && (
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <div className="bg-theme-card rounded-xl shadow-sm p-6">
+                    <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                         <span>📰</span> Recent News
                     </h3>
                     
                     <div className="space-y-4 max-h-96 overflow-y-auto">
                         {news.slice(0, 10).map((article, i) => (
-                            <div key={i} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
+                            <div key={i} className="border-b border-theme pb-4 last:border-0 last:pb-0">
                                 <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1">
                                         {article.url ? (
@@ -249,22 +249,22 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
                                                 href={article.url} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer"
-                                                className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors"
+                                                className="text-sm font-medium text-theme hover:text-primary transition-colors"
                                             >
                                                 {article.title}
                                             </a>
                                         ) : (
-                                            <p className="text-sm font-medium text-gray-900">{article.title}</p>
+                                            <p className="text-sm font-medium text-theme">{article.title}</p>
                                         )}
                                         {article.summary && (
-                                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{article.summary}</p>
+                                            <p className="text-xs text-theme-secondary mt-1 line-clamp-2">{article.summary}</p>
                                         )}
                                         <div className="flex items-center gap-2 mt-2">
                                             {article.source && (
-                                                <span className="text-xs text-gray-500">{article.source}</span>
+                                                <span className="text-xs text-theme-muted">{article.source}</span>
                                             )}
                                             {article.published_at && (
-                                                <span className="text-xs text-gray-400">
+                                                <span className="text-xs text-theme-muted">
                                                     {formatDate(article.published_at)}
                                                 </span>
                                             )}
@@ -272,9 +272,9 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
                                     </div>
                                     {article.overall_sentiment_label && (
                                         <span className={`px-2 py-1 rounded text-xs font-medium shrink-0 ${
-                                            article.overall_sentiment_label.toLowerCase().includes('bullish') ? 'bg-green-100 text-green-700' :
-                                            article.overall_sentiment_label.toLowerCase().includes('bearish') ? 'bg-red-100 text-red-700' :
-                                            'bg-gray-100 text-gray-700'
+                                            article.overall_sentiment_label.toLowerCase().includes('bullish') ? 'bg-green-500/20 text-green-500' :
+                                            article.overall_sentiment_label.toLowerCase().includes('bearish') ? 'bg-red-500/20 text-red-500' :
+                                            'bg-theme-secondary text-theme-secondary'
                                         }`}>
                                             {article.overall_sentiment_label}
                                         </span>
@@ -291,9 +291,9 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
 
 function MetricCard({ label, value }: { label: string; value?: string }) {
     return (
-        <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-sm text-gray-500 mb-1">{label}</p>
-            <p className="text-lg font-semibold text-gray-900">{value || 'N/A'}</p>
+        <div className="bg-theme-secondary rounded-lg p-4">
+            <p className="text-sm text-theme-muted mb-1">{label}</p>
+            <p className="text-lg font-semibold text-theme">{value || 'N/A'}</p>
         </div>
     );
 }
