@@ -20,20 +20,20 @@
 }
 
 .dark {
-    /* Dark mode colors - dark page, clearly visible lighter cards */
-    --color-bg: 15, 23, 42;
-    --color-bg-secondary: 30, 41, 59;
-    --color-card: 51, 65, 85;
-    --color-border: 71, 85, 105;
-    --color-text: 248, 250, 252;
-    --color-text-secondary: 226, 232, 240;
-    --color-text-muted: 148, 163, 184;
+    /* Dark mode colors - dark page, VERY visible lighter cards */
+    --color-bg: 17, 24, 39;
+    --color-bg-secondary: 31, 41, 55;
+    --color-card: 55, 65, 81;
+    --color-border: 75, 85, 99;
+    --color-text: 249, 250, 251;
+    --color-text-secondary: 229, 231, 235;
+    --color-text-muted: 156, 163, 175;
     
     /* Chart colors (hex for recharts) */
-    --chart-grid: #475569;
-    --chart-tooltip-bg: #334155;
-    --chart-tooltip-border: #64748B;
-    --chart-axis-text: #CBD5E1;
+    --chart-grid: #4B5563;
+    --chart-tooltip-bg: #374151;
+    --chart-tooltip-border: #6B7280;
+    --chart-axis-text: #D1D5DB;
 }
 
 body {
