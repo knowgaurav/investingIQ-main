@@ -172,7 +172,7 @@ export default function Home() {
                         Popular Stocks
                     </h2>
                     <div className="flex flex-wrap justify-center gap-3">
-                        {['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META', 'JPM'].map(
+                        {['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META', 'JPM', 'V', 'WMT', 'JNJ', 'UNH'].map(
                             (ticker) => (
                                 <button
                                     key={ticker}
