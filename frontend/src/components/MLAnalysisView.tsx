@@ -91,16 +91,16 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
         <div className="space-y-6">
             {/* Overall Signal Card */}
             <div className={`rounded-xl shadow-sm p-6 ${
-                signal === 'BUY' ? 'bg-green-50 border-2 border-green-200' :
-                signal === 'SELL' ? 'bg-red-50 border-2 border-red-200' :
-                'bg-yellow-50 border-2 border-yellow-200'
+                signal === 'BUY' ? 'bg-green-500/10 border-2 border-green-500/30' :
+                signal === 'SELL' ? 'bg-red-500/10 border-2 border-red-500/30' :
+                'bg-yellow-500/10 border-2 border-yellow-500/30'
             }`}>
                 <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-theme">ML Analysis Signal</h3>
                     <span className={`px-4 py-2 rounded-full text-lg font-bold ${
-                        signal === 'BUY' ? 'bg-green-500 text-white' :
-                        signal === 'SELL' ? 'bg-red-500 text-white' :
-                        'bg-yellow-500 text-white'
+                        signal === 'BUY' ? 'bg-green-500/100 text-white' :
+                        signal === 'SELL' ? 'bg-red-500/100 text-white' :
+                        'bg-yellow-500/100 text-white'
                     }`}>
                         {signal}
                     </span>
@@ -153,7 +153,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                 <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📈</span> Price Forecast
                     {prediction?.models_used && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                        <span className="text-xs bg-blue-100 text-blue-400 px-2 py-1 rounded-full">
                             {prediction.models_used}
                         </span>
                     )}
@@ -195,8 +195,8 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         {(prediction.arima_forecast || prediction.prophet_forecast || prediction.ets_forecast) && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 {/* ARIMA */}
-                                <div className="bg-blue-50 rounded-lg p-3">
-                                    <p className="text-xs font-semibold text-blue-700 mb-2">ARIMA</p>
+                                <div className="bg-blue-500/10 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-blue-400 mb-2">ARIMA</p>
                                     {prediction.arima_forecast ? (
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs">
@@ -214,8 +214,8 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                 </div>
                                 
                                 {/* Prophet */}
-                                <div className="bg-purple-50 rounded-lg p-3">
-                                    <p className="text-xs font-semibold text-purple-700 mb-2">Prophet</p>
+                                <div className="bg-purple-500/10 rounded-lg p-3">
+                                    <p className="text-xs font-semibold text-purple-400 mb-2">Prophet</p>
                                     {prediction.prophet_forecast ? (
                                         <div className="space-y-1">
                                             <div className="flex justify-between text-xs">
@@ -233,7 +233,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                 </div>
                                 
                                 {/* ETS */}
-                                <div className="bg-green-50 rounded-lg p-3">
+                                <div className="bg-green-500/10 rounded-lg p-3">
                                     <p className="text-xs font-semibold text-green-500 mb-2">ETS (Holt-Winters)</p>
                                     {prediction.ets_forecast ? (
                                         <div className="space-y-1">
@@ -257,8 +257,8 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         {prediction.rf_signal && (
                             <div className={`rounded-lg p-4 border-2 ${
                                 prediction.rf_signal.signal === 'buy' 
-                                    ? 'bg-green-50 border-green-300' 
-                                    : 'bg-yellow-50 border-yellow-300'
+                                    ? 'bg-green-500/10 border-green-500/40' 
+                                    : 'bg-yellow-500/10 border-yellow-500/40'
                             }`}>
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-2">
@@ -266,7 +266,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                         <div>
                                             <p className="text-xs text-theme-muted uppercase tracking-wide">Random Forest Signal</p>
                                             <p className={`text-xl font-bold uppercase ${
-                                                prediction.rf_signal.signal === 'buy' ? 'text-green-500' : 'text-yellow-700'
+                                                prediction.rf_signal.signal === 'buy' ? 'text-green-500' : 'text-yellow-400'
                                             }`}>
                                                 {prediction.rf_signal.signal === 'buy' ? 'BUY' : 'HOLD'}
                                             </p>
@@ -328,11 +328,11 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         
                         {/* ML Reasoning */}
                         {prediction.reasoning && prediction.reasoning.length > 0 && (
-                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                                <p className="text-sm font-semibold text-blue-800 mb-2">🔍 Model Analysis Reasoning</p>
+                            <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                                <p className="text-sm font-semibold text-blue-400 mb-2">🔍 Model Analysis Reasoning</p>
                                 <ul className="space-y-1">
                                     {prediction.reasoning.map((reason, i) => (
-                                        <li key={i} className="text-sm text-blue-700 flex items-start gap-2">
+                                        <li key={i} className="text-sm text-blue-400 flex items-start gap-2">
                                             <span className="text-blue-400">•</span>
                                             {reason}
                                         </li>
@@ -417,23 +417,23 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                             <div className="pt-4 border-t">
                                 <p className="text-sm font-medium text-theme mb-3">Key Price Levels</p>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-green-50 rounded-lg p-3">
+                                    <div className="bg-green-500/10 rounded-lg p-3">
                                         <p className="text-xs text-green-500 font-medium mb-2">Support (Buy Zones)</p>
                                         <p className="text-xs text-green-500 mb-2">Price tends to bounce up from these levels</p>
                                         <div className="flex flex-wrap gap-2">
                                             {technical.support_levels.length > 0 ? technical.support_levels.map((level, i) => (
-                                                <span key={i} className="px-2 py-1 bg-green-500/20 text-green-500 rounded text-sm font-medium">
+                                                <span key={i} className="px-2 py-1 bg-green-500/100/20 text-green-500 rounded text-sm font-medium">
                                                     ${level.toFixed(2)}
                                                 </span>
                                             )) : <span className="text-theme-muted text-xs">None nearby</span>}
                                         </div>
                                     </div>
-                                    <div className="bg-red-50 rounded-lg p-3">
+                                    <div className="bg-red-500/10 rounded-lg p-3">
                                         <p className="text-xs text-red-500 font-medium mb-2">Resistance (Sell Zones)</p>
                                         <p className="text-xs text-red-500 mb-2">Price tends to face selling pressure here</p>
                                         <div className="flex flex-wrap gap-2">
                                             {technical.resistance_levels.length > 0 ? technical.resistance_levels.map((level, i) => (
-                                                <span key={i} className="px-2 py-1 bg-red-500/20 text-red-500 rounded text-sm font-medium">
+                                                <span key={i} className="px-2 py-1 bg-red-500/100/20 text-red-500 rounded text-sm font-medium">
                                                     ${level.toFixed(2)}
                                                 </span>
                                             )) : <span className="text-theme-muted text-xs">None nearby</span>}
@@ -458,8 +458,8 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                     <div className="space-y-4">
                         {/* Sentiment Summary */}
                         <div className={`rounded-lg p-4 ${
-                            sentiment.label === 'positive' ? 'bg-green-50' :
-                            sentiment.label === 'negative' ? 'bg-red-50' : 'bg-theme-secondary'
+                            sentiment.label === 'positive' ? 'bg-green-500/10' :
+                            sentiment.label === 'negative' ? 'bg-red-500/10' : 'bg-theme-secondary'
                         }`}>
                             <div className="flex items-center justify-between mb-3">
                                 <div>
@@ -487,7 +487,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                         
                         {/* Sentiment Breakdown */}
                         <div className="grid grid-cols-3 gap-3">
-                            <div className="bg-green-50 rounded-lg p-3 text-center">
+                            <div className="bg-green-500/10 rounded-lg p-3 text-center">
                                 <p className="text-2xl font-bold text-green-500">{sentiment.positive_pct.toFixed(0)}%</p>
                                 <p className="text-xs text-green-500">Positive</p>
                             </div>
@@ -495,7 +495,7 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                 <p className="text-2xl font-bold text-theme-secondary">{sentiment.neutral_pct.toFixed(0)}%</p>
                                 <p className="text-xs text-theme-secondary">Neutral</p>
                             </div>
-                            <div className="bg-red-50 rounded-lg p-3 text-center">
+                            <div className="bg-red-500/10 rounded-lg p-3 text-center">
                                 <p className="text-2xl font-bold text-red-500">{sentiment.negative_pct.toFixed(0)}%</p>
                                 <p className="text-xs text-red-500">Negative</p>
                             </div>
@@ -508,12 +508,12 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
                                 <div className="space-y-2 max-h-60 overflow-y-auto">
                                     {sentiment.details.slice(0, 8).map((detail, i) => (
                                         <div key={i} className={`flex items-start gap-3 p-2 rounded-lg ${
-                                            detail.label === 'positive' ? 'bg-green-50' :
-                                            detail.label === 'negative' ? 'bg-red-50' : 'bg-theme-secondary'
+                                            detail.label === 'positive' ? 'bg-green-500/10' :
+                                            detail.label === 'negative' ? 'bg-red-500/10' : 'bg-theme-secondary'
                                         }`}>
                                             <span className={`px-2 py-1 rounded text-xs font-bold ${
-                                                detail.label === 'positive' ? 'bg-green-500 text-white' :
-                                                detail.label === 'negative' ? 'bg-red-500 text-white' :
+                                                detail.label === 'positive' ? 'bg-green-500/100 text-white' :
+                                                detail.label === 'negative' ? 'bg-red-500/100 text-white' :
                                                 'bg-gray-400 text-white'
                                             }`}>
                                                 {detail.label === 'positive' ? '↑' : detail.label === 'negative' ? '↓' : '−'}
@@ -531,8 +531,8 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
             </div>
             
             {/* Disclaimer */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                <p className="text-sm text-yellow-800">
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                <p className="text-sm text-yellow-400">
                     <strong>Disclaimer:</strong> This ML analysis is for informational purposes only and should not be considered financial advice. 
                     Always do your own research and consult with a qualified financial advisor before making investment decisions.
                 </p>
@@ -550,7 +550,7 @@ function ForecastCard({ label, currentPrice, forecastPrice, change }: {
     const isPositive = change !== null && change >= 0;
     
     return (
-        <div className={`rounded-lg p-4 ${isPositive ? 'bg-green-50' : change !== null ? 'bg-red-50' : 'bg-theme-secondary'}`}>
+        <div className={`rounded-lg p-4 ${isPositive ? 'bg-green-500/10' : change !== null ? 'bg-red-500/10' : 'bg-theme-secondary'}`}>
             <p className="text-sm text-theme-secondary mb-2">{label}</p>
             {forecastPrice !== null && currentPrice ? (
                 <div className="space-y-2">
@@ -586,15 +586,15 @@ function TechnicalIndicatorRow({ name, value, signal, explanation }: {
     explanation: string;
 }) {
     const signalConfig: Record<string, { bg: string; text: string; label: string }> = {
-        bullish: { bg: 'bg-green-500/20', text: 'text-green-500', label: 'Bullish' },
-        bearish: { bg: 'bg-red-500/20', text: 'text-red-500', label: 'Bearish' },
-        overbought: { bg: 'bg-red-500/20', text: 'text-red-500', label: 'Overbought' },
-        oversold: { bg: 'bg-green-500/20', text: 'text-green-500', label: 'Oversold' },
+        bullish: { bg: 'bg-green-500/100/20', text: 'text-green-500', label: 'Bullish' },
+        bearish: { bg: 'bg-red-500/100/20', text: 'text-red-500', label: 'Bearish' },
+        overbought: { bg: 'bg-red-500/100/20', text: 'text-red-500', label: 'Overbought' },
+        oversold: { bg: 'bg-green-500/100/20', text: 'text-green-500', label: 'Oversold' },
         neutral: { bg: 'bg-theme-secondary', text: 'text-theme-secondary', label: 'Neutral' },
         normal: { bg: 'bg-theme-secondary', text: 'text-theme-secondary', label: 'Normal' },
-        high: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'High' },
-        low: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Low' },
-        alert: { bg: 'bg-red-500/20', text: 'text-red-500', label: 'Alert' },
+        high: { bg: 'bg-yellow-100', text: 'text-yellow-400', label: 'High' },
+        low: { bg: 'bg-blue-100', text: 'text-blue-400', label: 'Low' },
+        alert: { bg: 'bg-red-500/100/20', text: 'text-red-500', label: 'Alert' },
     };
     
     const config = signalConfig[signal.toLowerCase()] || signalConfig.neutral;

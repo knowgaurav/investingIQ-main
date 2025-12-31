@@ -100,7 +100,7 @@ export default function LLMAnalysisView({
                                 </p>
                             </div>
                             <div className="flex-1 grid grid-cols-3 gap-2 text-center">
-                                <div className="bg-green-50 rounded-lg p-2">
+                                <div className="bg-green-500/10 rounded-lg p-2">
                                     <p className="text-lg font-semibold text-green-500">{sentiment.breakdown.positive}</p>
                                     <p className="text-xs text-green-500">Bullish</p>
                                 </div>
@@ -108,7 +108,7 @@ export default function LLMAnalysisView({
                                     <p className="text-lg font-semibold text-theme-secondary">{sentiment.breakdown.neutral}</p>
                                     <p className="text-xs text-theme-secondary">Neutral</p>
                                 </div>
-                                <div className="bg-red-50 rounded-lg p-2">
+                                <div className="bg-red-500/10 rounded-lg p-2">
                                     <p className="text-lg font-semibold text-red-500">{sentiment.breakdown.negative}</p>
                                     <p className="text-xs text-red-500">Bearish</p>
                                 </div>
@@ -124,8 +124,8 @@ export default function LLMAnalysisView({
                                             <div className="flex items-start justify-between gap-2 mb-1">
                                                 <p className="text-sm font-medium text-theme">{detail.headline}</p>
                                                 <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${
-                                                    detail.sentiment.toLowerCase() === 'bullish' ? 'bg-green-500/20 text-green-500' :
-                                                    detail.sentiment.toLowerCase() === 'bearish' ? 'bg-red-500/20 text-red-500' :
+                                                    detail.sentiment.toLowerCase() === 'bullish' ? 'bg-green-500/100/20 text-green-500' :
+                                                    detail.sentiment.toLowerCase() === 'bearish' ? 'bg-red-500/100/20 text-red-500' :
                                                     'bg-theme-secondary text-theme-secondary'
                                                 }`}>
                                                     {detail.sentiment} ({(detail.confidence * 100).toFixed(0)}%)
@@ -155,8 +155,8 @@ export default function LLMAnalysisView({
                 ) : (
                     <p className="text-theme-muted">No insights available yet.</p>
                 )}
-                <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
-                    <p className="text-xs text-yellow-800">
+                <div className="mt-4 p-3 bg-yellow-500/10 rounded-lg">
+                    <p className="text-xs text-yellow-400">
                         ⚠️ This is AI-generated analysis and should not be considered financial advice. 
                         Always consult with a qualified financial advisor before making investment decisions.
                     </p>
