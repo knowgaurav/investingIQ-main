@@ -1,6 +1,6 @@
 'use client';
 
-import { useLLMConfig } from '@/hooks/useLLMConfig';
+import ReactMarkdown from 'react-markdown';
 
 interface LLMAnalysisViewProps {
     hasLLMConfig: boolean;
@@ -70,8 +70,10 @@ export default function LLMAnalysisView({
                     <span>📰</span> News Summary (LLM Generated)
                 </h3>
                 {newsSummary ? (
-                    <div className="prose prose-gray max-w-none">
-                        <p className="text-theme-secondary whitespace-pre-wrap">{newsSummary}</p>
+                    <div className="space-y-3 text-theme-secondary text-sm leading-relaxed
+                        [&>p]:mb-3 [&>p]:leading-relaxed
+                        [&_strong]:text-theme [&_strong]:font-semibold">
+                        <ReactMarkdown>{newsSummary}</ReactMarkdown>
                     </div>
                 ) : (
                     <p className="text-theme-muted">No summary available yet.</p>
@@ -99,9 +101,9 @@ export default function LLMAnalysisView({
                                     <p className="text-lg font-semibold text-green-500">{sentiment.breakdown.positive}</p>
                                     <p className="text-xs text-green-500">Bullish</p>
                                 </div>
-                                <div className="bg-theme-secondary rounded-lg p-2">
-                                    <p className="text-lg font-semibold text-theme-secondary">{sentiment.breakdown.neutral}</p>
-                                    <p className="text-xs text-theme-secondary">Neutral</p>
+                                <div className="bg-gray-500/20 rounded-lg p-2">
+                                    <p className="text-lg font-semibold text-gray-400">{sentiment.breakdown.neutral}</p>
+                                    <p className="text-xs text-gray-400">Neutral</p>
                                 </div>
                                 <div className="bg-red-500/10 rounded-lg p-2">
                                     <p className="text-lg font-semibold text-red-500">{sentiment.breakdown.negative}</p>
@@ -113,20 +115,22 @@ export default function LLMAnalysisView({
                         {sentiment.details.length > 0 && (
                             <div className="pt-4 border-t">
                                 <p className="text-sm font-medium text-theme-secondary mb-3">Detailed Analysis</p>
-                                <div className="space-y-3 max-h-64 overflow-y-auto">
+                                <div className="space-y-2 max-h-60 overflow-y-auto">
                                     {sentiment.details.map((detail, i) => (
-                                        <div key={i} className="bg-theme-secondary rounded-lg p-3">
-                                            <div className="flex items-start justify-between gap-2 mb-1">
-                                                <p className="text-sm font-medium text-theme">{detail.headline}</p>
-                                                <span className={`px-2 py-0.5 rounded text-xs font-medium shrink-0 ${
-                                                    detail.sentiment.toLowerCase() === 'bullish' ? 'bg-green-500/100/20 text-green-500' :
-                                                    detail.sentiment.toLowerCase() === 'bearish' ? 'bg-red-500/100/20 text-red-500' :
-                                                    'bg-theme-secondary text-theme-secondary'
+                                        <div key={i} className={`flex items-start gap-3 p-3 rounded-lg ${detail.sentiment.toLowerCase() === 'bullish' ? 'bg-green-500/10' :
+                                            detail.sentiment.toLowerCase() === 'bearish' ? 'bg-red-500/10' : 'bg-gray-500/20'
+                                            }`}>
+                                            <span className={`px-2 py-1 rounded text-xs font-bold shrink-0 ${detail.sentiment.toLowerCase() === 'bullish' ? 'bg-green-500 text-white' :
+                                                detail.sentiment.toLowerCase() === 'bearish' ? 'bg-red-500 text-white' :
+                                                    'bg-gray-500 text-white'
                                                 }`}>
-                                                    {detail.sentiment} ({(detail.confidence * 100).toFixed(0)}%)
-                                                </span>
+                                                {detail.sentiment.toLowerCase() === 'bullish' ? '↑' :
+                                                    detail.sentiment.toLowerCase() === 'bearish' ? '↓' : '−'} {(detail.confidence * 100).toFixed(0)}%
+                                            </span>
+                                            <div className="flex-1">
+                                                <p className="text-sm font-medium text-theme">{detail.headline}</p>
+                                                <p className="text-xs text-theme-secondary mt-1">{detail.reasoning}</p>
                                             </div>
-                                            <p className="text-xs text-theme-secondary">{detail.reasoning}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -144,18 +148,27 @@ export default function LLMAnalysisView({
                     <span>💡</span> AI Investment Insights
                 </h3>
                 {aiInsights ? (
-                    <div className="prose prose-gray max-w-none">
-                        <p className="text-theme-secondary whitespace-pre-wrap">{aiInsights}</p>
+                    <div className="space-y-4 text-theme-secondary text-sm leading-relaxed
+                        [&>h3]:text-theme [&>h3]:font-semibold [&>h3]:text-base [&>h3]:mt-6 [&>h3]:mb-2
+                        [&>h4]:text-theme [&>h4]:font-semibold [&>h4]:text-sm [&>h4]:mt-5 [&>h4]:mb-2
+                        [&>p]:mb-3 [&>p]:leading-relaxed
+                        [&_strong]:text-theme [&_strong]:font-semibold
+                        [&>ul]:list-disc [&>ul]:pl-6 [&>ul]:my-3 [&>ul]:space-y-2
+                        [&>ol]:list-decimal [&>ol]:pl-6 [&>ol]:my-3 [&>ol]:space-y-2
+                        [&_li]:pl-1">
+                        <ReactMarkdown>{aiInsights}</ReactMarkdown>
                     </div>
                 ) : (
                     <p className="text-theme-muted">No insights available yet.</p>
                 )}
-                <div className="mt-4 p-3 bg-yellow-500/10 rounded-lg">
-                    <p className="text-xs text-yellow-400">
-                        ⚠️ This is AI-generated analysis and should not be considered financial advice. 
-                        Always consult with a qualified financial advisor before making investment decisions.
-                    </p>
-                </div>
+            </div>
+
+            {/* Disclaimer */}
+            <div className="bg-amber-50 dark:bg-yellow-500/10 border border-amber-300 dark:border-yellow-500/30 rounded-lg p-4">
+                <p className="text-sm text-amber-700 dark:text-yellow-400">
+                    <strong>Disclaimer:</strong> This is AI-generated analysis and should not be considered financial advice.
+                    Always consult with a qualified financial advisor before making investment decisions.
+                </p>
             </div>
         </div>
     );

@@ -256,15 +256,15 @@ class OpenRouterProvider(BaseLLMProvider):
     
     @property
     def default_model(self) -> str:
-        return "openai/gpt-4o-mini"
+        return "xiaomi/mimo-v2-flash:free"
     
     @property
     def base_url(self) -> str:
         return "https://openrouter.ai/api/v1"
 
 
-class MegaLLMProvider(BaseLLMProvider):
-    """MegaLLM provider implementation."""
+class OHMYGPTProvider(BaseLLMProvider):
+    """OHMYGPT provider implementation."""
     
     @property
     def default_model(self) -> str:
@@ -272,16 +272,4 @@ class MegaLLMProvider(BaseLLMProvider):
     
     @property
     def base_url(self) -> str:
-        return "https://api.megallm.com/v1"
-
-
-class AgentRouterProvider(BaseLLMProvider):
-    """AgentRouter provider implementation."""
-    
-    @property
-    def default_model(self) -> str:
-        return "gpt-4o-mini"
-    
-    @property
-    def base_url(self) -> str:
-        return "https://api.agentrouter.ai/v1"
+        return "https://api.ohmygpt.com/v1"

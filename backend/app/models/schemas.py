@@ -20,9 +20,8 @@ class LLMProvider(str, Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     GOOGLE = "google"
+    OHMYGPT = "ohmygpt"
     OPENROUTER = "openrouter"
-    MEGALLM = "megallm"
-    AGENTROUTER = "agentrouter"
 
 
 class LLMConfig(BaseModel):

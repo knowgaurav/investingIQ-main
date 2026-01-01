@@ -12,6 +12,8 @@ sqlalchemy
 langchain-openai
 langchain-anthropic
 redis
+pydantic>=2.0.0
+httpx>=0.25.0
 
 # ML Libraries
 statsmodels>=0.14.0

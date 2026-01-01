@@ -54,11 +54,21 @@ def main(msg: func.ServiceBusMessage):
             sentiment_result = provider.analyze_sentiment(headlines)
             summary_result = provider.generate_summary(headlines, ticker)
             
+            # Also generate insights in same call (combines all analysis)
+            insights_result = provider.generate_insights(
+                ticker=ticker,
+                stock_data=data.get("stock_data", {}),
+                sentiment=sentiment_result,
+                summary=summary_result,
+            )
+            
             messages_to_send = [
                 {"task_type": "llm_sentiment_ready", "task_id": task_id, "ticker": ticker, 
                  "data": sentiment_result, "timestamp": datetime.utcnow().isoformat()},
                 {"task_type": "llm_summary_ready", "task_id": task_id, "ticker": ticker,
                  "data": summary_result, "timestamp": datetime.utcnow().isoformat()},
+                {"task_type": "llm_insights_ready", "task_id": task_id, "ticker": ticker,
+                 "data": insights_result, "timestamp": datetime.utcnow().isoformat()},
             ]
             
         elif task_type == "generate_insights":
