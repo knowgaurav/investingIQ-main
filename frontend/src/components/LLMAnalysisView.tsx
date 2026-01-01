@@ -4,7 +4,6 @@ import { useLLMConfig } from '@/hooks/useLLMConfig';
 
 interface LLMAnalysisViewProps {
     hasLLMConfig: boolean;
-    onConfigureClick: () => void;
     newsSummary?: string;
     sentiment?: {
         overall_score: number;
@@ -22,7 +21,6 @@ interface LLMAnalysisViewProps {
 
 export default function LLMAnalysisView({
     hasLLMConfig,
-    onConfigureClick,
     newsSummary,
     sentiment,
     aiInsights,
@@ -47,12 +45,9 @@ export default function LLMAnalysisView({
                     <li>• Deep sentiment analysis with reasoning</li>
                     <li>• Investment insights & recommendations</li>
                 </ul>
-                <button
-                    onClick={onConfigureClick}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                    Configure LLM API Key
-                </button>
+                <p className="text-sm text-theme-secondary">
+                    Click the settings button in the bottom right corner to configure.
+                </p>
             </div>
         );
     }

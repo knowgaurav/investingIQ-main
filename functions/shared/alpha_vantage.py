@@ -20,16 +20,31 @@ def get_api_key() -> str:
 
 def fetch_daily_prices(ticker: str, outputsize: str = "compact", days: int = 100) -> dict:
     """
-    Fetch daily price data. Falls back to Finviz if Alpha Vantage fails.
+    Fetch daily price data. Uses cache, falls back to APIs.
     """
+    from shared.cache import get_stock_cache
+    
+    ticker = ticker.upper()
+    cache = get_stock_cache()
+    
+    # Check cache first
+    cached = cache.get_prices(ticker)
+    if cached and cached.get("price_history"):
+        logger.info(f"Using cached price data for {ticker}")
+        return cached
+    
     # Try Alpha Vantage first
     result = fetch_prices_alphavantage(ticker, outputsize, days)
     if result.get("price_history"):
+        cache.set_prices(ticker, result)
         return result
     
-    # Fallback to Finviz scraping (free, no API key)
+    # Fallback to Finviz scraping
     logger.info(f"Falling back to Finviz for {ticker} price data")
-    return fetch_prices_finviz(ticker, days)
+    result = fetch_prices_finviz(ticker, days)
+    if result.get("price_history"):
+        cache.set_prices(ticker, result)
+    return result
 
 
 def fetch_prices_alphavantage(ticker: str, outputsize: str, days: int) -> dict:
@@ -155,15 +170,30 @@ def fetch_prices_finviz(ticker: str, days: int = 100) -> dict:
 
 
 def fetch_company_overview(ticker: str) -> dict:
-    """Fetch company info. Falls back to FMP if Alpha Vantage fails."""
+    """Fetch company info with 24hr cache. Falls back to Yahoo if Alpha Vantage fails."""
+    from shared.cache import get_stock_cache
+    
+    ticker = ticker.upper()
+    cache = get_stock_cache()
+    
+    # Check cache first (24hr TTL for company info)
+    cached = cache.get_company_info(ticker)
+    if cached and (cached.get("market_cap") or cached.get("pe_ratio") or cached.get("name")):
+        logger.info(f"Using cached company info for {ticker}")
+        return cached
+    
     # Try Alpha Vantage first
     result = fetch_overview_alphavantage(ticker)
     if result.get("market_cap") or result.get("pe_ratio"):
+        cache.set_company_info(ticker, result)
         return result
     
-    # Fallback to FMP
-    logger.info(f"Falling back to FMP for {ticker} company overview")
-    return fetch_overview_fmp(ticker)
+    # Fallback to Yahoo scraping
+    logger.info(f"Falling back to Yahoo for {ticker} company overview")
+    result = fetch_overview_fmp(ticker)
+    if result.get("name") and result.get("name") != ticker:
+        cache.set_company_info(ticker, result)
+    return result
 
 
 def fetch_overview_alphavantage(ticker: str) -> dict:
@@ -332,8 +362,19 @@ def fetch_news_sentiment(ticker: str, limit: int = 50) -> list:
 
 def fetch_earnings(ticker: str) -> dict:
     """
-    Fetch earnings history and estimates from Alpha Vantage.
+    Fetch earnings history with 24hr cache.
     """
+    from shared.cache import get_stock_cache
+    
+    ticker = ticker.upper()
+    cache = get_stock_cache()
+    
+    # Check cache first
+    cached = cache.get_earnings(ticker)
+    if cached and (cached.get("annual_earnings") or cached.get("quarterly_earnings")):
+        logger.info(f"Using cached earnings for {ticker}")
+        return cached
+    
     try:
         params = {
             "function": "EARNINGS",
@@ -348,7 +389,7 @@ def fetch_earnings(ticker: str) -> dict:
         annual = data.get("annualEarnings", [])[:5]
         quarterly = data.get("quarterlyEarnings", [])[:8]
         
-        return {
+        result = {
             "annual_earnings": [
                 {
                     "fiscal_year": e.get("fiscalDateEnding"),
@@ -367,6 +408,11 @@ def fetch_earnings(ticker: str) -> dict:
                 for e in quarterly
             ],
         }
+        
+        if result["annual_earnings"] or result["quarterly_earnings"]:
+            cache.set_earnings(ticker, result)
+        
+        return result
         
     except Exception as e:
         logger.error(f"Error fetching earnings for {ticker}: {e}")
@@ -395,20 +441,32 @@ def fetch_stock_data(ticker: str) -> dict:
 
 def fetch_news(ticker: str, limit: int = 20) -> list:
     """
-    Fetch news articles for sentiment analysis.
-    Falls back to Finviz if Alpha Vantage fails or is rate-limited.
-    
-    Returns list with title, summary, sentiment scores.
+    Fetch news articles with 15min cache.
+    Falls back to Finviz if Alpha Vantage fails.
     """
-    # Try Alpha Vantage first
-    articles = fetch_news_sentiment(ticker.upper(), limit)
+    from shared.cache import get_stock_cache
     
+    ticker = ticker.upper()
+    cache = get_stock_cache()
+    
+    # Check cache first
+    cached = cache.get_news(ticker)
+    if cached:
+        logger.info(f"Using cached news for {ticker}")
+        return cached
+    
+    # Try Alpha Vantage first
+    articles = fetch_news_sentiment(ticker, limit)
     if articles:
+        cache.set_news(ticker, articles)
         return articles
     
     # Fallback to Finviz scraping
     logger.info(f"Falling back to Finviz for {ticker} news")
-    return fetch_news_finviz(ticker.upper(), limit)
+    articles = fetch_news_finviz(ticker, limit)
+    if articles:
+        cache.set_news(ticker, articles)
+    return articles
 
 
 def fetch_news_finviz(ticker: str, limit: int = 20) -> list:

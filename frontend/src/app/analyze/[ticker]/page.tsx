@@ -32,7 +32,6 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
     const [report, setReport] = useState<AnalysisReport | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<AnalysisTab>('overview');
-    const [showLLMSettings, setShowLLMSettings] = useState(false);
     
     const { config: llmConfig, hasConfig: hasLLMConfig, isLoaded: llmConfigLoaded } = useLLMConfig();
 
@@ -222,21 +221,20 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
             <Header 
                 ticker={ticker} 
                 companyName={report.company_name} 
-                onLLMSettingsClick={() => setShowLLMSettings(true)}
             />
 
             <div className="container mx-auto px-4 py-8">
                 {/* Company Header */}
-                <div className="mb-6">
-                    <div className="flex items-center gap-4 mb-2">
-                        <h1 className="text-3xl font-bold text-theme">
+                <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-1">
+                        <h1 className="text-3xl font-bold text-theme tracking-tight">
                             {report.company_name || ticker}
                         </h1>
-                        <span className="px-3 py-1 bg-primary/20 text-primary rounded-full font-semibold">
+                        <span className="px-3 py-1.5 bg-primary text-white text-sm rounded-lg font-bold shadow-sm">
                             {ticker}
                         </span>
                     </div>
-                    <p className="text-theme-muted">
+                    <p className="text-sm text-theme-muted">
                         Last analyzed: {new Date(report.analyzed_at).toLocaleString()}
                     </p>
                 </div>
@@ -316,7 +314,6 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 {activeTab === 'llm' && (
                     <LLMAnalysisView
                         hasLLMConfig={hasLLMConfig}
-                        onConfigureClick={() => setShowLLMSettings(true)}
                         newsSummary={report.news_summary || undefined}
                         sentiment={report.sentiment_score !== null ? {
                             overall_score: report.sentiment_score,
@@ -330,8 +327,8 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
 
             </div>
 
-            {/* LLM Settings Modal */}
-            <LLMSettings isOpen={showLLMSettings} onClose={() => setShowLLMSettings(false)} />
+            {/* LLM Settings Floating Button */}
+            <LLMSettings />
         </main>
     );
 }
@@ -339,11 +336,9 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
 function Header({ 
     ticker, 
     companyName,
-    onLLMSettingsClick 
 }: { 
     ticker: string; 
     companyName?: string;
-    onLLMSettingsClick?: () => void;
 }) {
     return (
         <header className="bg-theme-card shadow-sm">
@@ -368,24 +363,10 @@ function Header({
                         </svg>
                         Back to Search
                     </Link>
-                    <div className="flex items-center gap-4">
-                        <DarkModeToggle />
-                        {onLLMSettingsClick && (
-                            <button
-                                onClick={onLLMSettingsClick}
-                                className="flex items-center gap-1 px-3 py-1.5 text-sm text-theme-secondary hover:text-theme hover:bg-theme-secondary rounded-lg transition-colors"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                LLM
-                            </button>
-                        )}
-                        <Link href="/" className="text-xl font-bold text-primary">
-                            InvestingIQ
-                        </Link>
-                    </div>
+                    <Link href="/" className="absolute left-1/2 -translate-x-1/2 text-2xl font-extrabold text-primary brightness-110">
+                        InvestingIQ
+                    </Link>
+                    <DarkModeToggle />
                 </div>
             </div>
         </header>
@@ -428,7 +409,7 @@ function SentimentDisplay({
                             cx="64"
                             cy="64"
                             r="56"
-                            className="stroke-gray-200 dark:stroke-gray-700"
+                            className="stroke-gray-200 dark:stroke-slate-700"
                             strokeWidth="12"
                             fill="none"
                         />
@@ -460,7 +441,7 @@ function SentimentDisplay({
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-theme-secondary">Positive</span>
                         <div className="flex items-center gap-2">
-                            <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div className="w-32 bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                                 <div
                                     className="bg-green-500 h-2 rounded-full"
                                     style={{ width: `${breakdown.positive}%` }}
@@ -474,7 +455,7 @@ function SentimentDisplay({
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-theme-secondary">Neutral</span>
                         <div className="flex items-center gap-2">
-                            <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div className="w-32 bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                                 <div
                                     className="bg-gray-500 h-2 rounded-full"
                                     style={{ width: `${breakdown.neutral}%` }}
@@ -488,7 +469,7 @@ function SentimentDisplay({
                     <div className="flex items-center justify-between">
                         <span className="text-sm text-theme-secondary">Negative</span>
                         <div className="flex items-center gap-2">
-                            <div className="w-32 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div className="w-32 bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                                 <div
                                     className="bg-red-500 h-2 rounded-full"
                                     style={{ width: `${breakdown.negative}%` }}
