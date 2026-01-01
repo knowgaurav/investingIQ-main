@@ -13,32 +13,67 @@ PROVIDER_CONFIG = {
     LLMProvider.OPENAI: {
         "base_url": "https://api.openai.com/v1",
         "default_model": "gpt-4o-mini",
-        "models": ["gpt-4o-mini", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-5-mini", "gpt-5-nano"],
+        "key_prefix": "sk-",
+        "models": [
+            {"id": "gpt-4o-mini", "name": "GPT-4o Mini", "description": "Fast, affordable small model"},
+            {"id": "gpt-5-nano", "name": "GPT-5 Nano", "description": "Fastest, most cost-efficient GPT-5"},
+            {"id": "gpt-5-mini", "name": "GPT-5 Mini", "description": "Cost-efficient GPT-5 for defined tasks"},
+            {"id": "gpt-5", "name": "GPT-5", "description": "Intelligent reasoning model for complex tasks"},
+            {"id": "gpt-5.1", "name": "GPT-5.1", "description": "Best for coding and agentic tasks"},
+            {"id": "gpt-5.2", "name": "GPT-5.2", "description": "Latest and most capable model"},
+            {"id": "gpt-4.1-nano", "name": "GPT-4.1 Nano", "description": "Fastest, most cost-efficient GPT-4.1"},
+            {"id": "gpt-4.1-mini", "name": "GPT-4.1 Mini", "description": "Smaller, faster GPT-4.1"},
+            {"id": "gpt-4.1", "name": "GPT-4.1", "description": "Smartest non-reasoning model"},
+            {"id": "gpt-4o", "name": "GPT-4o", "description": "Fast, intelligent, flexible GPT model"},
+        ],
     },
     LLMProvider.ANTHROPIC: {
         "base_url": "https://api.anthropic.com/v1",
         "default_model": "claude-haiku-4-5-latest",
-        "models": ["claude-haiku-4-5-latest", "claude-sonnet-4-5-latest", "claude-3-5-haiku-latest"],
+        "key_prefix": "sk-ant-",
+        "models": [
+            {"id": "claude-haiku-4-5-latest", "name": "Claude Haiku 4.5", "description": "Fast with thinking, 90% of Sonnet performance"},
+            {"id": "claude-sonnet-4-5-latest", "name": "Claude Sonnet 4.5", "description": "Best balance with extended thinking"},
+            {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku", "description": "Legacy fast model"},
+            {"id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet", "description": "Legacy balanced model"},
+        ],
     },
     LLMProvider.GOOGLE: {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
         "default_model": "gemini-2.5-flash",
-        "models": ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3-flash", "gemini-2.0-flash", "gemini-2.0-flash-lite"],
+        "key_prefix": "",
+        "models": [
+            {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "description": "Fast with thinking capabilities"},
+            {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash", "description": "Previous generation flash"},
+            {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash", "description": "Legacy fast model"},
+        ],
+    },
+    LLMProvider.OHMYGPT: {
+        "base_url": "https://api.ohmygpt.com/v1",
+        "default_model": "gpt-4o-mini",
+        "key_prefix": "",
+        "models": [
+            {"id": "gpt-4o-mini", "name": "GPT-4o Mini", "description": "OpenAI GPT-4o Mini via OHMYGPT"},
+            {"id": "gpt-4o", "name": "GPT-4o", "description": "OpenAI GPT-4o via OHMYGPT"},
+            {"id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet", "description": "Anthropic Claude via OHMYGPT"},
+        ],
     },
     LLMProvider.OPENROUTER: {
         "base_url": "https://openrouter.ai/api/v1",
-        "default_model": "openai/gpt-4o-mini",
-        "models": ["openai/gpt-4o-mini", "anthropic/claude-3.5-haiku", "google/gemini-2.0-flash-exp"],
-    },
-    LLMProvider.MEGALLM: {
-        "base_url": "https://api.megallm.com/v1",
-        "default_model": "gpt-4o-mini",
-        "models": ["gpt-4o-mini", "claude-haiku", "gemini-flash"],
-    },
-    LLMProvider.AGENTROUTER: {
-        "base_url": "https://api.agentrouter.ai/v1",
-        "default_model": "gpt-4o-mini",
-        "models": ["gpt-4o-mini", "claude-haiku", "gemini-flash"],
+        "default_model": "xiaomi/mimo-v2-flash:free",
+        "key_prefix": "sk-or-",
+        "models": [
+            {"id": "xiaomi/mimo-v2-flash:free", "name": "MiMo-V2-Flash (Free)", "description": "Free - Xiaomi 309B MoE, #1 open-source"},
+            {"id": "mistralai/devstral-2512:free", "name": "Devstral 2 (Free)", "description": "Free - Mistral 123B for agentic coding"},
+            {"id": "kwaipilot/kat-coder-pro:free", "name": "KAT-Coder-Pro (Free)", "description": "Free - KwaiKAT agentic coding model"},
+            {"id": "deepseek/deepseek-r1-0528:free", "name": "DeepSeek R1 (Free)", "description": "Free - DeepSeek 671B reasoning model"},
+            {"id": "qwen/qwen3-coder:free", "name": "Qwen3 Coder 480B (Free)", "description": "Free - Qwen 480B for coding tasks"},
+            {"id": "meta-llama/llama-3.3-70b-instruct:free", "name": "Llama 3.3 70B (Free)", "description": "Free - Meta Llama 3.3 multilingual"},
+            {"id": "google/gemma-3-27b-it:free", "name": "Gemma 3 27B (Free)", "description": "Free - Google multimodal model"},
+            {"id": "openai/gpt-oss-120b:free", "name": "GPT-OSS-120B (Free)", "description": "Free - OpenAI open-source 117B MoE"},
+            {"id": "moonshotai/kimi-k2:free", "name": "Kimi K2 (Free)", "description": "Free - Moonshot 1T params, tool use"},
+            {"id": "google/gemini-2.0-flash-exp:free", "name": "Gemini 2.0 Flash (Free)", "description": "Free - Google 1M context experimental"},
+        ],
     },
 }
 
@@ -111,6 +146,7 @@ async def get_providers():
     return {
         provider.value: {
             "default_model": config["default_model"],
+            "key_prefix": config.get("key_prefix", ""),
             "models": config["models"],
         }
         for provider, config in PROVIDER_CONFIG.items()

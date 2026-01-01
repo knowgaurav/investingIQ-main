@@ -6,8 +6,7 @@ from .llm_providers import (
     AnthropicProvider,
     GoogleProvider,
     OpenRouterProvider,
-    MegaLLMProvider,
-    AgentRouterProvider,
+    OHMYGPTProvider,
 )
 
 
@@ -19,8 +18,7 @@ class LLMProviderFactory:
         "anthropic": AnthropicProvider,
         "google": GoogleProvider,
         "openrouter": OpenRouterProvider,
-        "megallm": MegaLLMProvider,
-        "agentrouter": AgentRouterProvider,
+        "ohmygpt": OHMYGPTProvider,
     }
     
     @classmethod

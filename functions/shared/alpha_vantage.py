@@ -1,54 +1,84 @@
-"""Alpha Vantage API client for stock data, news, and company info."""
+"""Alpha Vantage API client with multi-key rotation."""
 import os
 import logging
-from datetime import datetime
 from typing import Optional
 import requests
+import redis
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.alphavantage.co/query"
+REDIS_URL = "redis://localhost:6379/0"
+
+# Redis key for tracking which API key to use next
+REDIS_KEY_INDEX = "alpha_vantage:key_index"
+
+
+def _get_redis():
+    """Get Redis client."""
+    return redis.from_url(REDIS_URL, decode_responses=True)
+
+
+def get_api_keys() -> list:
+    """Get list of Alpha Vantage API keys from environment.
+    
+    Expects ALPHA_VANTAGE_API_KEYS as comma-separated values,
+    or falls back to single ALPHA_VANTAGE_API_KEY.
+    """
+    keys_str = os.environ.get("ALPHA_VANTAGE_API_KEYS", "")
+    if keys_str:
+        return [k.strip() for k in keys_str.split(",") if k.strip()]
+    
+    # Fallback to single key
+    single_key = os.environ.get("ALPHA_VANTAGE_API_KEY", "")
+    return [single_key] if single_key else []
 
 
 def get_api_key() -> str:
-    """Get Alpha Vantage API key from environment."""
-    key = os.environ.get("ALPHA_VANTAGE_API_KEY")
-    if not key:
-        raise ValueError("ALPHA_VANTAGE_API_KEY not set")
-    return key
+    """Get next API key using round-robin rotation."""
+    keys = get_api_keys()
+    if not keys:
+        raise ValueError("No Alpha Vantage API keys configured")
+    
+    if len(keys) == 1:
+        return keys[0]
+    
+    # Round-robin using Redis atomic increment
+    try:
+        r = _get_redis()
+        index = r.incr(REDIS_KEY_INDEX) - 1
+        key = keys[index % len(keys)]
+        logger.debug(f"Using API key index {index % len(keys)}")
+        return key
+    except Exception as e:
+        logger.warning(f"Redis error, using first key: {e}")
+        return keys[0]
+
+
+def safe_float(value) -> Optional[float]:
+    """Safely convert value to float."""
+    if value is None or value == "" or value == "None" or value == "-":
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def safe_int(value) -> Optional[int]:
+    """Safely convert value to int."""
+    if value is None or value == "" or value == "None" or value == "-":
+        return None
+    try:
+        return int(float(value))
+    except (ValueError, TypeError):
+        return None
 
 
 def fetch_daily_prices(ticker: str, outputsize: str = "compact", days: int = 100) -> dict:
-    """
-    Fetch daily price data. Uses cache, falls back to APIs.
-    """
-    from shared.cache import get_stock_cache
-    
+    """Fetch daily price data from Alpha Vantage."""
     ticker = ticker.upper()
-    cache = get_stock_cache()
     
-    # Check cache first
-    cached = cache.get_prices(ticker)
-    if cached and cached.get("price_history"):
-        logger.info(f"Using cached price data for {ticker}")
-        return cached
-    
-    # Try Alpha Vantage first
-    result = fetch_prices_alphavantage(ticker, outputsize, days)
-    if result.get("price_history"):
-        cache.set_prices(ticker, result)
-        return result
-    
-    # Fallback to Finviz scraping
-    logger.info(f"Falling back to Finviz for {ticker} price data")
-    result = fetch_prices_finviz(ticker, days)
-    if result.get("price_history"):
-        cache.set_prices(ticker, result)
-    return result
-
-
-def fetch_prices_alphavantage(ticker: str, outputsize: str, days: int) -> dict:
-    """Fetch from Alpha Vantage."""
     try:
         params = {
             "function": "TIME_SERIES_DAILY",
@@ -67,11 +97,11 @@ def fetch_prices_alphavantage(ticker: str, outputsize: str, days: int) -> dict:
         
         if "Note" in data:
             logger.warning(f"Alpha Vantage rate limit: {data['Note']}")
-            return {"ticker": ticker, "price_history": [], "error": "Rate limit exceeded"}
+            return {"ticker": ticker, "price_history": [], "_rate_limited": True}
         
         if "Information" in data:
             logger.warning(f"Alpha Vantage: {data['Information']}")
-            return {"ticker": ticker, "price_history": [], "error": data["Information"]}
+            return {"ticker": ticker, "price_history": [], "_rate_limited": True}
         
         time_series = data.get("Time Series (Daily)", {})
         if not time_series:
@@ -97,107 +127,14 @@ def fetch_prices_alphavantage(ticker: str, outputsize: str, days: int) -> dict:
         return {"ticker": ticker, "price_history": price_history, "current_price": current_price}
         
     except Exception as e:
-        logger.error(f"Alpha Vantage error: {e}")
-        return {"ticker": ticker, "price_history": [], "error": str(e)}
-
-
-def fetch_prices_finviz(ticker: str, days: int = 100) -> dict:
-    """Fetch price data by scraping Finviz (free, no API key)."""
-    from bs4 import BeautifulSoup
-    from urllib.request import urlopen, Request
-    from datetime import datetime, timedelta
-    
-    try:
-        url = f"https://finviz.com/quote.ashx?t={ticker}"
-        req = Request(url=url, headers={'User-Agent': 'Mozilla/5.0'})
-        response = urlopen(req, timeout=15)
-        html = BeautifulSoup(response, 'html.parser')
-        
-        # Extract current price and key stats
-        def get_value(label):
-            try:
-                for row in html.find_all('tr', class_='table-dark-row'):
-                    cells = row.find_all('td')
-                    for i, cell in enumerate(cells):
-                        if cell.text.strip() == label and i + 1 < len(cells):
-                            return cells[i + 1].text.strip()
-            except:
-                pass
-            return None
-        
-        price_str = get_value('Price')
-        current_price = float(price_str.replace(',', '')) if price_str else None
-        
-        if not current_price:
-            # Try alternative selector
-            price_elem = html.find('strong', class_='quote-price_wrapper_price')
-            if price_elem:
-                current_price = float(price_elem.text.replace(',', ''))
-        
-        if not current_price:
-            logger.warning(f"Finviz: Could not find price for {ticker}")
-            return {"ticker": ticker, "price_history": [], "error": "No price found"}
-        
-        # Generate synthetic historical data based on current price
-        # This is a fallback - real historical data would be better
-        price_history = []
-        base_date = datetime.now()
-        
-        # Use price with small random variations for demo purposes
-        import random
-        random.seed(42)  # Consistent results
-        
-        for i in range(days):
-            date = base_date - timedelta(days=days - i - 1)
-            if date.weekday() < 5:  # Skip weekends
-                variation = random.uniform(-0.02, 0.02)
-                day_price = current_price * (1 + variation * (days - i) / days)
-                price_history.append({
-                    "date": date.strftime("%Y-%m-%d"),
-                    "open": round(day_price * 0.998, 2),
-                    "high": round(day_price * 1.01, 2),
-                    "low": round(day_price * 0.99, 2),
-                    "close": round(day_price, 2),
-                    "volume": random.randint(50000000, 100000000),
-                })
-        
-        logger.info(f"Finviz: Generated {len(price_history)} days for {ticker}, current=${current_price}")
-        return {"ticker": ticker, "price_history": price_history, "current_price": current_price}
-        
-    except Exception as e:
-        logger.error(f"Finviz price error: {e}")
+        logger.error(f"Alpha Vantage price error: {e}")
         return {"ticker": ticker, "price_history": [], "error": str(e)}
 
 
 def fetch_company_overview(ticker: str) -> dict:
-    """Fetch company info with 24hr cache. Falls back to Yahoo if Alpha Vantage fails."""
-    from shared.cache import get_stock_cache
-    
-    ticker = ticker.upper()
-    cache = get_stock_cache()
-    
-    # Check cache first (24hr TTL for company info)
-    cached = cache.get_company_info(ticker)
-    if cached and (cached.get("market_cap") or cached.get("pe_ratio") or cached.get("name")):
-        logger.info(f"Using cached company info for {ticker}")
-        return cached
-    
-    # Try Alpha Vantage first
-    result = fetch_overview_alphavantage(ticker)
-    if result.get("market_cap") or result.get("pe_ratio"):
-        cache.set_company_info(ticker, result)
-        return result
-    
-    # Fallback to Yahoo scraping
-    logger.info(f"Falling back to Yahoo for {ticker} company overview")
-    result = fetch_overview_fmp(ticker)
-    if result.get("name") and result.get("name") != ticker:
-        cache.set_company_info(ticker, result)
-    return result
-
-
-def fetch_overview_alphavantage(ticker: str) -> dict:
     """Fetch company overview from Alpha Vantage."""
+    ticker = ticker.upper()
+    
     try:
         params = {
             "function": "OVERVIEW",
@@ -209,14 +146,20 @@ def fetch_overview_alphavantage(ticker: str) -> dict:
         resp.raise_for_status()
         data = resp.json()
         
-        if not data or "Symbol" not in data:
-            return {"name": ticker, "error": "No data available"}
+        if "Note" in data or "Information" in data:
+            msg = data.get("Note") or data.get("Information")
+            logger.warning(f"Alpha Vantage rate limit for {ticker}: {msg}")
+            return {"name": ticker, "sector": None, "industry": None, "_rate_limited": True}
         
-        return {
+        if not data or "Symbol" not in data:
+            logger.warning(f"No overview data for {ticker}")
+            return {"name": ticker, "sector": None, "industry": None}
+        
+        result = {
             "name": data.get("Name", ticker),
-            "sector": data.get("Sector", "Unknown"),
-            "industry": data.get("Industry", "Unknown"),
-            "description": data.get("Description", ""),
+            "sector": data.get("Sector"),
+            "industry": data.get("Industry"),
+            "description": data.get("Description") or "",
             "market_cap": safe_int(data.get("MarketCapitalization")),
             "pe_ratio": safe_float(data.get("PERatio")),
             "peg_ratio": safe_float(data.get("PEGRatio")),
@@ -232,82 +175,60 @@ def fetch_overview_alphavantage(ticker: str) -> dict:
             "analyst_target": safe_float(data.get("AnalystTargetPrice")),
         }
         
+        logger.info(f"Alpha Vantage overview for {ticker}: sector={result['sector']}, industry={result['industry']}")
+        return result
+        
     except Exception as e:
         logger.error(f"Alpha Vantage overview error for {ticker}: {e}")
-        return {"name": ticker, "error": str(e)}
+        return {"name": ticker, "sector": None, "industry": None, "_error": str(e)}
 
 
-def fetch_overview_fmp(ticker: str) -> dict:
-    """Fetch company overview by scraping Yahoo Finance (free, no API key)."""
-    from bs4 import BeautifulSoup
+def fetch_earnings(ticker: str) -> dict:
+    """Fetch earnings history from Alpha Vantage."""
+    ticker = ticker.upper()
     
     try:
-        headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
+        params = {
+            "function": "EARNINGS",
+            "symbol": ticker,
+            "apikey": get_api_key(),
+        }
         
-        # Scrape Yahoo Finance quote page
-        url = f"https://finance.yahoo.com/quote/{ticker}"
-        resp = requests.get(url, headers=headers, timeout=15)
-        soup = BeautifulSoup(resp.text, 'html.parser')
+        resp = requests.get(BASE_URL, params=params, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
         
-        def get_stat(label):
-            """Extract stat value from Yahoo Finance page."""
-            try:
-                # Find by data-field attribute or text content
-                for elem in soup.find_all(['fin-streamer', 'td', 'span']):
-                    if elem.get('data-field') == label:
-                        return elem.get('data-value') or elem.text.strip()
-                    if label.lower() in str(elem.get('title', '')).lower():
-                        next_elem = elem.find_next('td') or elem.find_next('fin-streamer')
-                        if next_elem:
-                            return next_elem.get('data-value') or next_elem.text.strip()
-            except:
-                pass
-            return None
+        if "Note" in data or "Information" in data:
+            logger.warning(f"Alpha Vantage rate limit for earnings {ticker}")
+            return {"annual_earnings": [], "quarterly_earnings": [], "_rate_limited": True}
         
-        # Get company name from title
-        title = soup.find('title')
-        name = title.text.split('(')[0].strip() if title else ticker
-        
-        # Try to extract key metrics
-        market_cap = get_stat('marketCap')
-        pe_ratio = get_stat('trailingPE')
-        eps = get_stat('epsTrailingTwelveMonths')
-        week_high = get_stat('fiftyTwoWeekHigh')
-        week_low = get_stat('fiftyTwoWeekLow')
-        
-        logger.info(f"Yahoo scrape for {ticker}: name={name}, pe={pe_ratio}")
+        annual = data.get("annualEarnings", [])[:5]
+        quarterly = data.get("quarterlyEarnings", [])[:8]
         
         return {
-            "name": name,
-            "sector": "Technology",  # Default for now
-            "industry": "Unknown",
-            "description": "",
-            "market_cap": safe_int(market_cap.replace(',', '').replace('T', '000000000000').replace('B', '000000000').replace('M', '000000') if market_cap else None),
-            "pe_ratio": safe_float(pe_ratio),
-            "peg_ratio": None,
-            "book_value": None,
-            "dividend_yield": None,
-            "eps": safe_float(eps),
-            "revenue_ttm": None,
-            "profit_margin": None,
-            "52_week_high": safe_float(week_high),
-            "52_week_low": safe_float(week_low),
-            "50_day_ma": None,
-            "200_day_ma": None,
-            "analyst_target": None,
+            "annual_earnings": [
+                {"fiscal_year": e.get("fiscalDateEnding"), "eps": safe_float(e.get("reportedEPS"))}
+                for e in annual
+            ],
+            "quarterly_earnings": [
+                {
+                    "fiscal_quarter": e.get("fiscalDateEnding"),
+                    "reported_eps": safe_float(e.get("reportedEPS")),
+                    "estimated_eps": safe_float(e.get("estimatedEPS")),
+                    "surprise": safe_float(e.get("surprise")),
+                    "surprise_pct": safe_float(e.get("surprisePercentage")),
+                }
+                for e in quarterly
+            ],
         }
         
     except Exception as e:
-        logger.error(f"Yahoo scrape error for {ticker}: {e}")
-        return {"name": ticker, "error": str(e)}
+        logger.error(f"Alpha Vantage earnings error for {ticker}: {e}")
+        return {"annual_earnings": [], "quarterly_earnings": []}
 
 
 def fetch_news_sentiment(ticker: str, limit: int = 50) -> list:
-    """
-    Fetch news articles with sentiment from Alpha Vantage.
-    
-    Returns list of articles with title, summary, url, source, sentiment scores.
-    """
+    """Fetch news articles with sentiment from Alpha Vantage."""
     try:
         params = {
             "function": "NEWS_SENTIMENT",
@@ -321,12 +242,8 @@ def fetch_news_sentiment(ticker: str, limit: int = 50) -> list:
         resp.raise_for_status()
         data = resp.json()
         
-        if "Note" in data:
-            logger.warning(f"Alpha Vantage rate limit: {data['Note']}")
-            return []
-        
-        if "Information" in data:
-            logger.warning(f"Alpha Vantage info: {data['Information']}")
+        if "Note" in data or "Information" in data:
+            logger.warning(f"Alpha Vantage rate limit for news {ticker}")
             return []
         
         feed = data.get("feed", [])
@@ -356,75 +273,12 @@ def fetch_news_sentiment(ticker: str, limit: int = 50) -> list:
         return articles
         
     except Exception as e:
-        logger.error(f"Error fetching news for {ticker}: {e}")
+        logger.error(f"Alpha Vantage news error for {ticker}: {e}")
         return []
 
 
-def fetch_earnings(ticker: str) -> dict:
-    """
-    Fetch earnings history with 24hr cache.
-    """
-    from shared.cache import get_stock_cache
-    
-    ticker = ticker.upper()
-    cache = get_stock_cache()
-    
-    # Check cache first
-    cached = cache.get_earnings(ticker)
-    if cached and (cached.get("annual_earnings") or cached.get("quarterly_earnings")):
-        logger.info(f"Using cached earnings for {ticker}")
-        return cached
-    
-    try:
-        params = {
-            "function": "EARNINGS",
-            "symbol": ticker,
-            "apikey": get_api_key(),
-        }
-        
-        resp = requests.get(BASE_URL, params=params, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
-        
-        annual = data.get("annualEarnings", [])[:5]
-        quarterly = data.get("quarterlyEarnings", [])[:8]
-        
-        result = {
-            "annual_earnings": [
-                {
-                    "fiscal_year": e.get("fiscalDateEnding"),
-                    "eps": safe_float(e.get("reportedEPS")),
-                }
-                for e in annual
-            ],
-            "quarterly_earnings": [
-                {
-                    "fiscal_quarter": e.get("fiscalDateEnding"),
-                    "reported_eps": safe_float(e.get("reportedEPS")),
-                    "estimated_eps": safe_float(e.get("estimatedEPS")),
-                    "surprise": safe_float(e.get("surprise")),
-                    "surprise_pct": safe_float(e.get("surprisePercentage")),
-                }
-                for e in quarterly
-            ],
-        }
-        
-        if result["annual_earnings"] or result["quarterly_earnings"]:
-            cache.set_earnings(ticker, result)
-        
-        return result
-        
-    except Exception as e:
-        logger.error(f"Error fetching earnings for {ticker}: {e}")
-        return {"annual_earnings": [], "quarterly_earnings": []}
-
-
 def fetch_stock_data(ticker: str) -> dict:
-    """
-    Fetch complete stock data: prices, company info, and earnings.
-    
-    Combines multiple API calls into one comprehensive result.
-    """
+    """Fetch complete stock data: prices and company info."""
     ticker = ticker.upper()
     
     prices = fetch_daily_prices(ticker)
@@ -435,116 +289,10 @@ def fetch_stock_data(ticker: str) -> dict:
         "price_history": prices.get("price_history", []),
         "current_price": prices.get("current_price"),
         "company_info": company,
-        "error": prices.get("error") or company.get("error"),
+        "error": prices.get("error") or company.get("_error"),
     }
 
 
 def fetch_news(ticker: str, limit: int = 20) -> list:
-    """
-    Fetch news articles with 15min cache.
-    Falls back to Finviz if Alpha Vantage fails.
-    """
-    from shared.cache import get_stock_cache
-    
-    ticker = ticker.upper()
-    cache = get_stock_cache()
-    
-    # Check cache first
-    cached = cache.get_news(ticker)
-    if cached:
-        logger.info(f"Using cached news for {ticker}")
-        return cached
-    
-    # Try Alpha Vantage first
-    articles = fetch_news_sentiment(ticker, limit)
-    if articles:
-        cache.set_news(ticker, articles)
-        return articles
-    
-    # Fallback to Finviz scraping
-    logger.info(f"Falling back to Finviz for {ticker} news")
-    articles = fetch_news_finviz(ticker, limit)
-    if articles:
-        cache.set_news(ticker, articles)
-    return articles
-
-
-def fetch_news_finviz(ticker: str, limit: int = 20) -> list:
-    """
-    Scrape news headlines from Finviz (free, no API key required).
-    """
-    from urllib.request import urlopen, Request
-    from bs4 import BeautifulSoup
-    
-    try:
-        url = f"https://finviz.com/quote.ashx?t={ticker}"
-        req = Request(url=url, headers={'User-Agent': 'Mozilla/5.0'})
-        response = urlopen(req, timeout=10)
-        html = BeautifulSoup(response, 'html.parser')
-        
-        news_table = html.find(id='news-table')
-        if not news_table:
-            logger.warning(f"No news table found on Finviz for {ticker}")
-            return []
-        
-        articles = []
-        rows = news_table.findAll('tr')
-        
-        for row in rows[:limit]:
-            try:
-                link = row.a
-                if not link:
-                    continue
-                    
-                title = link.get_text(strip=True)
-                url = link.get('href', '')
-                
-                # Get date/time from td
-                date_td = row.td
-                date_str = date_td.get_text(strip=True) if date_td else ''
-                
-                # Get source (usually in span)
-                source_span = row.find('span')
-                source = source_span.get_text(strip=True) if source_span else 'Finviz'
-                
-                articles.append({
-                    "title": title,
-                    "summary": "",
-                    "url": url,
-                    "source": source,
-                    "published_at": date_str,
-                    "overall_sentiment_score": None,
-                    "overall_sentiment_label": "Neutral",
-                    "ticker_sentiment_score": None,
-                    "ticker_sentiment_label": "Neutral",
-                    "relevance_score": None,
-                })
-            except Exception as e:
-                continue
-        
-        logger.info(f"Fetched {len(articles)} news articles from Finviz for {ticker}")
-        return articles
-        
-    except Exception as e:
-        logger.error(f"Error fetching Finviz news for {ticker}: {e}")
-        return []
-
-
-def safe_float(value) -> Optional[float]:
-    """Safely convert value to float."""
-    if value is None or value == "" or value == "None" or value == "-":
-        return None
-    try:
-        return float(value)
-    except (ValueError, TypeError):
-        return None
-
-
-def safe_int(value) -> Optional[int]:
-    """Safely convert value to int."""
-    if value is None or value == "" or value == "None" or value == "-":
-        return None
-    try:
-        return int(value)
-    except (ValueError, TypeError):
-        return None
+    """Fetch news articles from Alpha Vantage."""
+    return fetch_news_sentiment(ticker.upper(), limit)

@@ -49,6 +49,7 @@ def main(msg: func.ServiceBusMessage):
                     "task_id": task_id,
                     "ticker": ticker,
                     "data": result,
+                    "llm_config": llm_config,
                     "timestamp": datetime.utcnow().isoformat(),
                 }
             })
@@ -75,6 +76,19 @@ def main(msg: func.ServiceBusMessage):
                 }
             })
             
+            # Cache stock data in Redis for LLM tool access (only if not rate limited)
+            if llm_config:
+                from shared.cache import get_stock_cache
+                cache = get_stock_cache()
+                cache.set_prices(ticker, result.get("price_history", []))
+                company_info = result.get("company_info", {})
+                # Only cache company info if we got real data (not rate limited)
+                if company_info and not company_info.get("_rate_limited"):
+                    cache.set_company_info(ticker, company_info)
+                if result.get("earnings"):
+                    cache.set_earnings(ticker, result.get("earnings", {}))
+                logger.info(f"Cached stock data for {ticker} for LLM analysis")
+            
         elif task_type == "fetch_news":
             result = fetch_news(ticker)
             headlines = [{"title": a.get("title", "")} for a in result]
@@ -86,6 +100,7 @@ def main(msg: func.ServiceBusMessage):
                     "task_id": task_id,
                     "ticker": ticker,
                     "data": result,
+                    "llm_config": llm_config,
                     "timestamp": datetime.utcnow().isoformat(),
                 }
             })
@@ -102,6 +117,12 @@ def main(msg: func.ServiceBusMessage):
             })
             
             if llm_config:
+                # Cache news in Redis for LLM tool access
+                from shared.cache import get_stock_cache
+                cache = get_stock_cache()
+                cache.set_news(ticker, result)
+                logger.info(f"Cached news for {ticker} for LLM analysis")
+                
                 messages_to_send.append({
                     "queue": "llm-queue",
                     "message": {

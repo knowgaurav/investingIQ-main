@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-export type LLMProvider = 'openai' | 'anthropic' | 'google' | 'openrouter' | 'megallm' | 'agentrouter';
+export type LLMProvider = 'openai' | 'anthropic' | 'google' | 'ohmygpt' | 'openrouter';
 
 export interface LLMConfig {
     provider: LLMProvider;
@@ -15,27 +15,34 @@ const STORAGE_KEY = 'investingiq_llm_config';
 export const PROVIDER_MODELS: Record<LLMProvider, { default: string; options: string[] }> = {
     openai: {
         default: 'gpt-4o-mini',
-        options: ['gpt-4o-mini', 'gpt-4.1-mini', 'gpt-4.1-nano', 'gpt-5-mini', 'gpt-5-nano'],
+        options: ['gpt-4o-mini', 'gpt-5-nano', 'gpt-5-mini', 'gpt-5', 'gpt-5.1', 'gpt-5.2', 'gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o'],
     },
     anthropic: {
         default: 'claude-haiku-4-5-latest',
-        options: ['claude-haiku-4-5-latest', 'claude-sonnet-4-5-latest', 'claude-3-5-haiku-latest'],
+        options: ['claude-haiku-4-5-latest', 'claude-sonnet-4-5-latest', 'claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022'],
     },
     google: {
         default: 'gemini-2.5-flash',
-        options: ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-3-flash', 'gemini-2.0-flash', 'gemini-2.0-flash-lite'],
+        options: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'],
+    },
+    ohmygpt: {
+        default: 'gpt-4o-mini',
+        options: ['gpt-4o-mini', 'gpt-4o', 'claude-3-5-sonnet-20241022'],
     },
     openrouter: {
-        default: 'openai/gpt-4o-mini',
-        options: ['openai/gpt-4o-mini', 'anthropic/claude-3.5-haiku', 'google/gemini-2.0-flash-exp'],
-    },
-    megallm: {
-        default: 'gpt-4o-mini',
-        options: ['gpt-4o-mini', 'claude-haiku', 'gemini-flash'],
-    },
-    agentrouter: {
-        default: 'gpt-4o-mini',
-        options: ['gpt-4o-mini', 'claude-haiku', 'gemini-flash'],
+        default: 'xiaomi/mimo-v2-flash:free',
+        options: [
+            'xiaomi/mimo-v2-flash:free',
+            'mistralai/devstral-2512:free',
+            'kwaipilot/kat-coder-pro:free',
+            'deepseek/deepseek-r1-0528:free',
+            'qwen/qwen3-coder:free',
+            'meta-llama/llama-3.3-70b-instruct:free',
+            'google/gemma-3-27b-it:free',
+            'openai/gpt-oss-120b:free',
+            'moonshotai/kimi-k2:free',
+            'google/gemini-2.0-flash-exp:free',
+        ],
     },
 };
 
@@ -43,9 +50,8 @@ export const PROVIDER_NAMES: Record<LLMProvider, string> = {
     openai: 'OpenAI',
     anthropic: 'Anthropic',
     google: 'Google',
+    ohmygpt: 'OHMYGPT',
     openrouter: 'OpenRouter',
-    megallm: 'MegaLLM',
-    agentrouter: 'AgentRouter',
 };
 
 export function useLLMConfig() {

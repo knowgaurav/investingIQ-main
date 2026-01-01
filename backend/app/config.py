@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     # News API
     news_api_key: str = ""
     
+    # Alpha Vantage
+    alpha_vantage_api_key: str = ""
+    
     # MLflow
     mlflow_tracking_uri: str = "http://localhost:5000"
     mlflow_experiment_name: str = "investingiq-llm"
