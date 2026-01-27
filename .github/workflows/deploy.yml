@@ -1,0 +1,121 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      functions: ${{ steps.filter.outputs.functions }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+            backend:
+              - 'backend/**'
+            functions:
+              - 'functions/**'
+
+  deploy-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to Vercel
+        run: |
+          echo "Frontend deployment is handled by Vercel GitHub integration"
+          echo "Vercel automatically deploys on push to main branch"
+          echo "Ensure Vercel is connected to this repository with:"
+          echo "  - Root Directory: frontend"
+          echo "  - Framework Preset: Next.js"
+          echo "  - Environment Variable: NEXT_PUBLIC_API_URL"
+
+  deploy-backend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.backend == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy
+        run: |
+          if [ -z "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK_URL secret not configured"
+            echo "Backend deployment is handled by Render GitHub integration"
+            echo "Or configure RENDER_DEPLOY_HOOK_URL secret for webhook deployment"
+          else
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+            echo "Render deployment triggered successfully"
+          fi
+
+  deploy-functions:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.functions == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      - name: Decode PFX Certificate
+        run: |
+          echo "${{ secrets.AZURE_SP_CERTIFICATE_BASE64 }}" | base64 -d > sp-cert.pfx
+
+      - name: Azure Login with Service Principal
+        run: |
+          az login --service-principal \
+            --username "${{ secrets.AZURE_CLIENT_ID }}" \
+            --tenant "${{ secrets.AZURE_TENANT_ID }}" \
+            --password sp-cert.pfx \
+            --allow-no-subscriptions
+          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      - name: Install Function Dependencies
+        working-directory: functions
+        run: |
+          pip install -r requirements.txt -t .python_packages/lib/site-packages
+
+      - name: Package Functions
+        working-directory: functions
+        run: |
+          zip -r ../functions.zip . -x "*.pyc" -x "__pycache__/*" -x ".venv/*" -x "tests/*" -x ".pytest_cache/*" -x ".hypothesis/*"
+
+      - name: Deploy to Azure Functions
+        run: |
+          az functionapp deployment source config-zip \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ secrets.AZURE_FUNCTION_APP_NAME }}" \
+            --src functions.zip
+
+      - name: Configure App Settings
+        run: |
+          az functionapp config appsettings set \
+            --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ secrets.AZURE_FUNCTION_APP_NAME }}" \
+            --settings \
+              DATABASE_URL="${{ secrets.FUNC_DATABASE_URL }}" \
+              OPENAI_API_KEY="${{ secrets.FUNC_OPENAI_API_KEY }}" \
+              OPENAI_BASE_URL="${{ secrets.FUNC_OPENAI_BASE_URL }}" \
+              LLM_MODEL="${{ secrets.FUNC_LLM_MODEL }}" \
+              BACKEND_CALLBACK_URL="${{ secrets.FUNC_BACKEND_CALLBACK_URL }}" \
+              AZURE_SERVICEBUS_CONNECTION_STRING="${{ secrets.FUNC_SERVICEBUS_CONNECTION_STRING }}" \
+              AZURE_STORAGE_CONNECTION_STRING="${{ secrets.FUNC_STORAGE_CONNECTION_STRING }}" \
+              ALPHA_VANTAGE_API_KEYS="${{ secrets.FUNC_ALPHA_VANTAGE_API_KEYS }}"
+
+      - name: Cleanup
+        if: always()
+        run: rm -f sp-cert.pfx functions.zip

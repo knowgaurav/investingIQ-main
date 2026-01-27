@@ -1,0 +1,33 @@
+# Render Blueprint - InvestingIQ Backend
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: investingiq-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: AZURE_SERVICEBUS_CONNECTION_STRING
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        value: https://ai.megallm.io/v1
+      - key: LLM_MODEL
+        value: deepseek-ai/deepseek-v3.1
+      - key: NEWS_API_KEY
+        sync: false
+      - key: ALPHA_VANTAGE_API_KEY
+        sync: false
+      - key: MLFLOW_TRACKING_URI
+        sync: false
+      - key: RATE_LIMIT
+        value: 100/minute
+      - key: DEBUG
+        value: "false"
