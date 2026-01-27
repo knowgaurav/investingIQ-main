@@ -57,10 +57,14 @@ def get_api_key() -> str:
 
 def safe_float(value) -> Optional[float]:
     """Safely convert value to float."""
-    if value is None or value == "" or value == "None" or value == "-":
+    if value is None or value == "" or value == "None" or value == "-" or value == "NaN":
         return None
     try:
-        return float(value)
+        result = float(value)
+        # Check for NaN (float("nan") returns nan)
+        if result != result:  # NaN is the only value that doesn't equal itself
+            return None
+        return result
     except (ValueError, TypeError):
         return None
 
