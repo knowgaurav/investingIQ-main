@@ -13,28 +13,38 @@ def main(input_data: dict) -> dict:
     stock_data = input_data["stock_data"]
     news_data = input_data["news_data"]
     
-    price_history = stock_data.get("price_history", [])
-    headlines = [{"title": a.get("title", "")} for a in news_data]
-    
-    # ML Prediction
-    send_progress(task_id, 25, "Running price predictions")
-    prediction_result = ml_prediction(price_history)
-    
-    # ML Technical
-    send_progress(task_id, 35, "Calculating technical indicators")
-    technical_result = ml_technical(price_history)
-    
-    # ML Sentiment
-    send_progress(task_id, 45, "Analyzing news sentiment")
-    sentiment_result = ml_sentiment(headlines)
-    
-    logger.info(f"ML analysis completed for {ticker}")
-    
-    return {
-        "type": "ml_analysis",
-        "data": {
-            "prediction": prediction_result,
-            "technical": technical_result,
-            "sentiment": sentiment_result,
+    try:
+        price_history = stock_data.get("price_history", [])
+        headlines = [{"title": a.get("title", "")} for a in news_data]
+        
+        # ML Prediction
+        send_progress(task_id, 25, "Running price predictions")
+        prediction_result = ml_prediction(price_history)
+        
+        # ML Technical
+        send_progress(task_id, 35, "Calculating technical indicators")
+        technical_result = ml_technical(price_history)
+        
+        # ML Sentiment
+        send_progress(task_id, 45, "Analyzing news sentiment")
+        sentiment_result = ml_sentiment(headlines)
+        
+        logger.info(f"ML analysis completed for {ticker}")
+        
+        return {
+            "type": "ml_analysis",
+            "status": "ok",
+            "data": {
+                "prediction": prediction_result,
+                "technical": technical_result,
+                "sentiment": sentiment_result,
+            }
         }
-    }
+    except Exception as e:
+        logger.error(f"ML analysis failed for {ticker}: {e}")
+        return {
+            "type": "ml_analysis",
+            "status": "failed",
+            "error": str(e),
+            "data": None,
+        }

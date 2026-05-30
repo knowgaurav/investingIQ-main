@@ -144,6 +144,17 @@ class RAGService:
             logger.error(f"Error getting analysis context: {e}")
             return None
     
+    def has_financials(self, db: Session, ticker: str) -> bool:
+        """Return True if any quarterly financials passages exist for the ticker."""
+        try:
+            return db.query(FinancialDocument).filter(
+                FinancialDocument.ticker == ticker.upper(),
+                FinancialDocument.doc_type == "quarterly_financials",
+            ).first() is not None
+        except Exception as e:
+            logger.error(f"Error checking financials availability: {e}")
+            return False
+
     def build_context_string(self, db: Session, query: str, ticker: str, limit: int = 5) -> tuple:
         """Build context string and sources for chat."""
         context_parts = []
@@ -154,9 +165,22 @@ class RAGService:
             docs = self.retrieve_context(db, query, ticker, limit)
             for doc in docs:
                 context_parts.append(f"[{doc['doc_type']}]: {doc['content']}")
-                sources.append({"title": doc['content'][:50] + "...", "doc_type": doc['doc_type']})
+                if doc["doc_type"] == "quarterly_financials":
+                    meta = doc.get("metadata") or {}
+                    statement_type = meta.get("statement_type", "financials")
+                    fiscal_quarter = meta.get("fiscal_quarter", "unknown quarter")
+                    sources.append(f"{statement_type.replace('_', ' ').title()} · {fiscal_quarter}")
+                else:
+                    sources.append(f"{doc['doc_type']}: {doc['content'][:50]}...")
         except Exception as e:
             logger.warning(f"Vector search failed: {e}")
+        
+        # Note when no quarterly financials are available for this ticker
+        if not self.has_financials(db, ticker):
+            context_parts.append(
+                f"[Note]: No quarterly financials have been ingested for {ticker.upper()} yet. "
+                "Suggest the user run an analysis first to load the company's quarterly financial records."
+            )
         
         # Get latest analysis report
         analysis = self.get_analysis_context(db, ticker)

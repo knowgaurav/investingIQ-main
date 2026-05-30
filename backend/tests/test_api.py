@@ -105,18 +105,16 @@ class TestAnalysisEndpoints:
     
     def test_request_analysis_accepts_ticker(self, client):
         """Test analysis request accepts ticker."""
-        with patch("app.models.database.SessionLocal") as mock_session:
-            with patch("app.api.routes.analysis.run_parallel_analysis_task"):
-                mock_db = MagicMock()
-                mock_session.return_value = mock_db
-                
-                response = client.post(
-                    "/api/v1/analysis/request",
-                    json={"ticker": "AAPL"}
-                )
-        
-        # Should return 202 Accepted or similar
-        assert response.status_code in [200, 202, 500]  # May fail without DB
+        with patch("app.api.routes.analysis.get_orchestration_client") as mock_get:
+            mock_get.return_value = MagicMock()
+
+            response = client.post(
+                "/api/v1/analysis/request",
+                json={"ticker": "AAPL"}
+            )
+
+        # Should return 202 Accepted
+        assert response.status_code in [200, 202, 503]
     
     def test_get_analysis_status_with_invalid_id(self, client):
         """Test getting analysis status with invalid task ID."""

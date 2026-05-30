@@ -1,4 +1,4 @@
-"""Analysis API endpoints - uses Redis + Service Bus (no database required)."""
+"""Analysis API endpoints - starts Azure Durable Functions orchestration."""
 import logging
 from uuid import UUID, uuid4
 
@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.models.schemas import (
     AnalysisRequest, AnalysisTaskStatus, AnalysisTaskResponse,
 )
-from app.services.service_bus import get_orchestrator
+from app.services.orchestration_client import get_orchestration_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -15,7 +15,7 @@ router = APIRouter()
 
 @router.post("/analysis/request", response_model=AnalysisTaskResponse, status_code=status.HTTP_202_ACCEPTED)
 async def request_analysis(request: AnalysisRequest) -> AnalysisTaskResponse:
-    """Create analysis task and send to Azure Service Bus for processing."""
+    """Create analysis task and start the Durable Functions orchestration."""
     ticker = request.ticker.upper().strip()
     if not ticker:
         raise HTTPException(status_code=400, detail="Ticker symbol is required")
@@ -24,7 +24,7 @@ async def request_analysis(request: AnalysisRequest) -> AnalysisTaskResponse:
     llm_enabled = request.llm_config is not None
     
     try:
-        orchestrator = get_orchestrator()
+        client = get_orchestration_client()
         llm_config = None
         if request.llm_config:
             llm_config = {
@@ -32,10 +32,10 @@ async def request_analysis(request: AnalysisRequest) -> AnalysisTaskResponse:
                 "api_key": request.llm_config.api_key,
                 "model": request.llm_config.model,
             }
-        orchestrator.start_analysis(ticker, task_id, llm_config)
+        client.start_analysis(ticker, task_id, llm_config)
     except Exception as e:
-        logger.error(f"Failed to queue analysis: {e}")
-        raise HTTPException(status_code=503, detail=f"Service Bus unavailable: {e}")
+        logger.error(f"Failed to start orchestration: {e}")
+        raise HTTPException(status_code=503, detail=f"Orchestration unavailable: {e}")
     
     analysis_type = "ML + LLM" if llm_enabled else "ML only"
     return AnalysisTaskResponse(

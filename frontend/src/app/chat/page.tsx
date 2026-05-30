@@ -174,8 +174,8 @@ function ChatContent() {
                                     >
                                         <div
                                             className={`max-w-[80%] rounded-2xl px-4 py-3 ${message.role === 'user'
-                                                    ? 'bg-primary text-white'
-                                                    : 'bg-theme-secondary text-theme'
+                                                ? 'bg-primary text-white'
+                                                : 'bg-theme-secondary text-theme'
                                                 }`}
                                         >
                                             <p className="whitespace-pre-wrap">{message.content}</p>
@@ -183,14 +183,20 @@ function ChatContent() {
                                                 <div className="mt-3 pt-3 border-t border-white/20">
                                                     <p className="text-xs text-theme-muted mb-1">Sources:</p>
                                                     <div className="flex flex-wrap gap-1">
-                                                        {message.sources.map((source, i) => (
-                                                            <span
-                                                                key={i}
-                                                                className="text-xs bg-theme text-theme-secondary px-2 py-0.5 rounded"
-                                                            >
-                                                                {source}
-                                                            </span>
-                                                        ))}
+                                                        {message.sources.map((source, i) => {
+                                                            const isFinancials = source.includes('·');
+                                                            return (
+                                                                <span
+                                                                    key={i}
+                                                                    className={`text-xs px-2 py-0.5 rounded ${isFinancials
+                                                                            ? 'bg-primary/20 text-primary font-medium'
+                                                                            : 'bg-theme text-theme-secondary'
+                                                                        }`}
+                                                                >
+                                                                    {isFinancials ? `📑 ${source}` : source}
+                                                                </span>
+                                                            );
+                                                        })}
                                                     </div>
                                                 </div>
                                             )}

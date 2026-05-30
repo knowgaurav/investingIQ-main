@@ -23,9 +23,6 @@ class Settings:
     # Backend callback URL for SSE updates
     backend_callback_url: str
     
-    # Service Bus
-    servicebus_connection: str
-    
     # Azure Storage
     storage_connection: str
     
@@ -42,7 +39,6 @@ def get_settings() -> Settings:
         openai_base_url=os.environ.get("OPENAI_BASE_URL", "https://ai.megallm.io/v1"),
         llm_model=os.environ.get("LLM_MODEL", "deepseek-ai/deepseek-v3.1"),
         backend_callback_url=os.environ.get("BACKEND_CALLBACK_URL", "http://localhost:8000"),
-        servicebus_connection=os.environ.get("AZURE_SERVICEBUS_CONNECTION_STRING", ""),
         storage_connection=os.environ.get("AZURE_STORAGE_CONNECTION_STRING", "UseDevelopmentStorage=true"),
         alpha_vantage_api_key=os.environ.get("ALPHA_VANTAGE_API_KEY", ""),
     )
