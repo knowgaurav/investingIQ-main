@@ -17,8 +17,9 @@ class Settings(BaseSettings):
     redis_host: str = "localhost"
     redis_port: int = 6379
     
-    # Azure Service Bus
-    azure_servicebus_connection_string: str = ""
+    # Azure Durable Functions orchestration
+    functions_orchestrator_url: str = "http://localhost:7071/api/orchestrator/start"
+    functions_key: str = ""
     
     # LLM (OpenAI-compatible API)
     openai_api_key: str = ""
