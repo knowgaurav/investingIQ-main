@@ -54,6 +54,7 @@ npm-debug.log*
 htmlcov/
 .pytest_cache/
 .hypothesis/
+coverage/
 
 # Database
 *.db
