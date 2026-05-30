@@ -9,11 +9,30 @@ import { StockSearchResult } from '@/lib/api';
 
 const RECENT_SEARCHES_KEY = 'investingiq_recent_searches';
 
+const TICKER_TAPE = [
+    { sym: 'AAPL', chg: '+1.24%', up: true },
+    { sym: 'MSFT', chg: '+0.62%', up: true },
+    { sym: 'NVDA', chg: '+3.08%', up: true },
+    { sym: 'TSLA', chg: '-2.11%', up: false },
+    { sym: 'AMZN', chg: '+0.47%', up: true },
+    { sym: 'META', chg: '+1.83%', up: true },
+    { sym: 'GOOGL', chg: '-0.34%', up: false },
+    { sym: 'JPM', chg: '+0.91%', up: true },
+    { sym: 'V', chg: '+0.18%', up: true },
+    { sym: 'WMT', chg: '-0.55%', up: false },
+];
+
+const EDITION_DATE = new Date().toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+});
+
 export default function Home() {
     const router = useRouter();
     const [recentSearches, setRecentSearches] = useState<StockSearchResult[]>([]);
 
-    // Load recent searches on mount
     useEffect(() => {
         try {
             const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
@@ -35,136 +54,162 @@ export default function Home() {
     };
 
     return (
-        <main className="min-h-screen bg-theme">
-            {/* Top Right Controls */}
-            <div className="absolute top-4 right-4 flex items-center gap-2">
-                <DarkModeToggle />
-            </div>
-
-            {/* Hero Section */}
-            <div className="container mx-auto px-4 pt-20 pb-16">
-                <div className="text-center">
-                    {/* Logo/Brand */}
-                    <div className="mb-6">
-                        <span className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl shadow-lg mb-4">
-                            <svg
-                                className="w-8 h-8 text-white"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-                                />
-                            </svg>
+        <main className="min-h-screen bg-theme overflow-hidden">
+            {/* ===== Ticker Tape ===== */}
+            <div className="ticker-mask border-b border-theme bg-theme-secondary/60 overflow-hidden">
+                <div className="flex w-max animate-ticker">
+                    {[...TICKER_TAPE, ...TICKER_TAPE].map((t, i) => (
+                        <span
+                            key={i}
+                            className="flex items-center gap-2 px-5 py-2 font-mono text-xs whitespace-nowrap border-r border-theme/60"
+                        >
+                            <span className="font-semibold text-theme tracking-wide">{t.sym}</span>
+                            <span className={t.up ? 'text-gain' : 'text-loss'}>
+                                {t.up ? '▲' : '▼'} {t.chg}
+                            </span>
                         </span>
-                    </div>
-
-                    {/* Title */}
-                    <h1 className="text-5xl font-bold text-theme mb-4">
-                        InvestingIQ
-                    </h1>
-                    <p className="text-xl text-theme-secondary mb-10 max-w-2xl mx-auto">
-                        AI-Powered Stock Analysis Platform. Get instant insights,
-                        sentiment analysis, and intelligent recommendations for any stock.
-                    </p>
-
-                    {/* Stock Search */}
-                    <StockSearch onRecentSearchesChange={setRecentSearches} />
-
-                    {/* Features */}
-                    <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-theme-muted">
-                        <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Real-time Analysis
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            AI-Powered Insights
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Sentiment Analysis
-                        </span>
-                        <span className="flex items-center gap-1">
-                            <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            Any Stock Worldwide
-                        </span>
-                    </div>
+                    ))}
                 </div>
             </div>
 
-            {/* Recent Searches Section */}
+            {/* ===== Masthead ===== */}
+            <header className="container mx-auto px-6 pt-7">
+                <div className="flex items-center justify-between text-theme-muted">
+                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] hidden sm:block">
+                        Vol. MMXXVI · No. 01
+                    </span>
+                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] hidden md:block">
+                        {EDITION_DATE}
+                    </span>
+                    <div className="flex items-center gap-3 ml-auto md:ml-0">
+                        <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] hidden lg:block">
+                            Price: 1 Analysis
+                        </span>
+                        <DarkModeToggle />
+                    </div>
+                </div>
+
+                <hr className="rule-gold mt-4" />
+
+                <div className="text-center pt-8">
+                    <p className="eyebrow mb-3 animate-fade-up">An AI Bureau of Market Intelligence</p>
+                    <h1 className="font-display font-black text-theme leading-[0.86] tracking-tight animate-fade-up"
+                        style={{ animationDelay: '0.05s', fontSize: 'clamp(3.25rem, 11vw, 8.5rem)' }}>
+                        InvestingIQ
+                    </h1>
+                </div>
+
+                <hr className="rule-gold mt-7" />
+            </header>
+
+            {/* ===== Lede + Search ===== */}
+            <section className="container mx-auto px-6">
+                <div className="max-w-3xl mx-auto text-center pt-10">
+                    <p className="font-display italic text-theme-secondary mb-9 animate-fade-up"
+                        style={{ animationDelay: '0.12s', fontSize: 'clamp(1.15rem, 2.6vw, 1.6rem)' }}>
+                        &ldquo;Instant insight on any ticker — statistical forecasts, machine
+                        sentiment, and an AI analyst&rsquo;s read, set in plain type.&rdquo;
+                    </p>
+
+                    <div className="animate-fade-up" style={{ animationDelay: '0.2s' }}>
+                        <StockSearch onRecentSearchesChange={setRecentSearches} />
+                    </div>
+
+                    {/* Feature columns — like newspaper bylines */}
+                    <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-px bg-theme border border-theme animate-fade-up"
+                        style={{ animationDelay: '0.28s' }}>
+                        {[
+                            ['Real-time', 'Live market analysis'],
+                            ['AI-Powered', 'LLM-driven insight'],
+                            ['Sentiment', 'News tone scoring'],
+                            ['Global', 'Any stock worldwide'],
+                        ].map(([head, sub]) => (
+                            <div key={head} className="bg-theme-card px-4 py-5 text-center">
+                                <p className="font-display font-semibold text-theme text-base">{head}</p>
+                                <p className="text-theme-muted text-xs mt-1">{sub}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ===== Recent Searches ===== */}
             {recentSearches.length > 0 && (
-                <div className="container mx-auto px-4 pb-16">
-                    <div className="max-w-xl mx-auto">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-theme-secondary">
-                                Recent Searches
-                            </h2>
+                <section className="container mx-auto px-6 pt-16">
+                    <div className="max-w-3xl mx-auto">
+                        <div className="flex items-end justify-between mb-4">
+                            <h2 className="eyebrow !text-theme-secondary">From Your Desk</h2>
                             <button
                                 onClick={clearRecentSearches}
-                                className="text-sm text-theme-muted hover:text-theme transition-colors"
+                                className="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-theme-muted hover:text-loss transition-colors"
                             >
                                 Clear all
                             </button>
                         </div>
-                        <div className="flex flex-wrap gap-2">
+                        <hr className="rule-gold mb-5" />
+                        <div className="flex flex-wrap gap-2.5">
                             {recentSearches.map((stock: StockSearchResult) => (
                                 <button
                                     key={stock.ticker}
                                     onClick={() => handleRecentClick(stock.ticker)}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-theme-card rounded-full shadow-sm hover:shadow-md transition-all group"
+                                    className="group inline-flex items-center gap-2 px-4 py-2 bg-theme-card border border-theme hover:border-accent transition-colors"
                                 >
-                                    <span className="font-semibold text-theme group-hover:text-primary">
+                                    <span className="font-mono font-semibold text-theme text-sm group-hover:text-primary">
                                         {stock.ticker}
                                     </span>
-                                    <span className="text-sm text-theme-muted group-hover:text-primary">
-                                        {stock.name.length > 20
-                                            ? `${stock.name.substring(0, 20)}...`
-                                            : stock.name}
+                                    <span className="text-xs text-theme-muted">
+                                        {stock.name.length > 22 ? `${stock.name.substring(0, 22)}…` : stock.name}
                                     </span>
                                 </button>
                             ))}
                         </div>
                     </div>
-                </div>
+                </section>
             )}
 
-            {/* Popular Stocks Section */}
-            <div className="container mx-auto px-4 pb-20">
-                <div className="max-w-3xl mx-auto">
-                    <h2 className="text-lg font-semibold text-theme-secondary mb-4 text-center">
-                        Popular Stocks
-                    </h2>
-                    <div className="flex flex-wrap justify-center gap-3">
+            {/* ===== Popular Stocks — "Most Watched" index ===== */}
+            <section className="container mx-auto px-6 py-16">
+                <div className="max-w-4xl mx-auto">
+                    <div className="text-center mb-2">
+                        <h2 className="eyebrow !text-theme-secondary">The Watchlist Index</h2>
+                    </div>
+                    <p className="font-display text-center text-theme-muted italic text-sm mb-6">
+                        Most-followed issues, selected by the bureau
+                    </p>
+                    <hr className="rule-gold mb-7" />
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-px bg-theme border border-theme">
                         {['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'NVDA', 'TSLA', 'META', 'JPM', 'V', 'WMT', 'JNJ', 'UNH'].map(
-                            (ticker) => (
+                            (ticker, i) => (
                                 <button
                                     key={ticker}
                                     onClick={() => handleRecentClick(ticker)}
-                                    className="px-5 py-2.5 bg-theme-card text-theme rounded-lg shadow-sm hover:bg-primary hover:text-white hover:shadow-md transition-all font-medium"
+                                    className="group bg-theme-card px-3 py-5 hover:bg-primary transition-colors duration-200"
                                 >
-                                    {ticker}
+                                    <span className="block font-mono text-[0.6rem] text-theme-muted group-hover:text-white/70 mb-1">
+                                        {String(i + 1).padStart(2, '0')}
+                                    </span>
+                                    <span className="block font-display font-bold text-theme text-lg group-hover:text-white transition-colors">
+                                        {ticker}
+                                    </span>
                                 </button>
                             )
                         )}
                     </div>
                 </div>
-            </div>
+            </section>
 
-            {/* LLM Settings Floating Button */}
+            {/* ===== Colophon footer ===== */}
+            <footer className="border-t border-theme">
+                <div className="container mx-auto px-6 py-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-theme-muted">
+                    <span className="font-mono text-[0.65rem] uppercase tracking-[0.18em]">
+                        InvestingIQ Bureau
+                    </span>
+                    <span className="font-display italic text-sm">
+                        Not financial advice. Read the figures, make your own call.
+                    </span>
+                </div>
+            </footer>
+
             <LLMSettings />
         </main>
     );
