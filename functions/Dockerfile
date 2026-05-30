@@ -1,5 +1,7 @@
 # Azure Functions Dockerfile for InvestingIQ Durable Functions (Python)
-FROM mcr.microsoft.com/azure-functions/python:4-python3.11
+# The base image is published for linux/amd64 only; pin the platform so it
+# builds on Apple Silicon (arm64) via emulation.
+FROM --platform=linux/amd64 mcr.microsoft.com/azure-functions/python:4-python3.11
 
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
