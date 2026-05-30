@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional
 import uuid
 
-from sqlalchemy import Column, String, DateTime, JSON, Float, Integer, ForeignKey, Text, create_engine
+from sqlalchemy import Column, String, DateTime, JSON, Float, Integer, ForeignKey, Text, UniqueConstraint, create_engine
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship, declarative_base, sessionmaker
 from pgvector.sqlalchemy import Vector
@@ -109,11 +109,29 @@ class FinancialDocument(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     ticker = Column(String(10), nullable=False, index=True)
-    doc_type = Column(String(50), nullable=False)  # 'news', 'price_history', 'company_info'
+    doc_type = Column(String(50), nullable=False)  # 'news', 'price_history', 'company_info', 'quarterly_financials'
     content = Column(Text, nullable=False)
     doc_metadata = Column(JSON)  # renamed from 'metadata' to avoid SQLAlchemy conflict
     embedding = Column(Vector(1536))  # OpenAI embedding dimension
     created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class QuarterlyFinancials(Base):
+    """Stores a company's quarterly financial statements (on-demand, per ticker+quarter)."""
+    __tablename__ = "quarterly_financials"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ticker = Column(String(10), nullable=False, index=True)
+    fiscal_quarter = Column(String(10), nullable=False)  # fiscalDateEnding, e.g. 2024-12-31
+    income_statement = Column(JSON)
+    balance_sheet = Column(JSON)
+    cash_flow = Column(JSON)
+    earnings = Column(JSON)
+    fetched_at = Column(DateTime, default=datetime.utcnow)
+    
+    __table_args__ = (
+        UniqueConstraint("ticker", "fiscal_quarter", name="uq_ticker_quarter"),
+    )
 
 
 def init_db():
