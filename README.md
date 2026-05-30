@@ -145,6 +145,96 @@ Whether you are a seasoned investor or a newcomer to the stock market, Investing
 
 
 
+<!-- ARCHITECTURE -->
+## Architecture & Deployment (v2)
+
+InvestingIQ runs as a Next.js frontend, a FastAPI backend, PostgreSQL + pgvector, and an Azure Durable Functions app that performs the heavy analysis in parallel. Everything except the Functions app runs on free tiers.
+
+```
+Frontend (Vercel) ──SSE──> Backend (FastAPI, Render free) ──HTTP start──> Durable Orchestrator (Azure Functions)
+        ▲                            │ progress callback (HTTP)                    │ fan-out / fan-in
+        └────────────────────────────┘                                            ▼
+                                   Postgres + pgvector (Supabase/Neon free) <── activity functions:
+                                                                                  • fetch_data
+                                                                                  • ml_analysis (ARIMA/Prophet/ETS, RSI/MACD/Bollinger, VADER)
+                                                                                  • llm_analysis (LLM reasoning)
+                                                                                  • financials_ingest (quarterly financials → pgvector)
+                                                                                  • aggregate (combined dual-analysis report)
+                                                                                  Azure Storage (Durable state)
+```
+
+### Orchestration
+
+- The backend starts the analysis by POSTing to the Durable Functions HTTP starter (`/api/orchestrator/start`); it returns a `task_id` immediately.
+- The orchestrator fans out ML analysis, LLM analysis, and quarterly-financials ingest as parallel activity functions, then fans in to a single report.
+- Each fanned-out activity returns a typed `status` and never raises, so a failure in one (e.g. LLM not configured, financials unavailable) still produces a complete report.
+- Progress is streamed to the frontend over SSE via an HTTP callback from the Functions app.
+- There is no Azure Service Bus, Celery, or Azurite-backed queue in the analysis path — orchestration is Durable Functions only. (`docker-compose` runs just Postgres, Redis cache, and MLflow for local dev.)
+
+### Quarterly Financials RAG
+
+- Financials are ingested **on demand**: only for tickers a user actually queries, never the whole market.
+- The `financials_ingest` activity fetches the income statement, balance sheet, cash flow, and earnings from **Alpha Vantage** using rotating API keys (`ALPHA_VANTAGE_API_KEYS`), caches them per `(ticker, fiscal_quarter)`, and embeds them into pgvector (the single vector store).
+- Alpha Vantage's free tier allows ~25 requests/day per key; because each `(ticker, fiscal_quarter)` is fetched at most once and cached, plus key rotation, usage stays within the free limit for a demo.
+- The RAG chat retrieves these passages and answers with citations naming the statement type and fiscal quarter (e.g. `Income Statement · 2024-12-31`).
+
+### Dual Analysis (ML + LLM)
+
+- The ML pipeline (statistical forecasts + technical indicators + lexicon sentiment) and the LLM pipeline run in parallel and are presented side by side under the **ML vs LLM** tab, with an agreement indicator when both produce a directional signal.
+
+### Hosting
+
+| Component | Host | Cost |
+|-----------|------|------|
+| Frontend (Next.js) | Vercel | Free |
+| Backend (FastAPI) | Render | Free |
+| Postgres + pgvector | Supabase or Neon | Free |
+| Functions (Durable orchestrator + activities) | Azure Consumption | Free grant + metered |
+| Storage (Durable runtime state) | Azure Storage | Metered (cents) |
+
+The Azure Functions app and its required Storage account are the only metered components.
+
+### Environment Variables
+
+Backend (`backend/.env`):
+```env
+DATABASE_URL=postgresql://...
+FUNCTIONS_ORCHESTRATOR_URL=https://<your-function-app>.azurewebsites.net/api/orchestrator/start
+FUNCTIONS_KEY=<function key, empty for local anonymous>
+OPENAI_API_KEY=...
+OPENAI_BASE_URL=https://ai.megallm.io/v1
+LLM_MODEL=deepseek-ai/deepseek-v3.1
+MLFLOW_TRACKING_URI=http://localhost:5000
+RATE_LIMIT=100/minute
+```
+
+Functions (`functions/.env` or app settings):
+```env
+DATABASE_URL=postgresql://...
+OPENAI_API_KEY=...
+OPENAI_BASE_URL=https://ai.megallm.io/v1
+LLM_MODEL=deepseek-ai/deepseek-v3.1
+BACKEND_CALLBACK_URL=https://<your-backend>
+ALPHA_VANTAGE_API_KEYS=key1,key2,key3
+AzureWebJobsStorage=<azure storage connection>
+```
+
+Frontend (`frontend/.env.local`):
+```env
+NEXT_PUBLIC_API_URL=https://<your-backend>
+```
+
+### Running locally
+
+```sh
+docker-compose up -d              # Postgres + pgvector, Redis cache, MLflow
+cd backend && alembic upgrade head && uvicorn app.main:app --reload --port 8000
+cd functions && func start        # Durable orchestrator + activities (needs Azure Functions Core Tools)
+cd frontend && npm run dev
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
 
 <!-- LICENSE -->
