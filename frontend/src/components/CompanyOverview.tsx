@@ -53,8 +53,8 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
     return (
         <div className="space-y-6">
             {/* Company Profile */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
+            <div className="card-paper p-6">
+                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>🏢</span> Company Profile
                 </h3>
 
@@ -85,8 +85,8 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
             </div>
 
             {/* Key Metrics */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
+            <div className="card-paper p-6">
+                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📈</span> Key Metrics
                 </h3>
 
@@ -107,8 +107,8 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
             </div>
 
             {/* Price Ranges & Moving Averages */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
+            <div className="card-paper p-6">
+                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
                     <span>📊</span> Price Analysis
                 </h3>
 
@@ -240,8 +240,8 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
 
             {/* Earnings History */}
             {earnings && (earnings.quarterly_earnings?.length || earnings.annual_earnings?.length) ? (
-                <div className="bg-theme-card rounded-xl shadow-md p-6">
-                    <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
+                <div className="card-paper p-6">
+                    <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
                         <span>💰</span> Earnings History
                     </h3>
 
@@ -283,8 +283,8 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
 
             {/* Recent News */}
             {news && news.length > 0 && (
-                <div className="bg-theme-card rounded-xl shadow-md p-6">
-                    <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
+                <div className="card-paper p-6">
+                    <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
                         <span>📰</span> Recent News
                     </h3>
 

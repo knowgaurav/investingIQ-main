@@ -78,9 +78,9 @@ export default function DualAnalysisView({ ml, llm, llmStatus, comparison }: Dua
             {/* Two columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* ML column */}
-                <div className="bg-theme-card rounded-xl shadow-md p-6">
+                <div className="card-paper p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+                        <h3 className="font-display text-xl font-semibold text-theme flex items-center gap-2">
                             <span>📊</span> Statistical (ML)
                         </h3>
                         {mlSignal && (
@@ -110,9 +110,9 @@ export default function DualAnalysisView({ ml, llm, llmStatus, comparison }: Dua
                 </div>
 
                 {/* LLM column */}
-                <div className="bg-theme-card rounded-xl shadow-md p-6">
+                <div className="card-paper p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
+                        <h3 className="font-display text-xl font-semibold text-theme flex items-center gap-2">
                             <span>🤖</span> AI (LLM)
                         </h3>
                         {llmAvailable && llmSignal && (
