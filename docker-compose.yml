@@ -35,8 +35,80 @@ services:
       - mlflow_db:/mlflow
     working_dir: /mlflow
 
+  # Azure Storage emulator required by the Durable Functions runtime
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: investingiq-azurite
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite_data:/data
+
+  # Azure Durable Functions app (orchestrator + activities)
+  functions:
+    build:
+      context: ./functions
+    container_name: investingiq-functions
+    ports:
+      - "7071:80"
+    env_file:
+      - ./functions/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/investingiq
+      BACKEND_CALLBACK_URL: http://backend:8000
+      AzureWebJobsStorage: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1"
+      AZURE_STORAGE_CONNECTION_STRING: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+
+  # FastAPI backend
+  backend:
+    build:
+      context: ./backend
+    container_name: investingiq-backend
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/investingiq
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      FUNCTIONS_ORCHESTRATOR_URL: http://functions:80/api/orchestrator/start
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      functions:
+        condition: service_started
+
+  # Next.js frontend
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+    container_name: investingiq-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    depends_on:
+      backend:
+        condition: service_started
+
 volumes:
   redis_data:
   postgres_data:
   mlflow_data:
   mlflow_db:
+  azurite_data:
