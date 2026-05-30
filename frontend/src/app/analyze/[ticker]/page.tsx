@@ -13,6 +13,7 @@ import PriceChart from '@/components/PriceChart';
 import CompanyOverview from '@/components/CompanyOverview';
 import MLAnalysisView from '@/components/MLAnalysisView';
 import LLMAnalysisView from '@/components/LLMAnalysisView';
+import DualAnalysisView from '@/components/DualAnalysisView';
 import LLMSettings from '@/components/LLMSettings';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { useLLMConfig } from '@/hooks/useLLMConfig';
@@ -22,7 +23,7 @@ interface AnalyzePageProps {
 }
 
 type PageState = 'loading' | 'analyzing' | 'complete' | 'error';
-type AnalysisTab = 'overview' | 'ml' | 'llm';
+type AnalysisTab = 'overview' | 'dual' | 'ml' | 'llm';
 
 export default function AnalyzePage({ params }: AnalyzePageProps) {
     const { ticker: rawTicker } = use(params);
@@ -32,16 +33,16 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
     const [report, setReport] = useState<AnalysisReport | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<AnalysisTab>('overview');
-    
+
     const { config: llmConfig, hasConfig: hasLLMConfig, isLoaded: llmConfigLoaded } = useLLMConfig();
 
     const connectSSE = useCallback((taskId: string) => {
         const eventSource = new EventSource(`http://localhost:8000/api/v1/events/${taskId}`);
-        
+
         eventSource.addEventListener('connected', () => {
             console.log('SSE connected for task:', taskId);
         });
-        
+
         eventSource.addEventListener('progress', (event) => {
             const data = JSON.parse(event.data);
             setTaskStatus({
@@ -52,7 +53,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 current_step: data.current_step,
                 error_message: data.error_message || null,
             });
-            
+
             if (data.status === 'completed' && data.data) {
                 const analysisData = data.data;
                 setReport({
@@ -71,10 +72,15 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                         sentiment: analysisData.ml_sentiment || null,
                     },
                     news_summary: analysisData.llm_summary || analysisData.summary || null,
-                    sentiment_score: analysisData.llm_sentiment?.overall_score || analysisData.sentiment?.overall_score || null,
+                    sentiment_score: analysisData.llm_sentiment?.overall_score || analysisData.llm_sentiment?.score || analysisData.sentiment?.overall_score || null,
                     sentiment_breakdown: analysisData.llm_sentiment?.breakdown || analysisData.sentiment?.breakdown || null,
                     sentiment_details: analysisData.llm_sentiment?.details || analysisData.sentiment?.details || null,
                     ai_insights: analysisData.llm_insights || analysisData.insights || null,
+                    llm_outlook: analysisData.llm_outlook || null,
+                    llm_status: analysisData.llm_status || null,
+                    dual_comparison: analysisData.dual_comparison || null,
+                    financials_status: analysisData.financials_status || null,
+                    financials_quarter: analysisData.financials_quarter || null,
                 });
                 setPageState('complete');
                 eventSource.close();
@@ -84,20 +90,20 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 eventSource.close();
             }
         });
-        
+
         eventSource.addEventListener('error', () => {
             console.error('SSE connection error');
             eventSource.close();
         });
-        
+
         return eventSource;
     }, []);
 
     useEffect(() => {
         if (!llmConfigLoaded) return;
-        
+
         let eventSource: EventSource | null = null;
-        
+
         const startAnalysis = async () => {
             try {
                 setPageState('analyzing');
@@ -116,7 +122,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
         };
 
         startAnalysis();
-        
+
         return () => {
             if (eventSource) {
                 eventSource.close();
@@ -218,9 +224,9 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
 
     return (
         <main className="min-h-screen bg-theme">
-            <Header 
-                ticker={ticker} 
-                companyName={report.company_name} 
+            <Header
+                ticker={ticker}
+                companyName={report.company_name}
             />
 
             <div className="container mx-auto px-4 py-8">
@@ -252,23 +258,32 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                     <div className="flex border-b border-theme/30">
                         <button
                             onClick={() => setActiveTab('overview')}
-                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
-                                activeTab === 'overview'
-                                    ? 'border-primary text-primary'
-                                    : 'border-transparent text-theme-muted hover:text-theme'
-                            }`}
+                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'overview'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-theme-muted hover:text-theme'
+                                }`}
                         >
                             <span className="flex items-center gap-2">
                                 <span>🏢</span> Company Overview
                             </span>
                         </button>
                         <button
+                            onClick={() => setActiveTab('dual')}
+                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'dual'
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-theme-muted hover:text-theme'
+                                }`}
+                        >
+                            <span className="flex items-center gap-2">
+                                <span>⚖️</span> ML vs LLM
+                            </span>
+                        </button>
+                        <button
                             onClick={() => setActiveTab('ml')}
-                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
-                                activeTab === 'ml'
-                                    ? 'border-green-500 text-green-500'
-                                    : 'border-transparent text-theme-muted hover:text-theme'
-                            }`}
+                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'ml'
+                                ? 'border-green-500 text-green-500'
+                                : 'border-transparent text-theme-muted hover:text-theme'
+                                }`}
                         >
                             <span className="flex items-center gap-2">
                                 <span>📊</span> ML Analysis
@@ -276,11 +291,10 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                         </button>
                         <button
                             onClick={() => setActiveTab('llm')}
-                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${
-                                activeTab === 'llm'
-                                    ? 'border-blue-400 text-blue-400'
-                                    : 'border-transparent text-theme-muted hover:text-theme'
-                            }`}
+                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'llm'
+                                ? 'border-blue-400 text-blue-400'
+                                : 'border-transparent text-theme-muted hover:text-theme'
+                                }`}
                         >
                             <span className="flex items-center gap-2">
                                 <span>🤖</span> LLM Analysis
@@ -311,6 +325,18 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                         sentiment={report.ml_analysis?.sentiment}
                     />
                 )}
+                {activeTab === 'dual' && (
+                    <DualAnalysisView
+                        ml={report.ml_analysis}
+                        llm={{
+                            outlook: report.llm_outlook,
+                            sentiment_score: report.sentiment_score,
+                            insight: report.ai_insights,
+                        }}
+                        llmStatus={report.llm_status}
+                        comparison={report.dual_comparison}
+                    />
+                )}
                 {activeTab === 'llm' && (
                     <LLMAnalysisView
                         hasLLMConfig={hasLLMConfig}
@@ -333,11 +359,11 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
     );
 }
 
-function Header({ 
-    ticker, 
+function Header({
+    ticker,
     companyName,
-}: { 
-    ticker: string; 
+}: {
+    ticker: string;
     companyName?: string;
 }) {
     return (

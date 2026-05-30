@@ -180,6 +180,15 @@ export interface LLMConfig {
 }
 
 /**
+ * Dual analysis comparison between ML and LLM pipelines.
+ */
+export interface DualComparison {
+    ml_signal: string;
+    llm_signal: string;
+    agreement: boolean;
+}
+
+/**
  * Complete analysis report.
  */
 export interface AnalysisReport {
@@ -205,6 +214,12 @@ export interface AnalysisReport {
     } | null;
     sentiment_details: SentimentResult[] | null;
     ai_insights: string | null;
+    // Dual analysis
+    llm_outlook?: string | null;
+    llm_status?: string | null;
+    dual_comparison?: DualComparison | null;
+    financials_status?: string | null;
+    financials_quarter?: string | null;
 }
 
 /**
