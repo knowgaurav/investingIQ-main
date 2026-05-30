@@ -10,8 +10,16 @@ const config: Config = {
     theme: {
         extend: {
             colors: {
-                primary: '#3d85ed',
+                primary: 'rgb(var(--color-primary) / <alpha-value>)',
+                accent: 'rgb(var(--color-accent) / <alpha-value>)',
+                gain: 'rgb(var(--color-gain) / <alpha-value>)',
+                loss: 'rgb(var(--color-loss) / <alpha-value>)',
                 secondary: '#e0ebfd',
+            },
+            fontFamily: {
+                display: ['var(--font-fraunces)', 'Georgia', 'serif'],
+                sans: ['var(--font-plex-sans)', 'system-ui', 'sans-serif'],
+                mono: ['var(--font-plex-mono)', 'ui-monospace', 'monospace'],
             },
             backgroundColor: {
                 theme: 'rgb(var(--color-bg) / <alpha-value>)',
@@ -25,6 +33,9 @@ const config: Config = {
             },
             borderColor: {
                 theme: 'rgb(var(--color-border) / <alpha-value>)',
+            },
+            ringColor: {
+                primary: 'rgb(var(--color-primary) / <alpha-value>)',
             },
         },
     },
