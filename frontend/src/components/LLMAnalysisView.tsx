@@ -164,9 +164,9 @@ export default function LLMAnalysisView({
             </div>
 
             {/* Disclaimer */}
-            <div className="bg-amber-50 dark:bg-yellow-500/10 border border-amber-300 dark:border-yellow-500/30 rounded-lg p-4">
-                <p className="text-sm text-amber-700 dark:text-yellow-400">
-                    <strong>Disclaimer:</strong> This is AI-generated analysis and should not be considered financial advice.
+            <div className="bg-accent/10 border-l-4 border-accent p-4">
+                <p className="text-sm text-theme-secondary">
+                    <strong className="text-theme">Disclaimer:</strong> This is AI-generated analysis and should not be considered financial advice.
                     Always consult with a qualified financial advisor before making investment decisions.
                 </p>
             </div>
