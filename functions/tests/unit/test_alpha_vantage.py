@@ -10,6 +10,9 @@ from shared.alpha_vantage import (
     safe_int,
     fetch_daily_prices,
     fetch_company_overview,
+    fetch_income_statement,
+    fetch_balance_sheet,
+    fetch_cash_flow,
     BASE_URL,
 )
 from tests.mocks.alpha_vantage_mocks import (
@@ -49,7 +52,7 @@ class TestGetApiKeys:
 
 
 class TestGetApiKey:
-    """Tests for get_api_key rotation."""
+    """Tests for get_api_key stateless selection."""
 
     def test_single_key_returns_same(self):
         """Single key always returns that key."""
@@ -63,27 +66,49 @@ class TestGetApiKey:
             with pytest.raises(ValueError, match="No Alpha Vantage API keys"):
                 get_api_key()
 
-    def test_rotation_with_redis(self):
-        """Multiple keys rotate via Redis."""
-        mock_redis = MagicMock()
-        mock_redis.incr.side_effect = [1, 2, 3, 4]
-        
+    def test_selection_is_within_pool(self):
+        """Every returned key belongs to the configured pool."""
         with patch.dict("os.environ", {"ALPHA_VANTAGE_API_KEYS": "k1,k2,k3"}, clear=True):
-            with patch("shared.alpha_vantage._get_redis", return_value=mock_redis):
-                assert get_api_key() == "k1"
-                assert get_api_key() == "k2"
-                assert get_api_key() == "k3"
-                assert get_api_key() == "k1"  # Wraps around
+            for _ in range(20):
+                assert get_api_key() in {"k1", "k2", "k3"}
 
-    def test_redis_error_fallback(self):
-        """Redis error falls back to first key."""
-        mock_redis = MagicMock()
-        mock_redis.incr.side_effect = Exception("Redis down")
-        
-        with patch.dict("os.environ", {"ALPHA_VANTAGE_API_KEYS": "k1,k2"}, clear=True):
-            with patch("shared.alpha_vantage._get_redis", return_value=mock_redis):
-                key = get_api_key()
-                assert key == "k1"
+
+class TestFetchQuarterlyStatements:
+    """Tests for the quarterly fundamental statement fetchers."""
+
+    @responses.activate
+    def test_income_statement_latest_quarter(self):
+        """Returns the most recent quarterly report by fiscalDateEnding."""
+        payload = {
+            "symbol": "AAPL",
+            "quarterlyReports": [
+                {"fiscalDateEnding": "2024-09-30", "totalRevenue": "94900000000"},
+                {"fiscalDateEnding": "2024-12-31", "totalRevenue": "124300000000"},
+            ],
+        }
+        responses.add(responses.GET, BASE_URL, json=payload, status=200)
+        with patch("shared.alpha_vantage.get_api_key", return_value="k"):
+            result = fetch_income_statement("AAPL")
+        assert result["fiscal_quarter"] == "2024-12-31"
+        assert result["report"]["totalRevenue"] == "124300000000"
+
+    @responses.activate
+    def test_balance_sheet_rate_limited(self):
+        """Rate limit responses are flagged and produce no report."""
+        responses.add(responses.GET, BASE_URL, json={"Note": "rate limit"}, status=200)
+        with patch("shared.alpha_vantage.get_api_key", return_value="k"):
+            result = fetch_balance_sheet("AAPL")
+        assert result["_rate_limited"] is True
+        assert result["fiscal_quarter"] is None
+
+    @responses.activate
+    def test_cash_flow_empty_reports(self):
+        """No quarterly reports yields an empty report and no quarter."""
+        responses.add(responses.GET, BASE_URL, json={"symbol": "AAPL", "quarterlyReports": []}, status=200)
+        with patch("shared.alpha_vantage.get_api_key", return_value="k"):
+            result = fetch_cash_flow("AAPL")
+        assert result["fiscal_quarter"] is None
+        assert result["report"] == {}
 
 
 class TestSafeFloat:
@@ -232,40 +257,27 @@ from hypothesis import given, strategies as st, settings
 
 
 class TestApiKeyRotationProperty:
-    """Property-based tests for API key rotation.
+    """Property-based tests for API key selection.
     
-    **Feature: functions-testing-setup, Property 2: API Key Rotation Distribution**
+    **Feature: functions-testing-setup, Property 2: API Key Selection Within Pool**
     **Validates: Requirements 6.1**
     """
 
     @settings(max_examples=100)
     @given(st.lists(st.text(min_size=1, max_size=20, alphabet="abcdefghijklmnopqrstuvwxyz0123456789"), min_size=2, max_size=10, unique=True))
-    def test_rotation_distribution(self, keys):
-        """For any list of N API keys (N > 1), after N consecutive calls to get_api_key(),
-        each key SHALL have been returned exactly once (round-robin distribution).
+    def test_selection_within_pool(self, keys):
+        """For any list of N API keys (N > 1), every value returned by get_api_key()
+        SHALL be one of the configured keys (stateless random selection).
         """
         if len(keys) < 2:
             return
         
-        mock_redis = MagicMock()
-        call_count = [0]
-        
-        def mock_incr(key):
-            call_count[0] += 1
-            return call_count[0]
-        
-        mock_redis.incr.side_effect = mock_incr
-        
         keys_str = ",".join(keys)
-        returned_keys = []
+        key_set = set(keys)
         
         with patch.dict("os.environ", {"ALPHA_VANTAGE_API_KEYS": keys_str}, clear=True):
-            with patch("shared.alpha_vantage._get_redis", return_value=mock_redis):
-                for _ in range(len(keys)):
-                    returned_keys.append(get_api_key())
-        
-        # Each key should appear exactly once in N calls
-        assert sorted(returned_keys) == sorted(keys)
+            for _ in range(len(keys) * 3):
+                assert get_api_key() in key_set
 
 
 class TestSafeConversionProperty:
