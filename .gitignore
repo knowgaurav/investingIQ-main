@@ -33,7 +33,7 @@ out/
 
 # IDE
 .idea/
-.vscode/
+
 *.swp
 *.swo
 *~
@@ -51,6 +51,7 @@ npm-debug.log*
 
 # Testing
 .coverage
+coverage/
 htmlcov/
 .pytest_cache/
 .hypothesis/
