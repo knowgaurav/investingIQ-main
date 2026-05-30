@@ -1,22 +1,13 @@
 """Alpha Vantage API client with multi-key rotation."""
 import os
+import random
 import logging
 from typing import Optional
 import requests
-import redis
 
 logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.alphavantage.co/query"
-REDIS_URL = "redis://localhost:6379/0"
-
-# Redis key for tracking which API key to use next
-REDIS_KEY_INDEX = "alpha_vantage:key_index"
-
-
-def _get_redis():
-    """Get Redis client."""
-    return redis.from_url(REDIS_URL, decode_responses=True)
 
 
 def get_api_keys() -> list:
@@ -35,7 +26,7 @@ def get_api_keys() -> list:
 
 
 def get_api_key() -> str:
-    """Get next API key using round-robin rotation."""
+    """Get an API key using stateless random selection over the configured pool."""
     keys = get_api_keys()
     if not keys:
         raise ValueError("No Alpha Vantage API keys configured")
@@ -43,16 +34,7 @@ def get_api_key() -> str:
     if len(keys) == 1:
         return keys[0]
     
-    # Round-robin using Redis atomic increment
-    try:
-        r = _get_redis()
-        index = r.incr(REDIS_KEY_INDEX) - 1
-        key = keys[index % len(keys)]
-        logger.debug(f"Using API key index {index % len(keys)}")
-        return key
-    except Exception as e:
-        logger.warning(f"Redis error, using first key: {e}")
-        return keys[0]
+    return random.choice(keys)
 
 
 def safe_float(value) -> Optional[float]:
@@ -229,6 +211,66 @@ def fetch_earnings(ticker: str) -> dict:
     except Exception as e:
         logger.error(f"Alpha Vantage earnings error for {ticker}: {e}")
         return {"annual_earnings": [], "quarterly_earnings": []}
+
+
+def _latest_quarterly_report(reports: list) -> dict:
+    """Return the most recent quarterly report by fiscalDateEnding."""
+    if not reports:
+        return {}
+    return max(reports, key=lambda r: r.get("fiscalDateEnding", ""))
+
+
+def _fetch_statement(ticker: str, function: str, label: str) -> dict:
+    """Fetch a fundamental statement and return its latest quarterly report.
+    
+    Returns a dict with `fiscal_quarter`, `report` (the latest quarterly report),
+    and either `_rate_limited` or `error` flags on failure.
+    """
+    ticker = ticker.upper()
+    
+    try:
+        params = {
+            "function": function,
+            "symbol": ticker,
+            "apikey": get_api_key(),
+        }
+        
+        resp = requests.get(BASE_URL, params=params, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        
+        if "Note" in data or "Information" in data:
+            logger.warning(f"Alpha Vantage rate limit for {label} {ticker}")
+            return {"fiscal_quarter": None, "report": {}, "_rate_limited": True}
+        
+        if "Error Message" in data:
+            logger.error(f"Alpha Vantage error for {label} {ticker}: {data['Error Message']}")
+            return {"fiscal_quarter": None, "report": {}, "error": data["Error Message"]}
+        
+        report = _latest_quarterly_report(data.get("quarterlyReports", []))
+        return {
+            "fiscal_quarter": report.get("fiscalDateEnding"),
+            "report": report,
+        }
+        
+    except Exception as e:
+        logger.error(f"Alpha Vantage {label} error for {ticker}: {e}")
+        return {"fiscal_quarter": None, "report": {}, "error": str(e)}
+
+
+def fetch_income_statement(ticker: str) -> dict:
+    """Fetch the latest quarterly income statement from Alpha Vantage."""
+    return _fetch_statement(ticker, "INCOME_STATEMENT", "income statement")
+
+
+def fetch_balance_sheet(ticker: str) -> dict:
+    """Fetch the latest quarterly balance sheet from Alpha Vantage."""
+    return _fetch_statement(ticker, "BALANCE_SHEET", "balance sheet")
+
+
+def fetch_cash_flow(ticker: str) -> dict:
+    """Fetch the latest quarterly cash flow statement from Alpha Vantage."""
+    return _fetch_statement(ticker, "CASH_FLOW", "cash flow")
 
 
 def fetch_news_sentiment(ticker: str, limit: int = 50) -> list:

@@ -31,7 +31,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
         "news_data": news_data,
     })
     
-    # Step 3: Fan-out to ML and LLM analysis
+    # Step 3: Fan-out to ML, financials ingest, and LLM analysis
     parallel_tasks = []
     
     # ML Analysis (always)
@@ -40,6 +40,12 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
         "task_id": task_id,
         "stock_data": stock_data,
         "news_data": news_data,
+    }))
+    
+    # Quarterly financials ingest + embed (always, on-demand per ticker)
+    parallel_tasks.append(context.call_activity("activity_financials_ingest", {
+        "ticker": ticker,
+        "task_id": task_id,
     }))
     
     # LLM Analysis (only if llm_config present)
