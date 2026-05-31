@@ -13,6 +13,7 @@ from shared.alpha_vantage import (
     fetch_income_statement,
     fetch_balance_sheet,
     fetch_cash_flow,
+    fetch_stock_data,
     BASE_URL,
 )
 from tests.mocks.alpha_vantage_mocks import (
@@ -87,7 +88,7 @@ class TestFetchQuarterlyStatements:
             ],
         }
         responses.add(responses.GET, BASE_URL, json=payload, status=200)
-        with patch("shared.alpha_vantage.get_api_key", return_value="k"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["k"]):
             result = fetch_income_statement("AAPL")
         assert result["fiscal_quarter"] == "2024-12-31"
         assert result["report"]["totalRevenue"] == "124300000000"
@@ -96,7 +97,7 @@ class TestFetchQuarterlyStatements:
     def test_balance_sheet_rate_limited(self):
         """Rate limit responses are flagged and produce no report."""
         responses.add(responses.GET, BASE_URL, json={"Note": "rate limit"}, status=200)
-        with patch("shared.alpha_vantage.get_api_key", return_value="k"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["k"]):
             result = fetch_balance_sheet("AAPL")
         assert result["_rate_limited"] is True
         assert result["fiscal_quarter"] is None
@@ -105,7 +106,7 @@ class TestFetchQuarterlyStatements:
     def test_cash_flow_empty_reports(self):
         """No quarterly reports yields an empty report and no quarter."""
         responses.add(responses.GET, BASE_URL, json={"symbol": "AAPL", "quarterlyReports": []}, status=200)
-        with patch("shared.alpha_vantage.get_api_key", return_value="k"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["k"]):
             result = fetch_cash_flow("AAPL")
         assert result["fiscal_quarter"] is None
         assert result["report"] == {}
@@ -166,7 +167,7 @@ class TestFetchDailyPrices:
         """Test successful price fetch."""
         responses.add(responses.GET, BASE_URL, json=MOCK_DAILY_RESPONSE, status=200)
         
-        with patch("shared.alpha_vantage.get_api_key", return_value="test_key"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["test_key"]):
             result = fetch_daily_prices("AAPL")
         
         assert result["ticker"] == "AAPL"
@@ -180,7 +181,7 @@ class TestFetchDailyPrices:
         """Test rate limit response handling."""
         responses.add(responses.GET, BASE_URL, json=MOCK_RATE_LIMIT_RESPONSE, status=200)
         
-        with patch("shared.alpha_vantage.get_api_key", return_value="test_key"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["test_key"]):
             result = fetch_daily_prices("AAPL")
         
         assert result["ticker"] == "AAPL"
@@ -192,7 +193,7 @@ class TestFetchDailyPrices:
         """Test error response handling."""
         responses.add(responses.GET, BASE_URL, json=MOCK_ERROR_RESPONSE, status=200)
         
-        with patch("shared.alpha_vantage.get_api_key", return_value="test_key"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["test_key"]):
             result = fetch_daily_prices("INVALID")
         
         assert result["ticker"] == "INVALID"
@@ -204,12 +205,64 @@ class TestFetchDailyPrices:
         """Test network error handling."""
         responses.add(responses.GET, BASE_URL, body=Exception("Network error"))
         
-        with patch("shared.alpha_vantage.get_api_key", return_value="test_key"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["test_key"]):
             result = fetch_daily_prices("AAPL")
         
         assert result["ticker"] == "AAPL"
         assert result["price_history"] == []
         assert "error" in result
+
+    @responses.activate
+    def test_rotates_to_next_key_on_rate_limit(self):
+        """A rate-limited key is skipped and the next key's data is used."""
+        # First key hits the daily limit, second key returns real data.
+        responses.add(responses.GET, BASE_URL, json=MOCK_RATE_LIMIT_RESPONSE, status=200)
+        responses.add(responses.GET, BASE_URL, json=MOCK_DAILY_RESPONSE, status=200)
+        
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["exhausted_key", "fresh_key"]):
+            result = fetch_daily_prices("AAPL")
+        
+        assert len(result["price_history"]) == 2
+        assert result.get("_rate_limited") is None
+
+    @responses.activate
+    def test_uses_user_provided_key_without_pool(self):
+        """A user-provided key is used directly without touching the configured pool."""
+        responses.add(responses.GET, BASE_URL, json=MOCK_DAILY_RESPONSE, status=200)
+        
+        # get_api_keys would raise if called (no pool configured), proving the
+        # user key path bypasses the pool entirely.
+        with patch("shared.alpha_vantage.get_api_keys", side_effect=AssertionError("pool should not be used")):
+            result = fetch_daily_prices("AAPL", api_key="user-key")
+        
+        assert len(result["price_history"]) == 2
+
+
+class TestFetchStockDataRateLimit:
+    """Tests that fetch_stock_data surfaces the rate-limit cause."""
+
+    @responses.activate
+    def test_rate_limited_flag_propagated(self):
+        """When prices are rate-limited, fetch_stock_data flags rate_limited=True."""
+        # Both prices and overview calls return the rate-limit message.
+        responses.add(responses.GET, BASE_URL, json=MOCK_RATE_LIMIT_RESPONSE, status=200)
+        responses.add(responses.GET, BASE_URL, json=MOCK_RATE_LIMIT_RESPONSE, status=200)
+        
+        result = fetch_stock_data("AAPL", api_key="user-key")
+        
+        assert result["price_history"] == []
+        assert result["rate_limited"] is True
+
+    @responses.activate
+    def test_not_rate_limited_on_success(self):
+        """Successful fetches do not set the rate_limited flag."""
+        responses.add(responses.GET, BASE_URL, json=MOCK_DAILY_RESPONSE, status=200)
+        responses.add(responses.GET, BASE_URL, json=MOCK_OVERVIEW_RESPONSE, status=200)
+        
+        result = fetch_stock_data("AAPL", api_key="user-key")
+        
+        assert len(result["price_history"]) == 2
+        assert result["rate_limited"] is False
 
 
 class TestFetchCompanyOverview:
@@ -220,7 +273,7 @@ class TestFetchCompanyOverview:
         """Test successful overview fetch."""
         responses.add(responses.GET, BASE_URL, json=MOCK_OVERVIEW_RESPONSE, status=200)
         
-        with patch("shared.alpha_vantage.get_api_key", return_value="test_key"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["test_key"]):
             result = fetch_company_overview("AAPL")
         
         assert result["name"] == "Apple Inc."
@@ -234,7 +287,7 @@ class TestFetchCompanyOverview:
         """Test rate limit response handling."""
         responses.add(responses.GET, BASE_URL, json=MOCK_RATE_LIMIT_RESPONSE, status=200)
         
-        with patch("shared.alpha_vantage.get_api_key", return_value="test_key"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["test_key"]):
             result = fetch_company_overview("AAPL")
         
         assert result["name"] == "AAPL"
@@ -245,7 +298,7 @@ class TestFetchCompanyOverview:
         """Test empty response handling."""
         responses.add(responses.GET, BASE_URL, json={}, status=200)
         
-        with patch("shared.alpha_vantage.get_api_key", return_value="test_key"):
+        with patch("shared.alpha_vantage.get_api_keys", return_value=["test_key"]):
             result = fetch_company_overview("UNKNOWN")
         
         assert result["name"] == "UNKNOWN"

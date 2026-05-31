@@ -99,6 +99,7 @@ class MLAnalysisResult(BaseModel):
 class AnalysisRequest(BaseModel):
     """Request to analyze a stock."""
     ticker: str = Field(..., min_length=1, max_length=10)
+    alpha_vantage_key: Optional[str] = None
     llm_config: Optional[LLMConfig] = None
 
 

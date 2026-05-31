@@ -1,6 +1,8 @@
 """LLM API key verification endpoint."""
 import logging
+import requests
 from fastapi import APIRouter, HTTPException
+import openai
 from openai import OpenAI
 import anthropic
 
@@ -12,67 +14,67 @@ router = APIRouter()
 PROVIDER_CONFIG = {
     LLMProvider.OPENAI: {
         "base_url": "https://api.openai.com/v1",
-        "default_model": "gpt-4o-mini",
+        "default_model": "gpt-5.4-mini",
         "key_prefix": "sk-",
         "models": [
-            {"id": "gpt-4o-mini", "name": "GPT-4o Mini", "description": "Fast, affordable small model"},
-            {"id": "gpt-5-nano", "name": "GPT-5 Nano", "description": "Fastest, most cost-efficient GPT-5"},
-            {"id": "gpt-5-mini", "name": "GPT-5 Mini", "description": "Cost-efficient GPT-5 for defined tasks"},
-            {"id": "gpt-5", "name": "GPT-5", "description": "Intelligent reasoning model for complex tasks"},
-            {"id": "gpt-5.1", "name": "GPT-5.1", "description": "Best for coding and agentic tasks"},
-            {"id": "gpt-5.2", "name": "GPT-5.2", "description": "Latest and most capable model"},
-            {"id": "gpt-4.1-nano", "name": "GPT-4.1 Nano", "description": "Fastest, most cost-efficient GPT-4.1"},
-            {"id": "gpt-4.1-mini", "name": "GPT-4.1 Mini", "description": "Smaller, faster GPT-4.1"},
-            {"id": "gpt-4.1", "name": "GPT-4.1", "description": "Smartest non-reasoning model"},
-            {"id": "gpt-4o", "name": "GPT-4o", "description": "Fast, intelligent, flexible GPT model"},
+            {"id": "gpt-5.4-mini", "name": "GPT-5.4 Mini", "description": "Strongest mini model for coding and subagents"},
+            {"id": "gpt-5.4-nano", "name": "GPT-5.4 Nano", "description": "Cheapest GPT-5.4-class for high-volume tasks"},
+            {"id": "gpt-5.4", "name": "GPT-5.4", "description": "Affordable model for coding and professional work"},
+            {"id": "gpt-5.5", "name": "GPT-5.5", "description": "Frontier intelligence for coding and professional work"},
+            {"id": "gpt-5.5-pro", "name": "GPT-5.5 Pro", "description": "Smarter, more precise responses for complex tasks"},
         ],
     },
     LLMProvider.ANTHROPIC: {
         "base_url": "https://api.anthropic.com/v1",
-        "default_model": "claude-haiku-4-5-latest",
+        "default_model": "claude-haiku-4-5",
         "key_prefix": "sk-ant-",
         "models": [
-            {"id": "claude-haiku-4-5-latest", "name": "Claude Haiku 4.5", "description": "Fast with thinking, 90% of Sonnet performance"},
-            {"id": "claude-sonnet-4-5-latest", "name": "Claude Sonnet 4.5", "description": "Best balance with extended thinking"},
-            {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku", "description": "Legacy fast model"},
-            {"id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet", "description": "Legacy balanced model"},
+            {"id": "claude-haiku-4-5", "name": "Claude Haiku 4.5", "description": "Fastest model with near-frontier intelligence"},
+            {"id": "claude-sonnet-4-5", "name": "Claude Sonnet 4.5", "description": "Previous balance of speed and intelligence"},
+            {"id": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6", "description": "Best balance of speed and intelligence"},
+            {"id": "claude-opus-4-7", "name": "Claude Opus 4.7", "description": "Capable model for complex agentic coding"},
+            {"id": "claude-opus-4-8", "name": "Claude Opus 4.8", "description": "Most capable model for reasoning and agentic coding"},
         ],
     },
     LLMProvider.GOOGLE: {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-        "default_model": "gemini-2.5-flash",
+        "default_model": "gemini-3.1-flash-lite",
         "key_prefix": "",
         "models": [
-            {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "description": "Fast with thinking capabilities"},
-            {"id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash", "description": "Previous generation flash"},
-            {"id": "gemini-1.5-flash", "name": "Gemini 1.5 Flash", "description": "Legacy fast model"},
+            {"id": "gemini-3.1-flash-lite", "name": "Gemini 3.1 Flash-Lite", "description": "Frontier-class performance at lowest cost"},
+            {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro", "description": "Advanced reasoning with 1M context"},
+            {"id": "gemini-3-flash-preview", "name": "Gemini 3 Flash", "description": "Frontier performance rivaling larger models"},
+            {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash", "description": "Most intelligent for agentic and coding tasks"},
+            {"id": "gemini-3.1-pro-preview", "name": "Gemini 3.1 Pro", "description": "Most advanced intelligence and agentic coding"},
         ],
     },
     LLMProvider.OHMYGPT: {
         "base_url": "https://api.ohmygpt.com/v1",
-        "default_model": "gpt-4o-mini",
+        "default_model": "gpt-5.4-mini",
         "key_prefix": "",
         "models": [
-            {"id": "gpt-4o-mini", "name": "GPT-4o Mini", "description": "OpenAI GPT-4o Mini via OHMYGPT"},
-            {"id": "gpt-4o", "name": "GPT-4o", "description": "OpenAI GPT-4o via OHMYGPT"},
-            {"id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet", "description": "Anthropic Claude via OHMYGPT"},
+            {"id": "gpt-5.4-mini", "name": "GPT-5.4 Mini", "description": "OpenAI GPT-5.4 Mini via OHMYGPT"},
+            {"id": "gpt-5.5", "name": "GPT-5.5", "description": "OpenAI frontier model via OHMYGPT"},
+            {"id": "claude-haiku-4-5", "name": "Claude Haiku 4.5", "description": "Anthropic Haiku via OHMYGPT"},
+            {"id": "claude-sonnet-4-6", "name": "Claude Sonnet 4.6", "description": "Anthropic Sonnet via OHMYGPT"},
+            {"id": "gemini-3.5-flash", "name": "Gemini 3.5 Flash", "description": "Google Gemini via OHMYGPT"},
         ],
     },
     LLMProvider.OPENROUTER: {
         "base_url": "https://openrouter.ai/api/v1",
-        "default_model": "xiaomi/mimo-v2-flash:free",
+        "default_model": "moonshotai/kimi-k2.6:free",
         "key_prefix": "sk-or-",
         "models": [
-            {"id": "xiaomi/mimo-v2-flash:free", "name": "MiMo-V2-Flash (Free)", "description": "Free - Xiaomi 309B MoE, #1 open-source"},
-            {"id": "mistralai/devstral-2512:free", "name": "Devstral 2 (Free)", "description": "Free - Mistral 123B for agentic coding"},
-            {"id": "kwaipilot/kat-coder-pro:free", "name": "KAT-Coder-Pro (Free)", "description": "Free - KwaiKAT agentic coding model"},
-            {"id": "deepseek/deepseek-r1-0528:free", "name": "DeepSeek R1 (Free)", "description": "Free - DeepSeek 671B reasoning model"},
+            {"id": "moonshotai/kimi-k2.6:free", "name": "Kimi K2.6 (Free)", "description": "Free - Moonshot multimodal, long-horizon coding"},
+            {"id": "deepseek/deepseek-v4-flash:free", "name": "DeepSeek V4 Flash (Free)", "description": "Free - DeepSeek 284B MoE, 1M context"},
             {"id": "qwen/qwen3-coder:free", "name": "Qwen3 Coder 480B (Free)", "description": "Free - Qwen 480B for coding tasks"},
-            {"id": "meta-llama/llama-3.3-70b-instruct:free", "name": "Llama 3.3 70B (Free)", "description": "Free - Meta Llama 3.3 multilingual"},
-            {"id": "google/gemma-3-27b-it:free", "name": "Gemma 3 27B (Free)", "description": "Free - Google multimodal model"},
+            {"id": "qwen/qwen3-next-80b-a3b-instruct:free", "name": "Qwen3 Next 80B (Free)", "description": "Free - Qwen 80B for reasoning and code"},
+            {"id": "minimax/minimax-m2.5:free", "name": "MiniMax M2.5 (Free)", "description": "Free - SOTA model for coding and agents"},
+            {"id": "z-ai/glm-4.5-air:free", "name": "GLM 4.5 Air (Free)", "description": "Free - Z.ai agent-centric MoE model"},
+            {"id": "nvidia/nemotron-3-super-120b-a12b:free", "name": "Nemotron 3 Super 120B (Free)", "description": "Free - NVIDIA 120B MoE for multi-agent"},
             {"id": "openai/gpt-oss-120b:free", "name": "GPT-OSS-120B (Free)", "description": "Free - OpenAI open-source 117B MoE"},
-            {"id": "moonshotai/kimi-k2:free", "name": "Kimi K2 (Free)", "description": "Free - Moonshot 1T params, tool use"},
-            {"id": "google/gemini-2.0-flash-exp:free", "name": "Gemini 2.0 Flash (Free)", "description": "Free - Google 1M context experimental"},
+            {"id": "meta-llama/llama-3.3-70b-instruct:free", "name": "Llama 3.3 70B (Free)", "description": "Free - Meta Llama 3.3 multilingual"},
+            {"id": "google/gemma-4-31b-it:free", "name": "Gemma 4 31B (Free)", "description": "Free - Google multimodal model"},
         ],
     },
 }
@@ -92,6 +94,8 @@ async def verify_llm_key(request: LLMVerifyRequest) -> LLMVerifyResponse:
     try:
         if request.provider == LLMProvider.ANTHROPIC:
             return await _verify_anthropic(request.api_key, model)
+        elif request.provider == LLMProvider.GOOGLE:
+            return await _verify_google(request.api_key, model)
         else:
             return await _verify_openai_compatible(
                 request.api_key, 
@@ -113,13 +117,18 @@ async def _verify_openai_compatible(api_key: str, base_url: str, model: str) -> 
             max_tokens=1,
         )
         return LLMVerifyResponse(valid=True)
+    except openai.AuthenticationError:
+        return LLMVerifyResponse(valid=False, error="Invalid API key")
+    except openai.PermissionDeniedError:
+        return LLMVerifyResponse(valid=False, error="API key lacks permission for this model")
+    except openai.NotFoundError:
+        return LLMVerifyResponse(valid=False, error=f"Model '{model}' not available")
+    except openai.RateLimitError:
+        # 429 means the key authenticated but the provider is rate-limited.
+        # The key is valid, so treat verification as successful.
+        return LLMVerifyResponse(valid=True)
     except Exception as e:
-        error_msg = str(e)
-        if "invalid_api_key" in error_msg.lower() or "unauthorized" in error_msg.lower():
-            return LLMVerifyResponse(valid=False, error="Invalid API key")
-        if "model" in error_msg.lower() and "not found" in error_msg.lower():
-            return LLMVerifyResponse(valid=False, error=f"Model '{model}' not available")
-        return LLMVerifyResponse(valid=False, error=error_msg[:200])
+        return LLMVerifyResponse(valid=False, error=str(e)[:200])
 
 
 async def _verify_anthropic(api_key: str, model: str) -> LLMVerifyResponse:
@@ -134,9 +143,55 @@ async def _verify_anthropic(api_key: str, model: str) -> LLMVerifyResponse:
         return LLMVerifyResponse(valid=True)
     except anthropic.AuthenticationError:
         return LLMVerifyResponse(valid=False, error="Invalid API key")
+    except anthropic.PermissionDeniedError:
+        return LLMVerifyResponse(valid=False, error="API key lacks permission for this model")
     except anthropic.NotFoundError:
         return LLMVerifyResponse(valid=False, error=f"Model '{model}' not available")
+    except anthropic.RateLimitError:
+        # 429 means the key authenticated but the provider is rate-limited.
+        # The key is valid, so treat verification as successful.
+        return LLMVerifyResponse(valid=True)
     except Exception as e:
+        return LLMVerifyResponse(valid=False, error=str(e)[:200])
+
+
+# Native Gemini REST endpoint. Google's OpenAI-compatibility shim
+# (/v1beta/openai) rejects the newer "AQ."-format API keys with 401, while
+# the native generateContent endpoint accepts both key formats.
+GOOGLE_NATIVE_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+
+
+async def _verify_google(api_key: str, model: str) -> LLMVerifyResponse:
+    """Verify a Google Gemini API key against the native REST API.
+
+    Uses the ListModels endpoint, which validates the key independently of
+    whether any specific model is enabled. The OpenAI-compat shim rejects the
+    newer 'AQ.'-format keys, so we always use the native API here.
+    """
+    try:
+        response = requests.get(
+            GOOGLE_NATIVE_BASE_URL,
+            headers={"x-goog-api-key": api_key},
+            timeout=15,
+        )
+
+        logger.info(
+            f"Google verify (ListModels): status={response.status_code} "
+            f"body={response.text[:300]}"
+        )
+
+        if response.status_code == 200:
+            return LLMVerifyResponse(valid=True)
+        if response.status_code in (400, 401, 403):
+            return LLMVerifyResponse(valid=False, error="Invalid API key")
+        if response.status_code == 429:
+            # Rate-limited means the key authenticated successfully.
+            return LLMVerifyResponse(valid=True)
+
+        detail = response.json().get("error", {}).get("message", response.text[:200])
+        return LLMVerifyResponse(valid=False, error=detail[:200])
+    except Exception as e:
+        logger.error(f"Google verify exception: {e}")
         return LLMVerifyResponse(valid=False, error=str(e)[:200])
 
 

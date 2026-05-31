@@ -220,6 +220,8 @@ export interface AnalysisReport {
     dual_comparison?: DualComparison | null;
     financials_status?: string | null;
     financials_quarter?: string | null;
+    // True when price data is empty because the Alpha Vantage key is rate-limited.
+    rate_limited?: boolean;
 }
 
 /**
@@ -304,12 +306,17 @@ export async function searchStocks(
  * Request a new stock analysis.
  * @param ticker - Stock ticker symbol
  * @param llmConfig - Optional LLM configuration for AI analysis
+ * @param alphaVantageKey - Optional user-provided Alpha Vantage API key
  */
 export async function requestAnalysis(
     ticker: string,
-    llmConfig?: LLMConfig | null
+    llmConfig?: LLMConfig | null,
+    alphaVantageKey?: string | null
 ): Promise<AnalysisTaskResponse> {
     const body: Record<string, unknown> = { ticker };
+    if (alphaVantageKey) {
+        body.alpha_vantage_key = alphaVantageKey;
+    }
     if (llmConfig) {
         body.llm_config = {
             provider: llmConfig.provider,

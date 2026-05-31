@@ -26,9 +26,9 @@ class TestActivityFetchData:
             
             result = main({"ticker": "AAPL", "task_id": "test-123"})
             
-            mock_fetch_stock.assert_called_once_with("AAPL")
-            mock_fetch_earnings.assert_called_once_with("AAPL")
-            mock_fetch_news.assert_called_once_with("AAPL", max_articles=20)
+            mock_fetch_stock.assert_called_once_with("AAPL", api_key=None)
+            mock_fetch_earnings.assert_called_once_with("AAPL", api_key=None)
+            mock_fetch_news.assert_called_once_with("AAPL", limit=20, api_key=None)
             
             assert result["stock_data"]["ticker"] == "AAPL"
             assert result["stock_data"]["earnings"] == mock_earnings

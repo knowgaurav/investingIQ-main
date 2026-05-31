@@ -31,14 +31,15 @@ def main(input_data: dict) -> dict:
 
     ticker = input_data["ticker"]
     task_id = input_data["task_id"]
+    api_key = input_data.get("alpha_vantage_key")
 
     try:
         send_progress(task_id, 30, "Fetching quarterly financials")
 
-        income = fetch_income_statement(ticker)
-        balance = fetch_balance_sheet(ticker)
-        cash = fetch_cash_flow(ticker)
-        earnings = fetch_earnings(ticker)
+        income = fetch_income_statement(ticker, api_key=api_key)
+        balance = fetch_balance_sheet(ticker, api_key=api_key)
+        cash = fetch_cash_flow(ticker, api_key=api_key)
+        earnings = fetch_earnings(ticker, api_key=api_key)
 
         # Resolve the latest fiscal quarter present across the statements.
         fiscal_quarter = (

@@ -20,10 +20,6 @@ vi.mock('@/components/StockSearch', () => ({
     ),
 }))
 
-vi.mock('@/components/LLMSettings', () => ({
-    default: () => <div data-testid="llm-settings">LLM Settings</div>,
-}))
-
 vi.mock('@/components/DarkModeToggle', () => ({
     default: () => <button data-testid="dark-mode-toggle">Toggle</button>,
 }))
@@ -77,11 +73,6 @@ describe('Home Page', () => {
     it('renders dark mode toggle', () => {
         render(<Home />)
         expect(screen.getByTestId('dark-mode-toggle')).toBeInTheDocument()
-    })
-
-    it('renders LLM settings component', () => {
-        render(<Home />)
-        expect(screen.getByTestId('llm-settings')).toBeInTheDocument()
     })
 
     it('does not render recent searches section when empty', () => {

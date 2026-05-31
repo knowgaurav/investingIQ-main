@@ -8,40 +8,41 @@ export interface LLMConfig {
     provider: LLMProvider;
     apiKey: string;
     model?: string;
+    alphaVantageKey?: string;
 }
 
 const STORAGE_KEY = 'investingiq_llm_config';
 
 export const PROVIDER_MODELS: Record<LLMProvider, { default: string; options: string[] }> = {
     openai: {
-        default: 'gpt-4o-mini',
-        options: ['gpt-4o-mini', 'gpt-5-nano', 'gpt-5-mini', 'gpt-5', 'gpt-5.1', 'gpt-5.2', 'gpt-4.1-nano', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-4o'],
+        default: 'gpt-5.4-mini',
+        options: ['gpt-5.4-mini', 'gpt-5.4-nano', 'gpt-5.4', 'gpt-5.5', 'gpt-5.5-pro'],
     },
     anthropic: {
-        default: 'claude-haiku-4-5-latest',
-        options: ['claude-haiku-4-5-latest', 'claude-sonnet-4-5-latest', 'claude-3-5-haiku-20241022', 'claude-3-5-sonnet-20241022'],
+        default: 'claude-haiku-4-5',
+        options: ['claude-haiku-4-5', 'claude-sonnet-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7', 'claude-opus-4-8'],
     },
     google: {
-        default: 'gemini-2.5-flash',
-        options: ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'],
+        default: 'gemini-3.1-flash-lite',
+        options: ['gemini-3.1-flash-lite', 'gemini-2.5-pro', 'gemini-3-flash-preview', 'gemini-3.5-flash', 'gemini-3.1-pro-preview'],
     },
     ohmygpt: {
-        default: 'gpt-4o-mini',
-        options: ['gpt-4o-mini', 'gpt-4o', 'claude-3-5-sonnet-20241022'],
+        default: 'gpt-5.4-mini',
+        options: ['gpt-5.4-mini', 'gpt-5.5', 'claude-haiku-4-5', 'claude-sonnet-4-6', 'gemini-3.5-flash'],
     },
     openrouter: {
-        default: 'xiaomi/mimo-v2-flash:free',
+        default: 'moonshotai/kimi-k2.6:free',
         options: [
-            'xiaomi/mimo-v2-flash:free',
-            'mistralai/devstral-2512:free',
-            'kwaipilot/kat-coder-pro:free',
-            'deepseek/deepseek-r1-0528:free',
+            'moonshotai/kimi-k2.6:free',
+            'deepseek/deepseek-v4-flash:free',
             'qwen/qwen3-coder:free',
-            'meta-llama/llama-3.3-70b-instruct:free',
-            'google/gemma-3-27b-it:free',
+            'qwen/qwen3-next-80b-a3b-instruct:free',
+            'minimax/minimax-m2.5:free',
+            'z-ai/glm-4.5-air:free',
+            'nvidia/nemotron-3-super-120b-a12b:free',
             'openai/gpt-oss-120b:free',
-            'moonshotai/kimi-k2:free',
-            'google/gemini-2.0-flash-exp:free',
+            'meta-llama/llama-3.3-70b-instruct:free',
+            'google/gemma-4-31b-it:free',
         ],
     },
 };

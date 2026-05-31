@@ -9,6 +9,44 @@ logger = logging.getLogger(__name__)
 
 BASE_URL = "https://www.alphavantage.co/query"
 
+# Alpha Vantage signals throttling via these top-level keys in a 200 response.
+_RATE_LIMIT_KEYS = ("Note", "Information")
+
+
+def _is_rate_limited(data: dict) -> bool:
+    """Return True if the response is an Alpha Vantage rate-limit message."""
+    return any(key in data for key in _RATE_LIMIT_KEYS)
+
+
+def _av_get(params: dict, api_key: Optional[str] = None) -> dict:
+    """Call Alpha Vantage, using a provided key or rotating through the pool.
+
+    If ``api_key`` is provided (user-supplied), it is used directly. Otherwise,
+    tries each configured API key (in random order) until one returns a
+    non-rate-limited payload or the pool is exhausted. Returns the parsed
+    JSON of the last attempt so callers can still detect a persistent
+    rate limit.
+    """
+    if api_key:
+        keys = [api_key]
+    else:
+        keys = get_api_keys()
+        if not keys:
+            raise ValueError("No Alpha Vantage API keys configured")
+        random.shuffle(keys)
+
+    data: dict = {}
+    for key in keys:
+        resp = requests.get(BASE_URL, params={**params, "apikey": key}, timeout=60)
+        resp.raise_for_status()
+        data = resp.json()
+        if not _is_rate_limited(data):
+            return data
+        logger.warning(
+            f"Alpha Vantage key rate-limited for {params.get('function')}, trying next key"
+        )
+    return data
+
 
 def get_api_keys() -> list:
     """Get list of Alpha Vantage API keys from environment.
@@ -61,7 +99,7 @@ def safe_int(value) -> Optional[int]:
         return None
 
 
-def fetch_daily_prices(ticker: str, outputsize: str = "compact", days: int = 100) -> dict:
+def fetch_daily_prices(ticker: str, outputsize: str = "compact", days: int = 100, api_key: Optional[str] = None) -> dict:
     """Fetch daily price data from Alpha Vantage."""
     ticker = ticker.upper()
     
@@ -70,23 +108,16 @@ def fetch_daily_prices(ticker: str, outputsize: str = "compact", days: int = 100
             "function": "TIME_SERIES_DAILY",
             "symbol": ticker,
             "outputsize": outputsize,
-            "apikey": get_api_key(),
         }
         
-        resp = requests.get(BASE_URL, params=params, timeout=60)
-        resp.raise_for_status()
-        data = resp.json()
+        data = _av_get(params, api_key)
         
         if "Error Message" in data:
             logger.error(f"Alpha Vantage error: {data['Error Message']}")
             return {"ticker": ticker, "price_history": [], "error": data["Error Message"]}
         
-        if "Note" in data:
-            logger.warning(f"Alpha Vantage rate limit: {data['Note']}")
-            return {"ticker": ticker, "price_history": [], "_rate_limited": True}
-        
-        if "Information" in data:
-            logger.warning(f"Alpha Vantage: {data['Information']}")
+        if _is_rate_limited(data):
+            logger.warning(f"Alpha Vantage rate limit (all keys) for prices {ticker}")
             return {"ticker": ticker, "price_history": [], "_rate_limited": True}
         
         time_series = data.get("Time Series (Daily)", {})
@@ -117,7 +148,7 @@ def fetch_daily_prices(ticker: str, outputsize: str = "compact", days: int = 100
         return {"ticker": ticker, "price_history": [], "error": str(e)}
 
 
-def fetch_company_overview(ticker: str) -> dict:
+def fetch_company_overview(ticker: str, api_key: Optional[str] = None) -> dict:
     """Fetch company overview from Alpha Vantage."""
     ticker = ticker.upper()
     
@@ -125,16 +156,13 @@ def fetch_company_overview(ticker: str) -> dict:
         params = {
             "function": "OVERVIEW",
             "symbol": ticker,
-            "apikey": get_api_key(),
         }
         
-        resp = requests.get(BASE_URL, params=params, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+        data = _av_get(params, api_key)
         
-        if "Note" in data or "Information" in data:
+        if _is_rate_limited(data):
             msg = data.get("Note") or data.get("Information")
-            logger.warning(f"Alpha Vantage rate limit for {ticker}: {msg}")
+            logger.warning(f"Alpha Vantage rate limit (all keys) for {ticker}: {msg}")
             return {"name": ticker, "sector": None, "industry": None, "_rate_limited": True}
         
         if not data or "Symbol" not in data:
@@ -169,7 +197,7 @@ def fetch_company_overview(ticker: str) -> dict:
         return {"name": ticker, "sector": None, "industry": None, "_error": str(e)}
 
 
-def fetch_earnings(ticker: str) -> dict:
+def fetch_earnings(ticker: str, api_key: Optional[str] = None) -> dict:
     """Fetch earnings history from Alpha Vantage."""
     ticker = ticker.upper()
     
@@ -177,15 +205,12 @@ def fetch_earnings(ticker: str) -> dict:
         params = {
             "function": "EARNINGS",
             "symbol": ticker,
-            "apikey": get_api_key(),
         }
         
-        resp = requests.get(BASE_URL, params=params, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+        data = _av_get(params, api_key)
         
-        if "Note" in data or "Information" in data:
-            logger.warning(f"Alpha Vantage rate limit for earnings {ticker}")
+        if _is_rate_limited(data):
+            logger.warning(f"Alpha Vantage rate limit (all keys) for earnings {ticker}")
             return {"annual_earnings": [], "quarterly_earnings": [], "_rate_limited": True}
         
         annual = data.get("annualEarnings", [])[:5]
@@ -220,7 +245,7 @@ def _latest_quarterly_report(reports: list) -> dict:
     return max(reports, key=lambda r: r.get("fiscalDateEnding", ""))
 
 
-def _fetch_statement(ticker: str, function: str, label: str) -> dict:
+def _fetch_statement(ticker: str, function: str, label: str, api_key: Optional[str] = None) -> dict:
     """Fetch a fundamental statement and return its latest quarterly report.
     
     Returns a dict with `fiscal_quarter`, `report` (the latest quarterly report),
@@ -232,15 +257,12 @@ def _fetch_statement(ticker: str, function: str, label: str) -> dict:
         params = {
             "function": function,
             "symbol": ticker,
-            "apikey": get_api_key(),
         }
         
-        resp = requests.get(BASE_URL, params=params, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+        data = _av_get(params, api_key)
         
-        if "Note" in data or "Information" in data:
-            logger.warning(f"Alpha Vantage rate limit for {label} {ticker}")
+        if _is_rate_limited(data):
+            logger.warning(f"Alpha Vantage rate limit (all keys) for {label} {ticker}")
             return {"fiscal_quarter": None, "report": {}, "_rate_limited": True}
         
         if "Error Message" in data:
@@ -258,38 +280,35 @@ def _fetch_statement(ticker: str, function: str, label: str) -> dict:
         return {"fiscal_quarter": None, "report": {}, "error": str(e)}
 
 
-def fetch_income_statement(ticker: str) -> dict:
+def fetch_income_statement(ticker: str, api_key: Optional[str] = None) -> dict:
     """Fetch the latest quarterly income statement from Alpha Vantage."""
-    return _fetch_statement(ticker, "INCOME_STATEMENT", "income statement")
+    return _fetch_statement(ticker, "INCOME_STATEMENT", "income statement", api_key)
 
 
-def fetch_balance_sheet(ticker: str) -> dict:
+def fetch_balance_sheet(ticker: str, api_key: Optional[str] = None) -> dict:
     """Fetch the latest quarterly balance sheet from Alpha Vantage."""
-    return _fetch_statement(ticker, "BALANCE_SHEET", "balance sheet")
+    return _fetch_statement(ticker, "BALANCE_SHEET", "balance sheet", api_key)
 
 
-def fetch_cash_flow(ticker: str) -> dict:
+def fetch_cash_flow(ticker: str, api_key: Optional[str] = None) -> dict:
     """Fetch the latest quarterly cash flow statement from Alpha Vantage."""
-    return _fetch_statement(ticker, "CASH_FLOW", "cash flow")
+    return _fetch_statement(ticker, "CASH_FLOW", "cash flow", api_key)
 
 
-def fetch_news_sentiment(ticker: str, limit: int = 50) -> list:
+def fetch_news_sentiment(ticker: str, limit: int = 50, api_key: Optional[str] = None) -> list:
     """Fetch news articles with sentiment from Alpha Vantage."""
     try:
         params = {
             "function": "NEWS_SENTIMENT",
             "tickers": ticker,
             "limit": limit,
-            "apikey": get_api_key(),
         }
         
         logger.info(f"Fetching news for {ticker}...")
-        resp = requests.get(BASE_URL, params=params, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
+        data = _av_get(params, api_key)
         
-        if "Note" in data or "Information" in data:
-            logger.warning(f"Alpha Vantage rate limit for news {ticker}")
+        if _is_rate_limited(data):
+            logger.warning(f"Alpha Vantage rate limit (all keys) for news {ticker}")
             return []
         
         feed = data.get("feed", [])
@@ -323,22 +342,31 @@ def fetch_news_sentiment(ticker: str, limit: int = 50) -> list:
         return []
 
 
-def fetch_stock_data(ticker: str) -> dict:
+def fetch_stock_data(ticker: str, api_key: Optional[str] = None) -> dict:
     """Fetch complete stock data: prices and company info."""
     ticker = ticker.upper()
     
-    prices = fetch_daily_prices(ticker)
-    company = fetch_company_overview(ticker)
+    prices = fetch_daily_prices(ticker, api_key=api_key)
+    company = fetch_company_overview(ticker, api_key=api_key)
+    
+    # Surface whether the empty price set is due to upstream rate limiting
+    # (vs. an actual data/code error) so the frontend can explain it.
+    price_rate_limited = bool(prices.get("_rate_limited"))
+    if price_rate_limited:
+        logger.warning(
+            f"Price data for {ticker} is empty because the Alpha Vantage key is rate-limited"
+        )
     
     return {
         "ticker": ticker,
         "price_history": prices.get("price_history", []),
         "current_price": prices.get("current_price"),
         "company_info": company,
+        "rate_limited": price_rate_limited or bool(company.get("_rate_limited")),
         "error": prices.get("error") or company.get("_error"),
     }
 
 
-def fetch_news(ticker: str, limit: int = 20) -> list:
+def fetch_news(ticker: str, limit: int = 20, api_key: Optional[str] = None) -> list:
     """Fetch news articles from Alpha Vantage."""
-    return fetch_news_sentiment(ticker.upper(), limit)
+    return fetch_news_sentiment(ticker.upper(), limit, api_key)

@@ -199,6 +199,29 @@ describe('requestAnalysis', () => {
             })
         )
     })
+
+    it('includes alpha_vantage_key when provided', async () => {
+        const mockResponse = { task_id: '123', status: 'pending', message: 'Analysis started' }
+            ; (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve(mockResponse),
+            })
+
+        const llmConfig = { provider: 'openai', api_key: 'test-key', model: 'gpt-4' }
+        await requestAnalysis('AAPL', llmConfig, 'av-key-123')
+
+        expect(global.fetch).toHaveBeenCalledWith(
+            expect.stringContaining('/api/analysis/request'),
+            expect.objectContaining({
+                method: 'POST',
+                body: JSON.stringify({
+                    ticker: 'AAPL',
+                    alpha_vantage_key: 'av-key-123',
+                    llm_config: { provider: 'openai', api_key: 'test-key', model: 'gpt-4' },
+                }),
+            })
+        )
+    })
 })
 
 describe('getAnalysisStatus', () => {

@@ -28,7 +28,7 @@ class TestOrchestrationClient:
             client._starter_url = "http://func/api/orchestrator/start"
             client._functions_key = "secret"
 
-            client.start_analysis("AAPL", "task-123", {"provider": "openai", "api_key": "k", "model": "m"})
+            client.start_analysis("AAPL", "task-123", {"provider": "openai", "api_key": "k", "model": "m"}, "av-key")
 
             mock_post.assert_called_once()
             _, kwargs = mock_post.call_args
@@ -36,6 +36,7 @@ class TestOrchestrationClient:
             assert kwargs["json"]["ticker"] == "AAPL"
             assert kwargs["json"]["task_id"] == "task-123"
             assert kwargs["json"]["llm_config"]["provider"] == "openai"
+            assert kwargs["json"]["alpha_vantage_key"] == "av-key"
 
     def test_no_key_sends_no_params(self):
         from app.services.orchestration_client import OrchestrationClient
