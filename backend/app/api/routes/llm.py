@@ -162,33 +162,36 @@ GOOGLE_NATIVE_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/model
 
 
 async def _verify_google(api_key: str, model: str) -> LLMVerifyResponse:
-    """Verify a Google Gemini API key against the native generateContent endpoint."""
-    url = f"{GOOGLE_NATIVE_BASE_URL}/{model}:generateContent"
+    """Verify a Google Gemini API key against the native REST API.
+
+    Uses the ListModels endpoint, which validates the key independently of
+    whether any specific model is enabled. The OpenAI-compat shim rejects the
+    newer 'AQ.'-format keys, so we always use the native API here.
+    """
     try:
-        response = requests.post(
-            url,
-            headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
-            json={
-                "contents": [{"role": "user", "parts": [{"text": "Hi"}]}],
-                "generationConfig": {"maxOutputTokens": 1},
-            },
+        response = requests.get(
+            GOOGLE_NATIVE_BASE_URL,
+            headers={"x-goog-api-key": api_key},
             timeout=15,
+        )
+
+        logger.info(
+            f"Google verify (ListModels): status={response.status_code} "
+            f"body={response.text[:300]}"
         )
 
         if response.status_code == 200:
             return LLMVerifyResponse(valid=True)
-        if response.status_code in (401, 403):
+        if response.status_code in (400, 401, 403):
             return LLMVerifyResponse(valid=False, error="Invalid API key")
-        if response.status_code == 404:
-            return LLMVerifyResponse(valid=False, error=f"Model '{model}' not available")
         if response.status_code == 429:
             # Rate-limited means the key authenticated successfully.
             return LLMVerifyResponse(valid=True)
 
-        # Surface the provider's own message for anything else.
         detail = response.json().get("error", {}).get("message", response.text[:200])
         return LLMVerifyResponse(valid=False, error=detail[:200])
     except Exception as e:
+        logger.error(f"Google verify exception: {e}")
         return LLMVerifyResponse(valid=False, error=str(e)[:200])
 
 
