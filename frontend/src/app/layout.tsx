@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
-import { Archivo, IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
+import { Sora, IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 
-const archivo = Archivo({
+const sora = Sora({
   subsets: ['latin'],
-  weight: ['500', '600', '700', '800', '900'],
-  variable: '--font-archivo',
+  weight: ['500', '600', '700', '800'],
+  variable: '--font-display',
   display: 'swap',
 })
 
@@ -50,7 +50,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} font-sans`}>
+      <body className={`${sora.variable} ${plexSans.variable} ${plexMono.variable} font-sans`}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

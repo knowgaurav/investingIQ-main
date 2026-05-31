@@ -139,14 +139,14 @@ export default function Home() {
 
                     <h1 className="font-display font-extrabold text-theme tracking-tight mt-7 leading-[1.02] animate-fade-up"
                         style={{ animationDelay: '0.05s', fontSize: 'clamp(2.5rem, 6vw, 4.75rem)' }}>
-                        Institutional-grade equity
-                        <br className="hidden sm:block" /> research, <span className="text-primary">powered by AI</span>
+                        Every stock, decoded
+                        <br className="hidden sm:block" /> by <span className="text-primary">machine intelligence</span>
                     </h1>
 
                     <p className="mt-6 text-theme-secondary max-w-2xl mx-auto leading-relaxed animate-fade-up"
                         style={{ animationDelay: '0.12s', fontSize: 'clamp(1rem, 1.6vw, 1.18rem)' }}>
-                        Machine-learning forecasts, real-time sentiment, and an LLM analyst desk —
-                        unified into a single report for any publicly-traded company on earth.
+                        Where quantitative models meet generative AI — price forecasts, live
+                        sentiment, and analyst-grade insight on any ticker, in seconds.
                     </p>
 
                     <div className="mt-10 animate-fade-up" style={{ animationDelay: '0.2s' }}>

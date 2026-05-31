@@ -110,7 +110,7 @@ body>* {
 
 /* ---- Typography helpers ---- */
 .font-display {
-    font-family: var(--font-archivo), system-ui, sans-serif;
+    font-family: var(--font-display), system-ui, sans-serif;
     letter-spacing: -0.02em;
 }
 
