@@ -11,10 +11,11 @@ import {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface AnalysisSetupModalProps {
-    ticker: string;
+    ticker?: string;
     initialConfig: LLMConfig | null;
     onStart: (config: LLMConfig) => void;
     onCancel: () => void;
+    mode?: 'analyze' | 'settings';
 }
 
 export default function AnalysisSetupModal({
@@ -22,6 +23,7 @@ export default function AnalysisSetupModal({
     initialConfig,
     onStart,
     onCancel,
+    mode = 'analyze',
 }: AnalysisSetupModalProps) {
     const [alphaVantageKey, setAlphaVantageKey] = useState(initialConfig?.alphaVantageKey || '');
     const [provider, setProvider] = useState<LLMProvider>(initialConfig?.provider || 'openai');
@@ -31,6 +33,8 @@ export default function AnalysisSetupModal({
     );
     const [isVerifying, setIsVerifying] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const isSettings = mode === 'settings';
 
     const handleProviderChange = (next: LLMProvider) => {
         setProvider(next);
@@ -90,9 +94,13 @@ export default function AnalysisSetupModal({
                 <div className="card-paper shadow-2xl overflow-hidden">
                     <div className="flex items-center justify-between p-4 border-b border-theme bg-theme-secondary/50">
                         <div>
-                            <span className="eyebrow">Analysis Setup</span>
+                            <span className="eyebrow">{isSettings ? 'API Keys' : 'Analysis Setup'}</span>
                             <h2 className="font-display text-lg font-bold text-theme mt-1">
-                                Analyze <span className="font-mono text-primary">{ticker}</span>
+                                {isSettings ? (
+                                    'Update API Keys'
+                                ) : (
+                                    <>Analyze <span className="font-mono text-primary">{ticker}</span></>
+                                )}
                             </h2>
                         </div>
                         <button
@@ -108,8 +116,9 @@ export default function AnalysisSetupModal({
 
                     <div className="p-4 space-y-4">
                         <p className="text-xs text-theme-secondary leading-relaxed">
-                            Provide your own API keys to run the analysis. Keys are stored only in
-                            your browser and sent directly with this request.
+                            {isSettings
+                                ? 'Update the API keys used for analysis. Keys are stored only in your browser.'
+                                : 'Provide your own API keys to run the analysis. Keys are stored only in your browser and sent directly with this request.'}
                         </p>
 
                         {/* Alpha Vantage Key */}
@@ -207,7 +216,7 @@ export default function AnalysisSetupModal({
                                     Verifying...
                                 </>
                             ) : (
-                                'Start Analysis'
+                                isSettings ? 'Save Keys' : 'Start Analysis'
                             )}
                         </button>
                     </div>

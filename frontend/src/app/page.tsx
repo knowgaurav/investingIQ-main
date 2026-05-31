@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import StockSearch from '@/components/StockSearch';
+import SettingsButton from '@/components/SettingsButton';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { StockSearchResult } from '@/lib/api';
 
@@ -274,6 +275,8 @@ export default function Home() {
                     </p>
                 </div>
             </footer>
+
+            <SettingsButton />
         </main>
     );
 }
