@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback, use } from 'react';
+import { useState, useCallback, use } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     requestAnalysis,
     AnalysisReport,
@@ -14,27 +15,29 @@ import CompanyOverview from '@/components/CompanyOverview';
 import MLAnalysisView from '@/components/MLAnalysisView';
 import LLMAnalysisView from '@/components/LLMAnalysisView';
 import DualAnalysisView from '@/components/DualAnalysisView';
-import LLMSettings from '@/components/LLMSettings';
+import AnalysisSetupModal from '@/components/AnalysisSetupModal';
 import DarkModeToggle from '@/components/DarkModeToggle';
-import { useLLMConfig } from '@/hooks/useLLMConfig';
+import { useLLMConfig, LLMConfig as StoredLLMConfig } from '@/hooks/useLLMConfig';
 
 interface AnalyzePageProps {
     params: Promise<{ ticker: string }>;
 }
 
-type PageState = 'loading' | 'analyzing' | 'complete' | 'error';
+type PageState = 'setup' | 'analyzing' | 'complete' | 'error';
 type AnalysisTab = 'overview' | 'dual' | 'ml' | 'llm';
 
 export default function AnalyzePage({ params }: AnalyzePageProps) {
     const { ticker: rawTicker } = use(params);
     const ticker = rawTicker.toUpperCase();
-    const [pageState, setPageState] = useState<PageState>('loading');
+    const router = useRouter();
+    const [pageState, setPageState] = useState<PageState>('setup');
     const [taskStatus, setTaskStatus] = useState<AnalysisTaskStatus | null>(null);
     const [report, setReport] = useState<AnalysisReport | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<AnalysisTab>('overview');
+    const [showSettings, setShowSettings] = useState(false);
 
-    const { config: llmConfig, hasConfig: hasLLMConfig, isLoaded: llmConfigLoaded } = useLLMConfig();
+    const { config: llmConfig, hasConfig: hasLLMConfig, isLoaded: llmConfigLoaded, saveConfig } = useLLMConfig();
 
     const connectSSE = useCallback((taskId: string) => {
         const eventSource = new EventSource(`http://localhost:8000/api/v1/events/${taskId}`);
@@ -81,6 +84,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                     dual_comparison: analysisData.dual_comparison || null,
                     financials_status: analysisData.financials_status || null,
                     financials_quarter: analysisData.financials_quarter || null,
+                    rate_limited: analysisData.stock_data?.rate_limited || false,
                 });
                 setPageState('complete');
                 eventSource.close();
@@ -99,47 +103,42 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
         return eventSource;
     }, []);
 
-    useEffect(() => {
-        if (!llmConfigLoaded) return;
+    const startAnalysis = useCallback((stored: StoredLLMConfig) => {
+        // Persist for next time, then kick off the analysis with the provided keys.
+        saveConfig(stored);
+        setPageState('analyzing');
+        setError(null);
 
-        let eventSource: EventSource | null = null;
+        const llmConfigPayload: LLMConfig = {
+            provider: stored.provider,
+            api_key: stored.apiKey,
+            model: stored.model,
+        };
 
-        const startAnalysis = async () => {
-            try {
-                setPageState('analyzing');
-                const llmConfigPayload: LLMConfig | null = llmConfig ? {
-                    provider: llmConfig.provider,
-                    api_key: llmConfig.apiKey,
-                    model: llmConfig.model,
-                } : null;
-                const response = await requestAnalysis(ticker, llmConfigPayload);
-                eventSource = connectSSE(response.task_id);
-            } catch (err: any) {
+        requestAnalysis(ticker, llmConfigPayload, stored.alphaVantageKey)
+            .then((response) => {
+                connectSSE(response.task_id);
+            })
+            .catch((err: any) => {
                 console.error('Error starting analysis:', err);
                 setError(err.message || 'Failed to start analysis');
                 setPageState('error');
-            }
-        };
+            });
+    }, [ticker, connectSSE, saveConfig]);
 
-        startAnalysis();
-
-        return () => {
-            if (eventSource) {
-                eventSource.close();
-            }
-        };
-    }, [ticker, connectSSE, llmConfig, llmConfigLoaded]);
-
-    // Loading state
-    if (pageState === 'loading') {
+    // Setup state - collect API keys before running analysis
+    if (pageState === 'setup') {
         return (
             <main className="min-h-screen bg-theme">
-                <div className="container mx-auto px-6 py-24">
-                    <div className="flex flex-col items-center justify-center">
-                        <div className="w-10 h-10 border-2 border-theme border-t-primary rounded-full animate-spin mb-5" />
-                        <p className="font-mono text-xs uppercase tracking-[0.18em] text-theme-muted">Loading…</p>
-                    </div>
-                </div>
+                <Header ticker={ticker} />
+                {llmConfigLoaded && (
+                    <AnalysisSetupModal
+                        ticker={ticker}
+                        initialConfig={llmConfig}
+                        onStart={startAnalysis}
+                        onCancel={() => router.push('/')}
+                    />
+                )}
             </main>
         );
     }
@@ -195,7 +194,7 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                             </h2>
                             <p className="text-theme-secondary mb-8">{error}</p>
                             <button
-                                onClick={() => window.location.reload()}
+                                onClick={() => { setError(null); setPageState('setup'); }}
                                 className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:brightness-110 transition-all"
                             >
                                 Try Again
@@ -245,7 +244,11 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                         </h2>
                         <span className="ai-badge"><span className="dot" /> Live</span>
                     </div>
-                    <PriceChart data={report.price_data} height={300} />
+                    {report.rate_limited && report.price_data.length === 0 ? (
+                        <RateLimitNotice onUpdateKeys={() => setShowSettings(true)} />
+                    ) : (
+                        <PriceChart data={report.price_data} height={300} />
+                    )}
                 </div>
 
                 {/* Analysis Tabs */}
@@ -318,9 +321,60 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 </div>
             </div>
 
-            {/* LLM Settings Floating Button */}
-            <LLMSettings />
+            {/* Floating settings gear — update keys anytime */}
+            <SettingsButton onClick={() => setShowSettings(true)} />
+
+            {showSettings && (
+                <AnalysisSetupModal
+                    ticker={ticker}
+                    initialConfig={llmConfig}
+                    onStart={(stored) => {
+                        setShowSettings(false);
+                        startAnalysis(stored);
+                    }}
+                    onCancel={() => setShowSettings(false)}
+                />
+            )}
         </main>
+    );
+}
+
+function SettingsButton({ onClick }: { onClick: () => void }) {
+    return (
+        <button
+            onClick={onClick}
+            title="Update API keys"
+            className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center bg-primary hover:brightness-110 transition-all hover:scale-105"
+        >
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+        </button>
+    );
+}
+
+function RateLimitNotice({ onUpdateKeys }: { onUpdateKeys: () => void }) {
+    return (
+        <div className="flex flex-col items-center justify-center text-center py-12 px-6 bg-theme-secondary rounded-lg">
+            <div className="w-12 h-12 rounded-full bg-yellow-500/10 flex items-center justify-center mb-4">
+                <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <p className="font-display font-bold text-theme mb-1">Alpha Vantage rate limit reached</p>
+            <p className="text-sm text-theme-secondary max-w-md leading-relaxed mb-4">
+                Your Alpha Vantage API key has hit its daily request limit, so price data
+                couldn&apos;t be fetched. This is an upstream provider limit, not an app error.
+                Try again later or update your key.
+            </p>
+            <button
+                onClick={onUpdateKeys}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:brightness-110 transition-all"
+            >
+                Update API Keys
+            </button>
+        </div>
     );
 }
 

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import StockSearch from '@/components/StockSearch';
-import LLMSettings from '@/components/LLMSettings';
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { StockSearchResult } from '@/lib/api';
 
@@ -275,8 +274,6 @@ export default function Home() {
                     </p>
                 </div>
             </footer>
-
-            <LLMSettings />
         </main>
     );
 }

@@ -8,6 +8,7 @@ export interface LLMConfig {
     provider: LLMProvider;
     apiKey: string;
     model?: string;
+    alphaVantageKey?: string;
 }
 
 const STORAGE_KEY = 'investingiq_llm_config';
