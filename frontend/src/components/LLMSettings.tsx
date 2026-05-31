@@ -96,9 +96,9 @@ export default function LLMSettings() {
             {/* Floating Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`fixed bottom-6 right-6 z-40 w-14 h-14 shadow-lg flex items-center justify-center transition-all hover:scale-105 border-2 ${hasConfig
-                    ? 'bg-green-500 border-green-600 hover:brightness-110'
-                    : 'bg-primary border-accent hover:bg-accent'
+                className={`fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 ${hasConfig
+                    ? 'bg-green-500 hover:brightness-110'
+                    : 'bg-primary hover:brightness-110'
                     }`}
                 title={hasConfig ? `LLM: ${PROVIDER_NAMES[config!.provider]}` : 'Configure LLM'}
             >
@@ -121,8 +121,8 @@ export default function LLMSettings() {
                     <div className="card-paper shadow-2xl overflow-hidden">
                         <div className="flex items-center justify-between p-4 border-b border-theme bg-theme-secondary/50">
                             <div>
-                                <p className="eyebrow !text-theme-muted">Bureau Settings</p>
-                                <h2 className="font-display text-lg font-semibold text-theme">
+                                <span className="eyebrow">AI Configuration</span>
+                                <h2 className="font-display text-lg font-bold text-theme mt-1">
                                     Configure LLM
                                 </h2>
                             </div>
@@ -138,13 +138,13 @@ export default function LLMSettings() {
 
                         <div className="p-4 space-y-4">
                             <div>
-                                <label className="block font-mono text-[0.65rem] uppercase tracking-[0.18em] text-theme-muted mb-1.5">
+                                <label className="block text-xs font-medium text-theme-secondary mb-1.5">
                                     Provider
                                 </label>
                                 <select
                                     value={provider}
                                     onChange={(e) => setProvider(e.target.value as LLMProvider)}
-                                    className="w-full px-3 py-2 border border-theme bg-theme text-theme text-sm focus:outline-none focus:border-primary"
+                                    className="w-full px-3 py-2 border border-theme bg-theme rounded-lg text-theme text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                                 >
                                     {Object.entries(PROVIDER_NAMES).map(([key, name]) => (
                                         <option key={key} value={key}>{name}</option>
@@ -153,7 +153,7 @@ export default function LLMSettings() {
                             </div>
 
                             <div>
-                                <label className="block font-mono text-[0.65rem] uppercase tracking-[0.18em] text-theme-muted mb-1.5">
+                                <label className="block text-xs font-medium text-theme-secondary mb-1.5">
                                     API Key
                                 </label>
                                 <input
@@ -164,18 +164,18 @@ export default function LLMSettings() {
                                         setIsVerified(false);
                                     }}
                                     placeholder="Enter your API key"
-                                    className="w-full px-3 py-2 border border-theme bg-theme text-theme text-sm font-mono focus:outline-none focus:border-primary"
+                                    className="w-full px-3 py-2 border border-theme bg-theme rounded-lg text-theme text-sm font-mono focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                                 />
                             </div>
 
                             <div>
-                                <label className="block font-mono text-[0.65rem] uppercase tracking-[0.18em] text-theme-muted mb-1.5">
-                                    Model <span className="opacity-70">(optional)</span>
+                                <label className="block text-xs font-medium text-theme-secondary mb-1.5">
+                                    Model <span className="text-theme-muted">(optional)</span>
                                 </label>
                                 <select
                                     value={model}
                                     onChange={(e) => setModel(e.target.value)}
-                                    className="w-full px-3 py-2 border border-theme bg-theme text-theme text-sm focus:outline-none focus:border-primary"
+                                    className="w-full px-3 py-2 border border-theme bg-theme rounded-lg text-theme text-sm focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                                 >
                                     {PROVIDER_MODELS[provider].options.map((m) => (
                                         <option key={m} value={m}>{m}</option>
@@ -190,7 +190,7 @@ export default function LLMSettings() {
                                 <button
                                     onClick={handleVerify}
                                     disabled={isVerifying || !apiKey.trim()}
-                                    className="px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] bg-primary text-white hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+                                    className="px-4 py-2 rounded-lg text-sm font-medium bg-primary text-white hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all"
                                 >
                                     {isVerifying ? (
                                         <>
@@ -203,7 +203,7 @@ export default function LLMSettings() {
                                 </button>
 
                                 {isVerified && (
-                                    <span className="text-gain text-sm flex items-center gap-1 font-mono uppercase tracking-wider">
+                                    <span className="text-gain text-sm flex items-center gap-1 font-medium">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                         </svg>
@@ -221,7 +221,7 @@ export default function LLMSettings() {
                             {config && (
                                 <button
                                     onClick={handleClear}
-                                    className="px-3 py-1.5 font-mono text-xs uppercase tracking-[0.12em] text-loss hover:bg-loss/10 transition-colors"
+                                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-loss hover:bg-loss/10 transition-colors"
                                 >
                                     Clear
                                 </button>
@@ -229,14 +229,14 @@ export default function LLMSettings() {
                             <div className="flex gap-2 ml-auto">
                                 <button
                                     onClick={() => setIsOpen(false)}
-                                    className="px-3 py-1.5 font-mono text-xs uppercase tracking-[0.12em] text-theme-secondary hover:text-theme transition-colors"
+                                    className="px-3 py-1.5 rounded-lg text-sm font-medium text-theme-secondary hover:text-theme transition-colors"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleSave}
                                     disabled={!isVerified}
-                                    className="px-4 py-1.5 font-mono text-xs uppercase tracking-[0.12em] bg-primary text-white hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    className="px-4 py-1.5 rounded-lg text-sm font-medium bg-primary text-white hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                 >
                                     Save
                                 </button>

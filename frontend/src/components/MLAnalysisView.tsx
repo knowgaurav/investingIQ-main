@@ -148,8 +148,8 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
 
             {/* Price Predictions */}
             <div className="card-paper p-6">
-                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>📈</span> Price Forecast
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Price Forecast
                     {prediction?.models_used && (
                         <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
                             {prediction.models_used}
@@ -344,8 +344,8 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
 
             {/* Technical Indicators */}
             <div className="card-paper p-6">
-                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>📊</span> Technical Indicators
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Technical Indicators
                 </h3>
 
                 {technical ? (
@@ -446,8 +446,8 @@ export default function MLAnalysisView({ prediction, technical, sentiment }: MLA
 
             {/* ML Sentiment */}
             <div className="card-paper p-6">
-                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>💬</span> News Sentiment Analysis
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> News Sentiment Analysis
                 </h3>
 
                 {sentiment ? (

@@ -38,12 +38,12 @@ describe('Home Page', () => {
 
     it('renders the main title', () => {
         render(<Home />)
-        expect(screen.getByText('InvestingIQ')).toBeInTheDocument()
+        expect(screen.getAllByText('InvestingIQ').length).toBeGreaterThan(0)
     })
 
     it('renders the tagline', () => {
         render(<Home />)
-        expect(screen.getByText(/An AI Bureau of Market Intelligence/)).toBeInTheDocument()
+        expect(screen.getByText(/AI · ML Research Platform/)).toBeInTheDocument()
     })
 
     it('renders stock search component', () => {
@@ -51,17 +51,17 @@ describe('Home Page', () => {
         expect(screen.getByTestId('stock-search')).toBeInTheDocument()
     })
 
-    it('renders feature columns', () => {
+    it('renders capability cards', () => {
         render(<Home />)
-        expect(screen.getByText('Real-time')).toBeInTheDocument()
-        expect(screen.getByText('AI-Powered')).toBeInTheDocument()
-        expect(screen.getByText('Sentiment')).toBeInTheDocument()
-        expect(screen.getByText('Global')).toBeInTheDocument()
+        expect(screen.getByText('ML Price Models')).toBeInTheDocument()
+        expect(screen.getByText('Sentiment Engine')).toBeInTheDocument()
+        expect(screen.getByText('AI Analyst Desk')).toBeInTheDocument()
+        expect(screen.getByText('Signal Coverage')).toBeInTheDocument()
     })
 
-    it('renders watchlist index section', () => {
+    it('renders coverage universe section', () => {
         render(<Home />)
-        expect(screen.getByText('The Watchlist Index')).toBeInTheDocument()
+        expect(screen.getByText('Most-followed names')).toBeInTheDocument()
         expect(screen.getByRole('button', { name: /AAPL/ })).toBeInTheDocument()
         expect(screen.getByRole('button', { name: /MSFT/ })).toBeInTheDocument()
         expect(screen.getByRole('button', { name: /GOOGL/ })).toBeInTheDocument()
@@ -86,6 +86,6 @@ describe('Home Page', () => {
 
     it('does not render recent searches section when empty', () => {
         render(<Home />)
-        expect(screen.queryByText('From Your Desk')).not.toBeInTheDocument()
+        expect(screen.queryByText('Recent Activity')).not.toBeInTheDocument()
     })
 })

@@ -1,13 +1,12 @@
 import type { Metadata } from 'next'
-import { Fraunces, IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
+import { Archivo, IBM_Plex_Sans, IBM_Plex_Mono } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
 
-const fraunces = Fraunces({
+const archivo = Archivo({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '900'],
-  style: ['normal', 'italic'],
-  variable: '--font-fraunces',
+  weight: ['500', '600', '700', '800', '900'],
+  variable: '--font-archivo',
   display: 'swap',
 })
 
@@ -26,8 +25,8 @@ const plexMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'InvestingIQ — The Daily Ledger of AI Stock Analysis',
-  description: 'Analyze any stock with AI-powered insights, sentiment analysis, and predictions',
+  title: 'InvestingIQ — AI-Powered Equity Research',
+  description: 'Institutional-grade stock analysis powered by machine learning forecasts, sentiment models, and LLM research.',
 }
 
 const themeScript = `
@@ -51,7 +50,7 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${fraunces.variable} ${plexSans.variable} ${plexMono.variable} font-sans`}>
+      <body className={`${archivo.variable} ${plexSans.variable} ${plexMono.variable} font-sans`}>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

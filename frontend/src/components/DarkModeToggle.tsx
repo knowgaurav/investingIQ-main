@@ -7,14 +7,14 @@ export default function DarkModeToggle() {
 
     if (!mounted) {
         return (
-            <div className="p-2 border border-theme bg-theme-secondary w-9 h-9" />
+            <div className="p-2 rounded-lg border border-theme bg-theme-secondary w-9 h-9" />
         );
     }
 
     return (
         <button
             onClick={toggleTheme}
-            className="p-2 border border-theme bg-theme-card text-theme-secondary hover:border-accent hover:text-accent transition-colors"
+            className="p-2 rounded-lg border border-theme bg-theme-card text-theme-secondary hover:text-primary hover:border-primary/50 transition-colors"
             aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
         >
             {theme === 'light' ? (

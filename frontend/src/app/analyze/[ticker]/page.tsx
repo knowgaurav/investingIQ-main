@@ -136,8 +136,8 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
             <main className="min-h-screen bg-theme">
                 <div className="container mx-auto px-6 py-24">
                     <div className="flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 border-2 border-theme border-t-accent rounded-full animate-spin mb-5" />
-                        <p className="eyebrow !text-theme-muted">Going to press…</p>
+                        <div className="w-10 h-10 border-2 border-theme border-t-primary rounded-full animate-spin mb-5" />
+                        <p className="font-mono text-xs uppercase tracking-[0.18em] text-theme-muted">Loading…</p>
                     </div>
                 </div>
             </main>
@@ -152,18 +152,18 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 <div className="container mx-auto px-6 py-20">
                     <div className="max-w-lg mx-auto card-paper p-10">
                         <div className="text-center">
-                            <p className="eyebrow mb-3">Dispatch in Progress</p>
-                            <h2 className="font-display font-bold text-3xl text-theme mb-3">
-                                Analyzing <span className="font-mono">{ticker}</span>
+                            <span className="ai-badge mb-5"><span className="dot" /> Running Models</span>
+                            <h2 className="font-display font-bold text-3xl text-theme mb-2 mt-2">
+                                Analyzing <span className="font-mono text-primary">{ticker}</span>
                             </h2>
-                            <p className="font-display italic text-theme-secondary mb-8">
+                            <p className="text-theme-secondary mb-8">
                                 {taskStatus?.current_step || 'Initializing analysis…'}
                             </p>
 
                             {/* Progress bar */}
-                            <div className="w-full bg-theme-secondary h-1.5 mb-3 overflow-hidden">
+                            <div className="w-full bg-theme-secondary rounded-full h-2 mb-3 overflow-hidden">
                                 <div
-                                    className="bg-accent h-1.5 transition-all duration-500"
+                                    className="bg-primary h-2 rounded-full transition-all duration-500"
                                     style={{ width: `${taskStatus?.progress || 0}%` }}
                                 />
                             </div>
@@ -185,14 +185,18 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 <div className="container mx-auto px-6 py-20">
                     <div className="max-w-lg mx-auto card-paper p-10">
                         <div className="text-center">
-                            <p className="eyebrow !text-loss mb-3">Stop Press</p>
-                            <h2 className="font-display font-bold text-3xl text-theme mb-3">
+                            <div className="w-12 h-12 rounded-full bg-loss/10 flex items-center justify-center mx-auto mb-5">
+                                <svg className="w-6 h-6 text-loss" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                                </svg>
+                            </div>
+                            <h2 className="font-display font-bold text-2xl text-theme mb-2">
                                 Analysis Failed
                             </h2>
-                            <p className="font-display italic text-theme-secondary mb-8">{error}</p>
+                            <p className="text-theme-secondary mb-8">{error}</p>
                             <button
                                 onClick={() => window.location.reload()}
-                                className="px-7 py-2.5 bg-primary text-white font-mono text-sm uppercase tracking-[0.15em] hover:bg-accent transition-colors"
+                                className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:brightness-110 transition-all"
                             >
                                 Try Again
                             </button>
@@ -216,50 +220,51 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
             />
 
             <div className="container mx-auto px-6 py-10">
-                {/* Company Header — editorial dateline */}
+                {/* Company Header */}
                 <div className="mb-8 animate-fade-up">
-                    <p className="eyebrow mb-2">Company Dossier · {ticker}</p>
-                    <div className="flex flex-wrap items-end gap-4">
-                        <h1 className="font-display font-black text-theme tracking-tight leading-none"
-                            style={{ fontSize: 'clamp(2.25rem, 6vw, 4rem)' }}>
+                    <span className="eyebrow">Equity Research · {ticker}</span>
+                    <div className="flex flex-wrap items-center gap-3 mt-3">
+                        <h1 className="font-display font-extrabold text-theme tracking-tight leading-none"
+                            style={{ fontSize: 'clamp(2rem, 5vw, 3.25rem)' }}>
                             {report.company_name || ticker}
                         </h1>
-                        <span className="font-mono text-sm px-3 py-1.5 bg-primary text-white font-semibold tracking-wide mb-1">
+                        <span className="font-mono text-sm px-2.5 py-1 rounded-md bg-primary/10 text-primary font-semibold tracking-wide border border-primary/20">
                             {ticker}
                         </span>
                     </div>
-                    <hr className="rule-gold mt-4" />
-                    <p className="font-mono text-xs text-theme-muted mt-3 uppercase tracking-[0.15em]">
-                        Filed: {new Date(report.analyzed_at).toLocaleString()}
+                    <p className="font-mono text-xs text-theme-muted mt-3">
+                        Last analyzed {new Date(report.analyzed_at).toLocaleString()}
                     </p>
                 </div>
 
                 {/* Price Chart — always visible */}
                 <div className="card-paper p-6 mb-7 animate-fade-up" style={{ animationDelay: '0.08s' }}>
-                    <h2 className="font-display font-semibold text-xl text-theme mb-1">
-                        Price History
-                    </h2>
-                    <p className="eyebrow !text-theme-muted mb-4">Trailing market record</p>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-display font-bold text-lg text-theme">
+                            Price History
+                        </h2>
+                        <span className="ai-badge"><span className="dot" /> Live</span>
+                    </div>
                     <PriceChart data={report.price_data} height={300} />
                 </div>
 
-                {/* Analysis Tabs — section masthead */}
+                {/* Analysis Tabs */}
                 <div className="mb-7 animate-fade-up" style={{ animationDelay: '0.14s' }}>
-                    <div className="flex flex-wrap gap-x-1 gap-y-2 border-b-2 border-theme">
-                        <TabButton active={activeTab === 'overview'} accent="primary" onClick={() => setActiveTab('overview')}>
-                            Company Overview
+                    <div className="flex flex-wrap gap-1 p-1 card-paper !rounded-xl">
+                        <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>
+                            Overview
                         </TabButton>
-                        <TabButton active={activeTab === 'dual'} accent="primary" onClick={() => setActiveTab('dual')}>
+                        <TabButton active={activeTab === 'dual'} onClick={() => setActiveTab('dual')}>
                             ML vs LLM
                         </TabButton>
-                        <TabButton active={activeTab === 'ml'} accent="gain" onClick={() => setActiveTab('ml')}>
+                        <TabButton active={activeTab === 'ml'} onClick={() => setActiveTab('ml')}>
                             ML Analysis
                         </TabButton>
-                        <TabButton active={activeTab === 'llm'} accent="accent" onClick={() => setActiveTab('llm')}>
+                        <TabButton active={activeTab === 'llm'} onClick={() => setActiveTab('llm')}>
                             <span className="flex items-center gap-2">
                                 LLM Analysis
                                 {!hasLLMConfig && (
-                                    <span className="px-1.5 py-0.5 bg-theme-secondary text-theme-muted font-mono text-[0.6rem] uppercase tracking-wider">
+                                    <span className="px-1.5 py-0.5 rounded bg-theme-secondary text-theme-muted font-mono text-[0.6rem] uppercase tracking-wider">
                                         Locked
                                     </span>
                                 )}
@@ -321,25 +326,19 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
 
 function TabButton({
     active,
-    accent,
     onClick,
     children,
 }: {
     active: boolean;
-    accent: 'primary' | 'gain' | 'accent';
     onClick: () => void;
     children: React.ReactNode;
 }) {
-    const activeText =
-        accent === 'gain' ? 'text-gain' : accent === 'accent' ? 'text-accent' : 'text-primary';
-    const activeBorder =
-        accent === 'gain' ? 'border-gain' : accent === 'accent' ? 'border-accent' : 'border-primary';
     return (
         <button
             onClick={onClick}
-            className={`px-4 md:px-5 py-3 font-mono text-xs md:text-sm uppercase tracking-[0.12em] -mb-0.5 border-b-2 transition-colors ${active
-                ? `${activeBorder} ${activeText}`
-                : 'border-transparent text-theme-muted hover:text-theme'
+            className={`px-4 md:px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${active
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-theme-secondary hover:text-theme hover:bg-theme-secondary'
                 }`}
         >
             {children}
@@ -355,33 +354,27 @@ function Header({
     companyName?: string;
 }) {
     return (
-        <header className="border-b border-theme bg-theme-card/80 backdrop-blur-sm sticky top-0 z-30">
-            <div className="container mx-auto px-6 py-3.5">
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/"
-                        className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.15em] text-theme-secondary hover:text-accent transition-colors"
-                    >
-                        <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                            />
+        <header className="border-b border-theme bg-theme-card/80 backdrop-blur-md sticky top-0 z-30">
+            <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+                <Link
+                    href="/"
+                    className="flex items-center gap-2 text-sm font-medium text-theme-secondary hover:text-theme transition-colors"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back
+                </Link>
+                <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-primary text-white">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M4 18L9 11l4 4 7-9" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M16 6h4v4" />
                         </svg>
-                        Back
-                    </Link>
-                    <Link href="/" className="absolute left-1/2 -translate-x-1/2 font-display font-black text-xl text-theme tracking-tight">
-                        InvestingIQ
-                    </Link>
-                    <DarkModeToggle />
-                </div>
+                    </span>
+                    <span className="font-display font-extrabold text-lg tracking-tight text-theme">InvestingIQ</span>
+                </Link>
+                <DarkModeToggle />
             </div>
         </header>
     );

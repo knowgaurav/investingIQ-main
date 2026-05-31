@@ -66,8 +66,8 @@ export default function LLMAnalysisView({
         <div className="space-y-6">
             {/* News Summary */}
             <div className="card-paper p-6">
-                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>📰</span> News Summary (LLM Generated)
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> News Summary (LLM Generated)
                 </h3>
                 {newsSummary ? (
                     <div className="space-y-3 text-theme-secondary text-sm leading-relaxed
@@ -82,8 +82,8 @@ export default function LLMAnalysisView({
 
             {/* AI Sentiment */}
             <div className="card-paper p-6">
-                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>🧠</span> AI Sentiment Analysis
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> AI Sentiment Analysis
                 </h3>
                 {sentiment ? (
                     <div className="space-y-4">
@@ -144,8 +144,8 @@ export default function LLMAnalysisView({
 
             {/* AI Insights */}
             <div className="card-paper p-6">
-                <h3 className="font-display text-xl font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>💡</span> AI Investment Insights
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> AI Investment Insights
                 </h3>
                 {aiInsights ? (
                     <div className="space-y-4 text-theme-secondary text-sm leading-relaxed

@@ -89,30 +89,34 @@ function ChatContent() {
     return (
         <main className="min-h-screen bg-theme flex flex-col">
             {/* Header */}
-            <header className="border-b border-theme bg-theme-card/80 backdrop-blur-sm">
-                <div className="container mx-auto px-6 py-3.5">
-                    <div className="flex items-center justify-between">
-                        <Link
-                            href="/"
-                            className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.15em] text-theme-secondary hover:text-accent transition-colors"
-                        >
+            <header className="border-b border-theme bg-theme-card/80 backdrop-blur-md">
+                <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+                    <Link
+                        href="/"
+                        className="flex items-center gap-2 text-sm font-medium text-theme-secondary hover:text-theme transition-colors"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back
+                    </Link>
+                    <Link href="/" className="flex items-center gap-2">
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-primary text-white">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M4 18L9 11l4 4 7-9" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M16 6h4v4" />
                             </svg>
-                            Back
-                        </Link>
-                        <Link href="/" className="font-display font-black text-xl text-theme tracking-tight">
-                            InvestingIQ
-                        </Link>
-                        <div className="flex items-center gap-3">
-                            <DarkModeToggle />
-                            <button
-                                onClick={startNewConversation}
-                                className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-theme-muted hover:text-accent transition-colors"
-                            >
-                                New Chat
-                            </button>
-                        </div>
+                        </span>
+                        <span className="font-display font-extrabold text-lg tracking-tight text-theme">InvestingIQ</span>
+                    </Link>
+                    <div className="flex items-center gap-3">
+                        <DarkModeToggle />
+                        <button
+                            onClick={startNewConversation}
+                            className="text-sm font-medium text-theme-muted hover:text-theme transition-colors"
+                        >
+                            New Chat
+                        </button>
                     </div>
                 </div>
             </header>
@@ -129,7 +133,7 @@ function ChatContent() {
                         value={ticker}
                         onChange={(e) => setTicker(e.target.value.toUpperCase())}
                         placeholder="Enter ticker (e.g., AAPL)"
-                        className="w-full max-w-xs px-4 py-2.5 bg-theme-card border border-theme text-theme font-mono focus:outline-none focus:border-primary"
+                        className="w-full max-w-xs px-4 py-2.5 bg-theme-card border border-theme rounded-lg text-theme font-mono focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                     />
                 </div>
 
@@ -139,11 +143,15 @@ function ChatContent() {
                     <div className="flex-1 p-6 overflow-y-auto">
                         {messages.length === 0 ? (
                             <div className="text-center text-theme-muted mt-16">
-                                <p className="eyebrow mb-4">The Correspondent</p>
-                                <p className="font-display text-2xl font-semibold text-theme">AI Financial Assistant</p>
-                                <p className="font-display italic text-sm mt-3 max-w-md mx-auto text-theme-secondary">
+                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                    </svg>
+                                </div>
+                                <p className="font-display text-xl font-bold text-theme">AI Financial Assistant</p>
+                                <p className="text-sm mt-2 max-w-md mx-auto text-theme-secondary leading-relaxed">
                                     Ask anything about a stock — analysis, news summaries,
-                                    sentiment, and more, answered in plain type.
+                                    sentiment, and more.
                                 </p>
                                 <div className="mt-7 flex flex-wrap justify-center gap-2">
                                     {[
@@ -154,7 +162,7 @@ function ChatContent() {
                                         <button
                                             key={i}
                                             onClick={() => setInput(suggestion)}
-                                            className="px-3 py-1.5 text-sm bg-theme-secondary border border-theme text-theme hover:border-accent transition-colors"
+                                            className="px-3 py-1.5 text-sm bg-theme-secondary border border-theme rounded-lg text-theme hover:border-primary/50 transition-colors"
                                         >
                                             {suggestion}
                                         </button>
@@ -169,9 +177,9 @@ function ChatContent() {
                                         className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                     >
                                         <div
-                                            className={`max-w-[80%] px-4 py-3 ${message.role === 'user'
-                                                ? 'bg-primary text-white'
-                                                : 'bg-theme-secondary text-theme border-l-2 border-accent'
+                                            className={`max-w-[80%] px-4 py-3 rounded-2xl ${message.role === 'user'
+                                                ? 'bg-primary text-white rounded-br-md'
+                                                : 'bg-theme-secondary text-theme rounded-bl-md'
                                                 }`}
                                         >
                                             <p className="whitespace-pre-wrap leading-relaxed">{message.content}</p>
@@ -201,7 +209,7 @@ function ChatContent() {
                                 ))}
                                 {isLoading && (
                                     <div className="flex justify-start">
-                                        <div className="bg-theme-secondary border-l-2 border-accent px-4 py-3">
+                                        <div className="bg-theme-secondary rounded-2xl rounded-bl-md px-4 py-3">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-2 h-2 bg-theme-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                                                 <div className="w-2 h-2 bg-theme-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -225,12 +233,12 @@ function ChatContent() {
                                 onKeyDown={handleKeyDown}
                                 placeholder={ticker ? `Ask about ${ticker}...` : 'Enter a ticker first...'}
                                 disabled={!ticker.trim() || isLoading}
-                                className="flex-1 px-4 py-3 bg-theme-secondary border border-theme text-theme focus:outline-none focus:border-primary disabled:opacity-50"
+                                className="flex-1 px-4 py-3 bg-theme-secondary border border-theme rounded-lg text-theme focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all disabled:opacity-50"
                             />
                             <button
                                 onClick={handleSend}
                                 disabled={!input.trim() || !ticker.trim() || isLoading}
-                                className="bg-primary text-white px-6 py-3 hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="bg-primary text-white px-6 py-3 rounded-lg hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {isLoading ? (
                                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

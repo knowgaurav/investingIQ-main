@@ -3,65 +3,68 @@
 @tailwind utilities;
 
 /*
- * InvestingIQ — "Gilded Broadsheet"
- * Editorial financial-newspaper meets trading-desk aesthetic.
- * Warm parchment (light) / warm charcoal (dark), petrol-teal actions,
- * gold ornament, serif headlines + monospaced market data.
+ * InvestingIQ — "Quant Desk"
+ * Institutional research-terminal aesthetic. Deep navy ink, disciplined
+ * electric-blue primary, cyan AI/ML accent, hairline structure, tabular
+ * numerals, restrained tech motifs (dot-grid, soft glow, live pulse).
  */
 
 :root {
-    /* Parchment / light mode — warm ivory broadsheet */
-    --color-bg: 244 240 231;
-    --color-bg-secondary: 236 230 218;
-    --color-card: 252 250 245;
-    --color-border: 221 213 197;
-    --color-text: 28 26 22;
-    --color-text-secondary: 84 79 70;
-    --color-text-muted: 132 125 113;
+    /* Light — clean cool-gray institutional surfaces */
+    --color-bg: 247 248 250;
+    --color-bg-secondary: 238 241 246;
+    --color-card: 255 255 255;
+    --color-border: 224 228 236;
+    --color-text: 13 19 32;
+    --color-text-secondary: 71 82 104;
+    --color-text-muted: 130 141 161;
 
-    /* Brand — petrol teal (action) + gold (ornament) */
-    --color-primary: 16 112 122;
-    --color-accent: 176 124 18;
+    /* Brand — institutional blue + cyan AI accent */
+    --color-primary: 37 84 199;
+    --color-accent: 13 148 168;
 
     /* Semantic market colors */
-    --color-gain: 23 122 84;
-    --color-loss: 184 50 44;
+    --color-gain: 13 150 94;
+    --color-loss: 205 58 52;
 
     /* Chart colors (hex for recharts) */
-    --chart-grid: #ddd5c5;
-    --chart-tooltip-bg: #fcfaf5;
-    --chart-tooltip-border: #ddd5c5;
-    --chart-axis-text: #847d71;
+    --chart-grid: #e6e9ef;
+    --chart-tooltip-bg: #ffffff;
+    --chart-tooltip-border: #d8dde6;
+    --chart-axis-text: #828da1;
 
     /* Atmosphere */
-    --grain-opacity: 0.035;
-    --hairline: rgba(176, 124, 18, 0.32);
+    --grid-line: rgba(13, 19, 32, 0.05);
+    --glow: rgba(37, 84, 199, 0.10);
+    --hairline: rgba(13, 19, 32, 0.08);
+    --elev: 0 1px 2px rgba(13, 19, 32, 0.04), 0 12px 32px -20px rgba(13, 19, 32, 0.18);
 }
 
 .dark {
-    /* Charcoal / dark mode — warm near-black trading desk */
-    --color-bg: 18 17 14;
-    --color-bg-secondary: 28 27 22;
-    --color-card: 28 27 22;
-    --color-border: 51 49 41;
-    --color-text: 243 239 231;
-    --color-text-secondary: 189 182 168;
-    --color-text-muted: 138 132 120;
+    /* Dark — deep navy-black trading terminal */
+    --color-bg: 9 13 20;
+    --color-bg-secondary: 16 22 34;
+    --color-card: 18 24 38;
+    --color-border: 33 42 61;
+    --color-text: 233 238 247;
+    --color-text-secondary: 167 178 198;
+    --color-text-muted: 109 122 146;
 
-    /* Brand — brighter on dark for legibility */
-    --color-primary: 51 168 178;
-    --color-accent: 214 162 56;
+    --color-primary: 88 134 255;
+    --color-accent: 45 212 232;
 
-    --color-gain: 52 199 142;
-    --color-loss: 232 90 82;
+    --color-gain: 41 197 134;
+    --color-loss: 240 104 99;
 
-    --chart-grid: #33312a;
-    --chart-tooltip-bg: #1c1b16;
-    --chart-tooltip-border: #4a473d;
-    --chart-axis-text: #8a8478;
+    --chart-grid: #212a3d;
+    --chart-tooltip-bg: #121826;
+    --chart-tooltip-border: #2c374f;
+    --chart-axis-text: #6d7a92;
 
-    --grain-opacity: 0.05;
-    --hairline: rgba(214, 162, 56, 0.30);
+    --grid-line: rgba(255, 255, 255, 0.04);
+    --glow: rgba(88, 134, 255, 0.16);
+    --hairline: rgba(255, 255, 255, 0.07);
+    --elev: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 40px -24px rgba(0, 0, 0, 0.7);
 }
 
 html {
@@ -77,30 +80,29 @@ body {
     min-height: 100vh;
 }
 
-/* Film-grain / paper texture overlay for depth */
+/* Subtle dot-grid backdrop — quant terminal texture */
 body::before {
     content: '';
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    opacity: var(--grain-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image: radial-gradient(var(--grid-line) 1px, transparent 1px);
+    background-size: 26px 26px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 85%);
 }
 
-/* Soft radial vignette to focus the page */
+/* Soft brand glow anchored top-center */
 body::after {
     content: '';
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    background: radial-gradient(120% 90% at 50% -10%,
-            rgba(var(--color-accent), 0.07),
-            transparent 60%);
+    background: radial-gradient(60% 50% at 50% -8%, var(--glow), transparent 70%);
 }
 
-/* keep app content above texture layers */
 body>* {
     position: relative;
     z-index: 1;
@@ -108,41 +110,73 @@ body>* {
 
 /* ---- Typography helpers ---- */
 .font-display {
-    font-family: var(--font-fraunces), Georgia, 'Times New Roman', serif;
-    font-optical-sizing: auto;
+    font-family: var(--font-archivo), system-ui, sans-serif;
+    letter-spacing: -0.02em;
 }
 
 .font-mono-data {
-    font-family: var(--font-plex-mono), 'SFMono-Regular', ui-monospace, monospace;
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
     font-feature-settings: 'tnum' 1, 'zero' 1;
 }
 
-/* Editorial small-caps label */
+/* Section eyebrow — refined uppercase label with leading tick */
 .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     font-family: var(--font-plex-mono), ui-monospace, monospace;
     text-transform: uppercase;
-    letter-spacing: 0.28em;
+    letter-spacing: 0.18em;
     font-size: 0.6875rem;
-    color: rgb(var(--color-accent));
+    font-weight: 500;
+    color: rgb(var(--color-primary));
 }
 
-/* Gold hairline rule */
+.eyebrow::before {
+    content: '';
+    width: 0.875rem;
+    height: 2px;
+    background: rgb(var(--color-accent));
+}
+
+/* Hairline divider */
 .rule-gold {
     border: 0;
     height: 1px;
-    background: linear-gradient(to right,
-            transparent,
-            var(--hairline),
-            transparent);
+    background: rgb(var(--color-border));
 }
 
-/* Reusable editorial card */
+/* Institutional card — clean elevated surface */
 .card-paper {
     background-color: rgb(var(--color-card));
     border: 1px solid rgb(var(--color-border));
-    border-radius: 4px;
-    box-shadow: 0 1px 0 rgba(var(--color-accent), 0.08),
-        0 18px 40px -28px rgba(0, 0, 0, 0.45);
+    border-radius: 12px;
+    box-shadow: var(--elev);
+}
+
+/* AI badge — small pill with live pulse */
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: 999px;
+    background: rgb(var(--color-card));
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-secondary));
+}
+
+.ai-badge .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgb(var(--color-accent));
+    box-shadow: 0 0 0 0 rgba(var(--color-accent), 0.6);
+    animation: live-pulse 2.4s ease-in-out infinite;
 }
 
 /* ---- Selection + scrollbar ---- */
@@ -152,29 +186,29 @@ body>* {
 }
 
 ::-webkit-scrollbar {
-    width: 11px;
-    height: 11px;
+    width: 12px;
+    height: 12px;
 }
 
 ::-webkit-scrollbar-track {
-    background: rgb(var(--color-bg-secondary));
+    background: rgb(var(--color-bg));
 }
 
 ::-webkit-scrollbar-thumb {
     background: rgb(var(--color-border));
-    border-radius: 0;
-    border: 3px solid rgb(var(--color-bg-secondary));
+    border-radius: 999px;
+    border: 3px solid rgb(var(--color-bg));
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: rgb(var(--color-accent));
+    background: rgb(var(--color-text-muted));
 }
 
 /* ---- Motion ---- */
 @keyframes fade-up {
     from {
         opacity: 0;
-        transform: translateY(18px);
+        transform: translateY(16px);
     }
 
     to {
@@ -203,29 +237,31 @@ body>* {
     }
 }
 
-@keyframes glow-pulse {
-
-    0%,
-    100% {
-        box-shadow: 0 0 0 0 rgba(var(--color-accent), 0.35);
+@keyframes live-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--color-accent), 0.5);
     }
 
-    50% {
-        box-shadow: 0 0 0 8px rgba(var(--color-accent), 0);
+    70% {
+        box-shadow: 0 0 0 6px rgba(var(--color-accent), 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--color-accent), 0);
     }
 }
 
 .animate-fade-up {
     opacity: 0;
-    animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-fade-in {
-    animation: fade-in 0.6s ease forwards;
+    animation: fade-in 0.5s ease forwards;
 }
 
 .animate-ticker {
-    animation: ticker-scroll 38s linear infinite;
+    animation: ticker-scroll 45s linear infinite;
 }
 
 .ticker-mask:hover .animate-ticker {
@@ -236,7 +272,8 @@ body>* {
 
     .animate-fade-up,
     .animate-fade-in,
-    .animate-ticker {
+    .animate-ticker,
+    .ai-badge .dot {
         animation: none;
         opacity: 1;
     }

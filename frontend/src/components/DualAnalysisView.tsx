@@ -80,8 +80,8 @@ export default function DualAnalysisView({ ml, llm, llmStatus, comparison }: Dua
                 {/* ML column */}
                 <div className="card-paper p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-display text-xl font-semibold text-theme flex items-center gap-2">
-                            <span>📊</span> Statistical (ML)
+                        <h3 className="font-display text-lg font-bold text-theme flex items-center gap-2.5">
+                            <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Statistical (ML)
                         </h3>
                         {mlSignal && (
                             <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${signalClass(mlSignal)}`}>
@@ -112,8 +112,8 @@ export default function DualAnalysisView({ ml, llm, llmStatus, comparison }: Dua
                 {/* LLM column */}
                 <div className="card-paper p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-display text-xl font-semibold text-theme flex items-center gap-2">
-                            <span>🤖</span> AI (LLM)
+                        <h3 className="font-display text-lg font-bold text-theme flex items-center gap-2.5">
+                            <span className="inline-block w-1 h-5 rounded-full bg-accent" /> AI (LLM)
                         </h3>
                         {llmAvailable && llmSignal && (
                             <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${signalClass(llmSignal)}`}>

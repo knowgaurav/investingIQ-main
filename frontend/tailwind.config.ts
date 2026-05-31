@@ -17,7 +17,7 @@ const config: Config = {
                 secondary: '#e0ebfd',
             },
             fontFamily: {
-                display: ['var(--font-fraunces)', 'Georgia', 'serif'],
+                display: ['var(--font-archivo)', 'system-ui', 'sans-serif'],
                 sans: ['var(--font-plex-sans)', 'system-ui', 'sans-serif'],
                 mono: ['var(--font-plex-mono)', 'ui-monospace', 'monospace'],
             },
