@@ -329,15 +329,144 @@ class OpenRouterAnalyzer(BaseLLMAnalyzer):
 
 
 class GoogleAnalyzer(BaseLLMAnalyzer):
-    """Google Gemini-based analyzer."""
-    
+    """Google Gemini-based analyzer using the native generateContent endpoint.
+
+    Google's OpenAI-compatibility endpoint (/v1beta/openai) rejects the newer
+    "AQ."-format API keys with 401, so this analyzer talks to the native
+    Gemini REST API which accepts both legacy (AIza...) and new (AQ.) keys.
+    """
+
+    NATIVE_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+
     @property
     def default_model(self) -> str:
-        return "gemini-2.5-flash"
-    
+        return "gemini-3.1-flash-lite"
+
     @property
     def base_url(self) -> str:
         return "https://generativelanguage.googleapis.com/v1beta/openai"
+
+    def _create_client(self):
+        # No SDK client; requests are made directly to the native REST endpoint.
+        return None
+
+    def _convert_tools_to_google(self) -> list:
+        """Convert OpenAI tool definitions to Google functionDeclarations."""
+        declarations = []
+        for tool in get_tool_definitions():
+            func = tool["function"]
+            declarations.append({
+                "name": func["name"],
+                "description": func["description"],
+                "parameters": func["parameters"],
+            })
+        return [{"functionDeclarations": declarations}] if declarations else []
+
+    def _post(self, contents: list, tools: list) -> dict:
+        """Call the native generateContent endpoint and return parsed JSON."""
+        import requests
+
+        url = f"{self.NATIVE_BASE_URL}/{self.model}:generateContent"
+        payload = {
+            "contents": contents,
+            "systemInstruction": {"parts": [{"text": ANALYSIS_SYSTEM_PROMPT}]},
+            "generationConfig": {"temperature": 0.7, "maxOutputTokens": 4000},
+        }
+        if tools:
+            payload["tools"] = tools
+
+        response = requests.post(
+            url,
+            headers={"Content-Type": "application/json", "x-goog-api-key": self.api_key},
+            json=payload,
+            timeout=120,
+        )
+        response.raise_for_status()
+        return response.json()
+
+    def analyze(self, ticker: str) -> dict:
+        """Google-specific analysis using the native generateContent endpoint."""
+        logger.info(f"Starting Google analysis for {ticker}")
+
+        tools = self._convert_tools_to_google()
+        gathered_data = {}
+        contents = [{
+            "role": "user",
+            "parts": [{"text": f"Please analyze the stock {ticker} comprehensively. Start by gathering data using the available tools, then provide your complete analysis as JSON."}],
+        }]
+
+        max_tool_rounds = 5
+        for _ in range(max_tool_rounds):
+            result = self._post(contents, tools)
+            candidates = result.get("candidates", [])
+            if not candidates:
+                break
+
+            parts = candidates[0].get("content", {}).get("parts", [])
+            function_calls = [p["functionCall"] for p in parts if "functionCall" in p]
+
+            if not function_calls:
+                text = next((p["text"] for p in parts if "text" in p), "")
+                return self._parse_google_response(ticker, text, gathered_data)
+
+            # Echo the model's function-call turn, then append tool results.
+            contents.append({"role": "model", "parts": parts})
+            response_parts = []
+            for fc in function_calls:
+                tool_name = fc["name"]
+                tool_args = fc.get("args", {})
+                logger.info(f"Executing tool: {tool_name} with args: {tool_args}")
+                tool_result = self._tools.execute_tool(tool_name, tool_args)
+                if tool_result.success:
+                    gathered_data[tool_name] = tool_result.data
+                response_parts.append({
+                    "functionResponse": {
+                        "name": tool_name,
+                        "response": {
+                            "result": tool_result.data if tool_result.success else {"error": tool_result.error}
+                        },
+                    }
+                })
+            contents.append({"role": "user", "parts": response_parts})
+
+        # Final request forcing a textual JSON answer (no further tools).
+        contents.append({
+            "role": "user",
+            "parts": [{"text": "Now provide your complete analysis as a JSON object with keys: technical, fundamental, sentiment, prediction, recommendation."}],
+        })
+        result = self._post(contents, tools=[])
+        candidates = result.get("candidates", [])
+        text = ""
+        if candidates:
+            text = next((p["text"] for p in candidates[0].get("content", {}).get("parts", []) if "text" in p), "")
+        return self._parse_google_response(ticker, text, gathered_data)
+
+    def _parse_google_response(self, ticker: str, content: str, gathered_data: dict) -> dict:
+        """Parse the Gemini text response into structured analysis."""
+        text = content.strip()
+        if "```json" in text:
+            start = text.find("```json") + 7
+            text = text[start:text.find("```", start)].strip()
+        elif "```" in text:
+            start = text.find("```") + 3
+            text = text[start:text.find("```", start)].strip()
+
+        try:
+            analysis = json.loads(text)
+            analysis["ticker"] = ticker.upper()
+            analysis["analysis_timestamp"] = datetime.utcnow().isoformat()
+            return {"success": True, "analysis": analysis, "gathered_data": gathered_data}
+        except json.JSONDecodeError:
+            return {
+                "success": True,
+                "analysis": {
+                    "ticker": ticker.upper(),
+                    "analysis_timestamp": datetime.utcnow().isoformat(),
+                    "raw_analysis": content,
+                    "_unstructured": True,
+                },
+                "gathered_data": gathered_data,
+            }
 
 
 class LLMAnalyzerFactory:

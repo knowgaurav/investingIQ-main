@@ -1,5 +1,6 @@
 """LLM API key verification endpoint."""
 import logging
+import requests
 from fastapi import APIRouter, HTTPException
 import openai
 from openai import OpenAI
@@ -93,6 +94,8 @@ async def verify_llm_key(request: LLMVerifyRequest) -> LLMVerifyResponse:
     try:
         if request.provider == LLMProvider.ANTHROPIC:
             return await _verify_anthropic(request.api_key, model)
+        elif request.provider == LLMProvider.GOOGLE:
+            return await _verify_google(request.api_key, model)
         else:
             return await _verify_openai_compatible(
                 request.api_key, 
@@ -148,6 +151,43 @@ async def _verify_anthropic(api_key: str, model: str) -> LLMVerifyResponse:
         # 429 means the key authenticated but the provider is rate-limited.
         # The key is valid, so treat verification as successful.
         return LLMVerifyResponse(valid=True)
+    except Exception as e:
+        return LLMVerifyResponse(valid=False, error=str(e)[:200])
+
+
+# Native Gemini REST endpoint. Google's OpenAI-compatibility shim
+# (/v1beta/openai) rejects the newer "AQ."-format API keys with 401, while
+# the native generateContent endpoint accepts both key formats.
+GOOGLE_NATIVE_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/models"
+
+
+async def _verify_google(api_key: str, model: str) -> LLMVerifyResponse:
+    """Verify a Google Gemini API key against the native generateContent endpoint."""
+    url = f"{GOOGLE_NATIVE_BASE_URL}/{model}:generateContent"
+    try:
+        response = requests.post(
+            url,
+            headers={"Content-Type": "application/json", "x-goog-api-key": api_key},
+            json={
+                "contents": [{"role": "user", "parts": [{"text": "Hi"}]}],
+                "generationConfig": {"maxOutputTokens": 1},
+            },
+            timeout=15,
+        )
+
+        if response.status_code == 200:
+            return LLMVerifyResponse(valid=True)
+        if response.status_code in (401, 403):
+            return LLMVerifyResponse(valid=False, error="Invalid API key")
+        if response.status_code == 404:
+            return LLMVerifyResponse(valid=False, error=f"Model '{model}' not available")
+        if response.status_code == 429:
+            # Rate-limited means the key authenticated successfully.
+            return LLMVerifyResponse(valid=True)
+
+        # Surface the provider's own message for anything else.
+        detail = response.json().get("error", {}).get("message", response.text[:200])
+        return LLMVerifyResponse(valid=False, error=detail[:200])
     except Exception as e:
         return LLMVerifyResponse(valid=False, error=str(e)[:200])
 
