@@ -1,6 +1,7 @@
 """LLM API key verification endpoint."""
 import logging
 from fastapi import APIRouter, HTTPException
+import openai
 from openai import OpenAI
 import anthropic
 
@@ -113,13 +114,18 @@ async def _verify_openai_compatible(api_key: str, base_url: str, model: str) -> 
             max_tokens=1,
         )
         return LLMVerifyResponse(valid=True)
+    except openai.AuthenticationError:
+        return LLMVerifyResponse(valid=False, error="Invalid API key")
+    except openai.PermissionDeniedError:
+        return LLMVerifyResponse(valid=False, error="API key lacks permission for this model")
+    except openai.NotFoundError:
+        return LLMVerifyResponse(valid=False, error=f"Model '{model}' not available")
+    except openai.RateLimitError:
+        # 429 means the key authenticated but the provider is rate-limited.
+        # The key is valid, so treat verification as successful.
+        return LLMVerifyResponse(valid=True)
     except Exception as e:
-        error_msg = str(e)
-        if "invalid_api_key" in error_msg.lower() or "unauthorized" in error_msg.lower():
-            return LLMVerifyResponse(valid=False, error="Invalid API key")
-        if "model" in error_msg.lower() and "not found" in error_msg.lower():
-            return LLMVerifyResponse(valid=False, error=f"Model '{model}' not available")
-        return LLMVerifyResponse(valid=False, error=error_msg[:200])
+        return LLMVerifyResponse(valid=False, error=str(e)[:200])
 
 
 async def _verify_anthropic(api_key: str, model: str) -> LLMVerifyResponse:
@@ -134,8 +140,14 @@ async def _verify_anthropic(api_key: str, model: str) -> LLMVerifyResponse:
         return LLMVerifyResponse(valid=True)
     except anthropic.AuthenticationError:
         return LLMVerifyResponse(valid=False, error="Invalid API key")
+    except anthropic.PermissionDeniedError:
+        return LLMVerifyResponse(valid=False, error="API key lacks permission for this model")
     except anthropic.NotFoundError:
         return LLMVerifyResponse(valid=False, error=f"Model '{model}' not available")
+    except anthropic.RateLimitError:
+        # 429 means the key authenticated but the provider is rate-limited.
+        # The key is valid, so treat verification as successful.
+        return LLMVerifyResponse(valid=True)
     except Exception as e:
         return LLMVerifyResponse(valid=False, error=str(e)[:200])
 
