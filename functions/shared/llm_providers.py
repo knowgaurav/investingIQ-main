@@ -210,7 +210,7 @@ class OpenAIProvider(BaseLLMProvider):
     
     @property
     def default_model(self) -> str:
-        return "gpt-4o-mini"
+        return "gpt-5.4-mini"
     
     @property
     def base_url(self) -> str:
@@ -222,7 +222,7 @@ class AnthropicProvider(BaseLLMProvider):
     
     @property
     def default_model(self) -> str:
-        return "claude-haiku-4-5-latest"
+        return "claude-haiku-4-5"
     
     @property
     def base_url(self) -> str:
@@ -244,7 +244,7 @@ class GoogleProvider(BaseLLMProvider):
     
     @property
     def default_model(self) -> str:
-        return "gemini-2.5-flash"
+        return "gemini-3.1-flash-lite"
     
     @property
     def base_url(self) -> str:
@@ -256,7 +256,7 @@ class OpenRouterProvider(BaseLLMProvider):
     
     @property
     def default_model(self) -> str:
-        return "xiaomi/mimo-v2-flash:free"
+        return "moonshotai/kimi-k2.6:free"
     
     @property
     def base_url(self) -> str:
@@ -268,7 +268,7 @@ class OHMYGPTProvider(BaseLLMProvider):
     
     @property
     def default_model(self) -> str:
-        return "gpt-4o-mini"
+        return "gpt-5.4-mini"
     
     @property
     def base_url(self) -> str:
