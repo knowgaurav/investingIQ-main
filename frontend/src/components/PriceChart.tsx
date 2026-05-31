@@ -41,8 +41,12 @@ export default function PriceChart({ data, height = 300 }: PriceChartProps) {
     const firstPrice = data[0]?.close || 0;
     const lastPrice = data[data.length - 1]?.close || 0;
     const isPositive = lastPrice >= firstPrice;
-    const lineColor = isPositive ? '#10B981' : '#EF4444';
+    const lineColor = isPositive ? '#177a54' : '#b8322c';
     const gradientId = isPositive ? 'colorPositive' : 'colorNegative';
+
+    // Theme-aware chart chrome via CSS variables (set in globals.css)
+    const gridColor = 'var(--chart-grid)';
+    const axisText = 'var(--chart-axis-text)';
 
     // Calculate min/max for Y axis with padding
     const prices = data.map((d) => d.close);
@@ -59,34 +63,34 @@ export default function PriceChart({ data, height = 300 }: PriceChartProps) {
                 >
                     <defs>
                         <linearGradient id="colorPositive" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10B981" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#177a54" stopOpacity={0.28} />
+                            <stop offset="95%" stopColor="#177a54" stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="colorNegative" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#EF4444" stopOpacity={0.3} />
-                            <stop offset="95%" stopColor="#EF4444" stopOpacity={0} />
+                            <stop offset="5%" stopColor="#b8322c" stopOpacity={0.28} />
+                            <stop offset="95%" stopColor="#b8322c" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                    <CartesianGrid strokeDasharray="2 4" stroke={gridColor} />
                     <XAxis
                         dataKey="date"
-                        tick={{ fontSize: 12, fill: '#6B7280' }}
+                        tick={{ fontSize: 11, fill: axisText, fontFamily: 'var(--font-plex-mono)' }}
                         tickLine={false}
-                        axisLine={{ stroke: '#E5E7EB' }}
+                        axisLine={{ stroke: gridColor }}
                         interval="preserveStartEnd"
                         minTickGap={50}
                     />
                     <YAxis
                         domain={[minPrice - padding, maxPrice + padding]}
-                        tick={{ fontSize: 12, fill: '#6B7280' }}
+                        tick={{ fontSize: 11, fill: axisText, fontFamily: 'var(--font-plex-mono)' }}
                         tickLine={false}
-                        axisLine={{ stroke: '#E5E7EB' }}
+                        axisLine={{ stroke: gridColor }}
                         tickFormatter={(value: number) => `$${value.toFixed(0)}`}
                         width={60}
                     />
                     <Tooltip
                         content={<CustomTooltip />}
-                        cursor={{ stroke: '#9CA3AF', strokeDasharray: '5 5' }}
+                        cursor={{ stroke: lineColor, strokeDasharray: '4 4', strokeOpacity: 0.5 }}
                     />
                     <Area
                         type="monotone"
@@ -96,9 +100,9 @@ export default function PriceChart({ data, height = 300 }: PriceChartProps) {
                         fill={`url(#${gradientId})`}
                         dot={false}
                         activeDot={{
-                            r: 6,
+                            r: 5,
                             fill: lineColor,
-                            stroke: '#fff',
+                            stroke: 'var(--chart-tooltip-bg)',
                             strokeWidth: 2,
                         }}
                     />
@@ -122,20 +126,20 @@ function CustomTooltip({ active, payload, label }: TooltipProps) {
     const data = payload[0].payload;
 
     return (
-        <div className="bg-theme-card rounded-lg shadow-lg p-3">
-            <p className="text-sm font-medium text-theme mb-1">{label}</p>
-            <div className="space-y-1 text-sm">
-                <p className="text-theme-secondary">
-                    Close: <span className="font-medium text-theme">${data.close.toFixed(2)}</span>
+        <div className="card-paper p-3 font-mono text-xs">
+            <p className="font-semibold text-theme mb-1.5 tracking-wide">{label}</p>
+            <div className="space-y-1">
+                <p className="text-theme-secondary flex justify-between gap-4">
+                    Close <span className="font-semibold text-theme">${data.close.toFixed(2)}</span>
                 </p>
-                <p className="text-theme-secondary">
-                    High: <span className="font-medium text-theme">${data.high.toFixed(2)}</span>
+                <p className="text-theme-secondary flex justify-between gap-4">
+                    High <span className="font-semibold text-gain">${data.high.toFixed(2)}</span>
                 </p>
-                <p className="text-theme-secondary">
-                    Low: <span className="font-medium text-theme">${data.low.toFixed(2)}</span>
+                <p className="text-theme-secondary flex justify-between gap-4">
+                    Low <span className="font-semibold text-loss">${data.low.toFixed(2)}</span>
                 </p>
-                <p className="text-theme-secondary">
-                    Volume: <span className="font-medium text-theme">{formatVolume(data.volume)}</span>
+                <p className="text-theme-secondary flex justify-between gap-4">
+                    Vol <span className="font-semibold text-theme">{formatVolume(data.volume)}</span>
                 </p>
             </div>
         </div>

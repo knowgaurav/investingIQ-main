@@ -134,10 +134,10 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
     if (pageState === 'loading') {
         return (
             <main className="min-h-screen bg-theme">
-                <div className="container mx-auto px-4 py-16">
+                <div className="container mx-auto px-6 py-24">
                     <div className="flex flex-col items-center justify-center">
-                        <div className="w-12 h-12 border-4 border-theme border-t-primary rounded-full animate-spin mb-4" />
-                        <p className="text-theme-secondary">Loading...</p>
+                        <div className="w-10 h-10 border-2 border-theme border-t-primary rounded-full animate-spin mb-5" />
+                        <p className="font-mono text-xs uppercase tracking-[0.18em] text-theme-muted">Loading…</p>
                     </div>
                 </div>
             </main>
@@ -149,26 +149,26 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
         return (
             <main className="min-h-screen bg-theme">
                 <Header ticker={ticker} />
-                <div className="container mx-auto px-4 py-16">
-                    <div className="max-w-md mx-auto bg-theme-card rounded-xl shadow-lg p-8">
+                <div className="container mx-auto px-6 py-20">
+                    <div className="max-w-lg mx-auto card-paper p-10">
                         <div className="text-center">
-                            <div className="w-16 h-16 border-4 border-theme border-t-primary rounded-full animate-spin mx-auto mb-6" />
-                            <h2 className="text-xl font-semibold text-theme mb-2">
-                                Analyzing {ticker}
+                            <span className="ai-badge mb-5"><span className="dot" /> Running Models</span>
+                            <h2 className="font-display font-bold text-3xl text-theme mb-2 mt-2">
+                                Analyzing <span className="font-mono text-primary">{ticker}</span>
                             </h2>
-                            <p className="text-theme-secondary mb-6">
-                                {taskStatus?.current_step || 'Initializing analysis...'}
+                            <p className="text-theme-secondary mb-8">
+                                {taskStatus?.current_step || 'Initializing analysis…'}
                             </p>
 
                             {/* Progress bar */}
-                            <div className="w-full bg-theme-secondary rounded-full h-2 mb-2">
+                            <div className="w-full bg-theme-secondary rounded-full h-2 mb-3 overflow-hidden">
                                 <div
                                     className="bg-primary h-2 rounded-full transition-all duration-500"
                                     style={{ width: `${taskStatus?.progress || 0}%` }}
                                 />
                             </div>
-                            <p className="text-sm text-theme-muted">
-                                {taskStatus?.progress || 0}% complete
+                            <p className="font-mono text-xs text-theme-muted tracking-wider">
+                                {taskStatus?.progress || 0}% COMPLETE
                             </p>
                         </div>
                     </div>
@@ -182,31 +182,21 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
         return (
             <main className="min-h-screen bg-theme">
                 <Header ticker={ticker} />
-                <div className="container mx-auto px-4 py-16">
-                    <div className="max-w-md mx-auto bg-theme-card rounded-xl shadow-lg p-8">
+                <div className="container mx-auto px-6 py-20">
+                    <div className="max-w-lg mx-auto card-paper p-10">
                         <div className="text-center">
-                            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <svg
-                                    className="w-8 h-8 text-red-500"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
+                            <div className="w-12 h-12 rounded-full bg-loss/10 flex items-center justify-center mx-auto mb-5">
+                                <svg className="w-6 h-6 text-loss" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                                 </svg>
                             </div>
-                            <h2 className="text-xl font-semibold text-theme mb-2">
+                            <h2 className="font-display font-bold text-2xl text-theme mb-2">
                                 Analysis Failed
                             </h2>
-                            <p className="text-theme-secondary mb-6">{error}</p>
+                            <p className="text-theme-secondary mb-8">{error}</p>
                             <button
                                 onClick={() => window.location.reload()}
-                                className="px-6 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity"
+                                className="px-6 py-2.5 bg-primary text-white rounded-lg font-medium text-sm hover:brightness-110 transition-all"
                             >
                                 Try Again
                             </button>
@@ -229,133 +219,130 @@ export default function AnalyzePage({ params }: AnalyzePageProps) {
                 companyName={report.company_name}
             />
 
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-6 py-10">
                 {/* Company Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-1">
-                        <h1 className="text-3xl font-bold text-theme tracking-tight">
+                <div className="mb-8 animate-fade-up">
+                    <span className="eyebrow">Equity Research · {ticker}</span>
+                    <div className="flex flex-wrap items-center gap-3 mt-3">
+                        <h1 className="font-display font-extrabold text-theme tracking-tight leading-none"
+                            style={{ fontSize: 'clamp(2rem, 5vw, 3.25rem)' }}>
                             {report.company_name || ticker}
                         </h1>
-                        <span className="px-3 py-1.5 bg-primary text-white text-sm rounded-lg font-bold shadow-sm">
+                        <span className="font-mono text-sm px-2.5 py-1 rounded-md bg-primary/10 text-primary font-semibold tracking-wide border border-primary/20">
                             {ticker}
                         </span>
                     </div>
-                    <p className="text-sm text-theme-muted">
-                        Last analyzed: {new Date(report.analyzed_at).toLocaleString()}
+                    <p className="font-mono text-xs text-theme-muted mt-3">
+                        Last analyzed {new Date(report.analyzed_at).toLocaleString()}
                     </p>
                 </div>
 
-                {/* Price Chart - Always visible */}
-                <div className="bg-theme-card rounded-xl shadow-md p-6 mb-6">
-                    <h2 className="text-xl font-semibold text-theme mb-4">
-                        Price History
-                    </h2>
+                {/* Price Chart — always visible */}
+                <div className="card-paper p-6 mb-7 animate-fade-up" style={{ animationDelay: '0.08s' }}>
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="font-display font-bold text-lg text-theme">
+                            Price History
+                        </h2>
+                        <span className="ai-badge"><span className="dot" /> Live</span>
+                    </div>
                     <PriceChart data={report.price_data} height={300} />
                 </div>
 
                 {/* Analysis Tabs */}
-                <div className="mb-6">
-                    <div className="flex border-b border-theme/30">
-                        <button
-                            onClick={() => setActiveTab('overview')}
-                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'overview'
-                                ? 'border-primary text-primary'
-                                : 'border-transparent text-theme-muted hover:text-theme'
-                                }`}
-                        >
+                <div className="mb-7 animate-fade-up" style={{ animationDelay: '0.14s' }}>
+                    <div className="flex flex-wrap gap-1 p-1 card-paper !rounded-xl">
+                        <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')}>
+                            Overview
+                        </TabButton>
+                        <TabButton active={activeTab === 'dual'} onClick={() => setActiveTab('dual')}>
+                            ML vs LLM
+                        </TabButton>
+                        <TabButton active={activeTab === 'ml'} onClick={() => setActiveTab('ml')}>
+                            ML Analysis
+                        </TabButton>
+                        <TabButton active={activeTab === 'llm'} onClick={() => setActiveTab('llm')}>
                             <span className="flex items-center gap-2">
-                                <span>🏢</span> Company Overview
-                            </span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('dual')}
-                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'dual'
-                                ? 'border-primary text-primary'
-                                : 'border-transparent text-theme-muted hover:text-theme'
-                                }`}
-                        >
-                            <span className="flex items-center gap-2">
-                                <span>⚖️</span> ML vs LLM
-                            </span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('ml')}
-                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'ml'
-                                ? 'border-green-500 text-green-500'
-                                : 'border-transparent text-theme-muted hover:text-theme'
-                                }`}
-                        >
-                            <span className="flex items-center gap-2">
-                                <span>📊</span> ML Analysis
-                            </span>
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('llm')}
-                            className={`px-6 py-3 font-medium text-sm border-b-2 transition-colors ${activeTab === 'llm'
-                                ? 'border-blue-400 text-blue-400'
-                                : 'border-transparent text-theme-muted hover:text-theme'
-                                }`}
-                        >
-                            <span className="flex items-center gap-2">
-                                <span>🤖</span> LLM Analysis
+                                LLM Analysis
                                 {!hasLLMConfig && (
-                                    <span className="px-1.5 py-0.5 bg-theme-secondary text-theme-muted text-xs rounded">
+                                    <span className="px-1.5 py-0.5 rounded bg-theme-secondary text-theme-muted font-mono text-[0.6rem] uppercase tracking-wider">
                                         Locked
                                     </span>
                                 )}
                             </span>
-                        </button>
+                        </TabButton>
                     </div>
                 </div>
 
                 {/* Tab Content */}
-                {activeTab === 'overview' && (
-                    <CompanyOverview
-                        ticker={ticker}
-                        companyInfo={report.company_info}
-                        currentPrice={report.current_price}
-                        news={report.news}
-                        earnings={report.earnings}
-                    />
-                )}
-                {activeTab === 'ml' && (
-                    <MLAnalysisView
-                        prediction={report.ml_analysis?.prediction}
-                        technical={report.ml_analysis?.technical}
-                        sentiment={report.ml_analysis?.sentiment}
-                    />
-                )}
-                {activeTab === 'dual' && (
-                    <DualAnalysisView
-                        ml={report.ml_analysis}
-                        llm={{
-                            outlook: report.llm_outlook,
-                            sentiment_score: report.sentiment_score,
-                            insight: report.ai_insights,
-                        }}
-                        llmStatus={report.llm_status}
-                        comparison={report.dual_comparison}
-                    />
-                )}
-                {activeTab === 'llm' && (
-                    <LLMAnalysisView
-                        hasLLMConfig={hasLLMConfig}
-                        newsSummary={report.news_summary || undefined}
-                        sentiment={report.sentiment_score !== null ? {
-                            overall_score: report.sentiment_score,
-                            breakdown: report.sentiment_breakdown || { positive: 0, negative: 0, neutral: 0 },
-                            details: report.sentiment_details || [],
-                        } : undefined}
-                        aiInsights={report.ai_insights || undefined}
-                    />
-                )}
-
-
+                <div className="animate-fade-in" key={activeTab}>
+                    {activeTab === 'overview' && (
+                        <CompanyOverview
+                            ticker={ticker}
+                            companyInfo={report.company_info}
+                            currentPrice={report.current_price}
+                            news={report.news}
+                            earnings={report.earnings}
+                        />
+                    )}
+                    {activeTab === 'ml' && (
+                        <MLAnalysisView
+                            prediction={report.ml_analysis?.prediction}
+                            technical={report.ml_analysis?.technical}
+                            sentiment={report.ml_analysis?.sentiment}
+                        />
+                    )}
+                    {activeTab === 'dual' && (
+                        <DualAnalysisView
+                            ml={report.ml_analysis}
+                            llm={{
+                                outlook: report.llm_outlook,
+                                sentiment_score: report.sentiment_score,
+                                insight: report.ai_insights,
+                            }}
+                            llmStatus={report.llm_status}
+                            comparison={report.dual_comparison}
+                        />
+                    )}
+                    {activeTab === 'llm' && (
+                        <LLMAnalysisView
+                            hasLLMConfig={hasLLMConfig}
+                            newsSummary={report.news_summary || undefined}
+                            sentiment={report.sentiment_score !== null ? {
+                                overall_score: report.sentiment_score,
+                                breakdown: report.sentiment_breakdown || { positive: 0, negative: 0, neutral: 0 },
+                                details: report.sentiment_details || [],
+                            } : undefined}
+                            aiInsights={report.ai_insights || undefined}
+                        />
+                    )}
+                </div>
             </div>
 
             {/* LLM Settings Floating Button */}
             <LLMSettings />
         </main>
+    );
+}
+
+function TabButton({
+    active,
+    onClick,
+    children,
+}: {
+    active: boolean;
+    onClick: () => void;
+    children: React.ReactNode;
+}) {
+    return (
+        <button
+            onClick={onClick}
+            className={`px-4 md:px-5 py-2.5 rounded-lg text-sm font-medium transition-colors ${active
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-theme-secondary hover:text-theme hover:bg-theme-secondary'
+                }`}
+        >
+            {children}
+        </button>
     );
 }
 
@@ -367,33 +354,27 @@ function Header({
     companyName?: string;
 }) {
     return (
-        <header className="bg-theme-card shadow-sm">
-            <div className="container mx-auto px-4 py-4">
-                <div className="flex items-center justify-between">
-                    <Link
-                        href="/"
-                        className="flex items-center gap-2 text-theme-secondary hover:text-theme transition-colors"
-                    >
-                        <svg
-                            className="w-5 h-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                            />
+        <header className="border-b border-theme bg-theme-card/80 backdrop-blur-md sticky top-0 z-30">
+            <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+                <Link
+                    href="/"
+                    className="flex items-center gap-2 text-sm font-medium text-theme-secondary hover:text-theme transition-colors"
+                >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                    Back
+                </Link>
+                <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-primary text-white">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M4 18L9 11l4 4 7-9" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.2} d="M16 6h4v4" />
                         </svg>
-                        Back to Search
-                    </Link>
-                    <Link href="/" className="absolute left-1/2 -translate-x-1/2 text-2xl font-extrabold text-primary brightness-110">
-                        InvestingIQ
-                    </Link>
-                    <DarkModeToggle />
-                </div>
+                    </span>
+                    <span className="font-display font-extrabold text-lg tracking-tight text-theme">InvestingIQ</span>
+                </Link>
+                <DarkModeToggle />
             </div>
         </header>
     );

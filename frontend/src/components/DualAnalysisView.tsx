@@ -43,9 +43,9 @@ export default function DualAnalysisView({ ml, llm, llmStatus, comparison }: Dua
             {/* Agreement banner */}
             {comparison ? (
                 <div
-                    className={`rounded-xl p-5 border-2 ${comparison.agreement
-                            ? 'bg-green-50 dark:bg-green-500/10 border-green-300 dark:border-green-500/30'
-                            : 'bg-amber-50 dark:bg-yellow-500/10 border-amber-300 dark:border-yellow-500/30'
+                    className={`card-paper p-5 border-l-4 ${comparison.agreement
+                        ? '!border-l-gain'
+                        : '!border-l-accent'
                         }`}
                 >
                     <div className="flex items-center justify-between">
@@ -68,7 +68,7 @@ export default function DualAnalysisView({ ml, llm, llmStatus, comparison }: Dua
                     </div>
                 </div>
             ) : (
-                <div className="rounded-xl p-5 border-2 border-dashed border-theme/30 bg-theme-secondary/40">
+                <div className="card-paper p-5 border-l-4 !border-l-theme border-dashed">
                     <p className="text-sm text-theme-secondary">
                         Side-by-side consensus is available when both the statistical model and the LLM produce a directional signal.
                     </p>
@@ -78,10 +78,10 @@ export default function DualAnalysisView({ ml, llm, llmStatus, comparison }: Dua
             {/* Two columns */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* ML column */}
-                <div className="bg-theme-card rounded-xl shadow-md p-6">
+                <div className="card-paper p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-                            <span>📊</span> Statistical (ML)
+                        <h3 className="font-display text-lg font-bold text-theme flex items-center gap-2.5">
+                            <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Statistical (ML)
                         </h3>
                         {mlSignal && (
                             <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${signalClass(mlSignal)}`}>
@@ -110,10 +110,10 @@ export default function DualAnalysisView({ ml, llm, llmStatus, comparison }: Dua
                 </div>
 
                 {/* LLM column */}
-                <div className="bg-theme-card rounded-xl shadow-md p-6">
+                <div className="card-paper p-6">
                     <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-theme flex items-center gap-2">
-                            <span>🤖</span> AI (LLM)
+                        <h3 className="font-display text-lg font-bold text-theme flex items-center gap-2.5">
+                            <span className="inline-block w-1 h-5 rounded-full bg-accent" /> AI (LLM)
                         </h3>
                         {llmAvailable && llmSignal && (
                             <span className={`px-3 py-1 rounded-full text-sm font-semibold capitalize ${signalClass(llmSignal)}`}>

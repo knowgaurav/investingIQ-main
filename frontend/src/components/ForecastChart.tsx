@@ -42,7 +42,7 @@ export default function ForecastChart({
         if (!dailyForecast || dailyForecast.length === 0) return [];
 
         const today = new Date();
-        
+
         // Add current price as day 0
         const data: ChartDataPoint[] = [
             {
@@ -60,7 +60,7 @@ export default function ForecastChart({
         for (let i = 0; i < dailyForecast.length; i++) {
             const forecastDate = new Date(today);
             forecastDate.setDate(today.getDate() + i + 1);
-            
+
             data.push({
                 day: i + 1,
                 date: forecastDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -93,65 +93,66 @@ export default function ForecastChart({
         <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                    <XAxis 
-                        dataKey="date" 
-                        tick={{ fontSize: 11 }}
+                    <CartesianGrid strokeDasharray="2 4" stroke="var(--chart-grid)" />
+                    <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 11, fill: 'var(--chart-axis-text)', fontFamily: 'var(--font-plex-mono)' }}
                         tickLine={false}
                         interval="preserveStartEnd"
                     />
-                    <YAxis 
+                    <YAxis
                         domain={[minPrice, maxPrice]}
-                        tick={{ fontSize: 11 }}
+                        tick={{ fontSize: 11, fill: 'var(--chart-axis-text)', fontFamily: 'var(--font-plex-mono)' }}
                         tickFormatter={(value) => `$${value.toFixed(0)}`}
                         width={60}
                     />
                     <Tooltip
                         formatter={(value: number, name: string) => [
                             `$${value.toFixed(2)}`,
-                            name === 'combined' ? 'Combined' : 
-                            name === 'arima' ? 'ARIMA' : 
-                            name === 'prophet' ? 'Prophet' : 'ETS'
+                            name === 'combined' ? 'Combined' :
+                                name === 'arima' ? 'ARIMA' :
+                                    name === 'prophet' ? 'Prophet' : 'ETS'
                         ]}
                         labelFormatter={(label) => `Date: ${label}`}
                         contentStyle={{
-                            backgroundColor: 'white',
-                            border: '1px solid #E5E7EB',
-                            borderRadius: '8px',
+                            backgroundColor: 'var(--chart-tooltip-bg)',
+                            border: '1px solid var(--chart-tooltip-border)',
+                            borderRadius: '2px',
                             fontSize: '12px',
+                            fontFamily: 'var(--font-plex-mono)',
                         }}
                     />
-                    <Legend 
+                    <Legend
                         verticalAlign="top"
                         height={36}
-                        formatter={(value) => 
-                            value === 'combined' ? 'Combined Forecast' : 
-                            value === 'arima' ? 'ARIMA' : 
-                            value === 'prophet' ? 'Prophet' : 'ETS'
+                        formatter={(value) =>
+                            value === 'combined' ? 'Combined Forecast' :
+                                value === 'arima' ? 'ARIMA' :
+                                    value === 'prophet' ? 'Prophet' : 'ETS'
                         }
                     />
-                    
+
                     {/* Reference line for current price */}
-                    <ReferenceLine 
-                        y={currentPrice} 
-                        stroke="#9CA3AF" 
-                        strokeDasharray="5 5"
-                        label={{ value: 'Current', position: 'right', fontSize: 10, fill: '#6B7280' }}
+                    <ReferenceLine
+                        y={currentPrice}
+                        stroke="var(--chart-axis-text)"
+                        strokeDasharray="4 4"
+                        label={{ value: 'Current', position: 'right', fontSize: 10, fill: 'var(--chart-axis-text)' }}
                     />
-                    
+
                     {/* Reference lines for 7-day and 30-day marks */}
-                    <ReferenceLine x="7 Days" stroke="#D1D5DB" strokeDasharray="3 3" />
-                    
+                    <ReferenceLine x="7 Days" stroke="var(--chart-grid)" strokeDasharray="3 3" />
+
                     {/* Combined forecast line */}
                     <Line
                         type="monotone"
                         dataKey="combined"
-                        stroke="#3B82F6"
+                        stroke="rgb(var(--color-primary))"
                         strokeWidth={3}
                         dot={false}
                         activeDot={{ r: 6 }}
                     />
-                    
+
                     {/* ARIMA line */}
                     {arimaDaily && (
                         <Line
@@ -163,7 +164,7 @@ export default function ForecastChart({
                             dot={false}
                         />
                     )}
-                    
+
                     {/* Prophet line */}
                     {prophetDaily && (
                         <Line
@@ -175,13 +176,13 @@ export default function ForecastChart({
                             dot={false}
                         />
                     )}
-                    
+
                     {/* ETS line */}
                     {etsDaily && (
                         <Line
                             type="monotone"
                             dataKey="ets"
-                            stroke="#10B981"
+                            stroke="rgb(var(--color-gain))"
                             strokeWidth={1.5}
                             strokeDasharray="5 5"
                             dot={false}

@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+ENV/
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+.hypothesis/
+tests/
+
+# Local Azure Functions settings (provided via compose env instead)
+local.settings.json
+
+# Env / secrets
+.env
+.env.*
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

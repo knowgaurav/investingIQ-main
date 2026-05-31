@@ -139,8 +139,14 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
     }, []);
 
     return (
-        <div className="relative w-full max-w-xl mx-auto">
-            <div className="relative">
+        <div className="relative w-full max-w-2xl mx-auto">
+            <div className="relative flex items-center bg-theme-card border border-theme rounded-xl shadow-sm focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all">
+                {/* Magnifier */}
+                <span className="pl-4 text-theme-muted shrink-0">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-4.35-4.35m1.35-5.4a6.75 6.75 0 11-13.5 0 6.75 6.75 0 0113.5 0z" />
+                    </svg>
+                </span>
                 <input
                     ref={inputRef}
                     type="text"
@@ -153,10 +159,10 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
                     onFocus={() => setShowSuggestions(true)}
                     onKeyDown={handleKeyDown}
                     placeholder="Search for any stock (e.g., AAPL, TSLA, NVDA)..."
-                    className="w-full px-6 py-4 text-lg bg-theme-card text-theme rounded-full shadow-md focus:ring-2 focus:ring-primary focus:outline-none transition-all"
+                    className="flex-1 min-w-0 px-3 py-4 text-base bg-transparent text-theme placeholder:text-theme-muted focus:outline-none"
                     autoComplete="off"
                 />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                <div className="flex items-center gap-2 pr-2 shrink-0">
                     {isLoading && (
                         <div className="w-5 h-5 border-2 border-theme border-t-primary rounded-full animate-spin" />
                     )}
@@ -166,7 +172,7 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
                                 router.push(`/analyze/${query.trim().toUpperCase()}`);
                             }
                         }}
-                        className="bg-primary text-white px-6 py-2 rounded-full hover:opacity-90 transition-opacity font-medium"
+                        className="bg-primary text-white px-5 md:px-6 py-2.5 rounded-lg font-medium text-sm hover:brightness-110 transition-all shadow-sm"
                     >
                         Analyze
                     </button>
@@ -177,25 +183,30 @@ export default function StockSearch({ onRecentSearchesChange }: StockSearchProps
             {showSuggestions && suggestions.length > 0 && (
                 <div
                     ref={suggestionsRef}
-                    className="absolute z-50 w-full mt-2 bg-theme-card rounded-xl shadow-lg overflow-hidden"
+                    className="absolute z-50 w-full mt-2 card-paper overflow-hidden text-left"
                 >
+                    <div className="px-4 py-2 border-b border-theme bg-theme-secondary/50">
+                        <span className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-theme-muted">
+                            Matching Securities
+                        </span>
+                    </div>
                     {suggestions.map((stock: StockSearchResult, index: number) => (
                         <button
                             key={stock.ticker}
                             onClick={() => handleSelect(stock)}
                             onMouseEnter={() => setSelectedIndex(index)}
-                            className={`w-full px-4 py-3 text-left flex items-center justify-between hover:bg-theme-secondary transition-colors ${index === selectedIndex ? 'bg-theme-secondary' : ''
+                            className={`w-full px-4 py-3 text-left flex items-center justify-between border-b border-theme/60 last:border-0 transition-colors ${index === selectedIndex ? 'bg-primary/5' : 'hover:bg-theme-secondary'
                                 }`}
                         >
-                            <div>
-                                <span className="font-semibold text-theme">
+                            <div className="flex items-baseline gap-3 min-w-0">
+                                <span className="font-mono font-semibold text-primary shrink-0 w-16">
                                     {stock.ticker}
                                 </span>
-                                <span className="ml-2 text-theme-secondary">
+                                <span className="text-theme-secondary truncate">
                                     {stock.name}
                                 </span>
                             </div>
-                            <span className="text-sm text-theme-muted">
+                            <span className="font-mono text-xs text-theme-muted uppercase tracking-wider shrink-0 ml-3">
                                 {stock.exchange}
                             </span>
                         </button>

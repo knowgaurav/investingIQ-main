@@ -28,13 +28,13 @@ export default function LLMAnalysisView({
 }: LLMAnalysisViewProps) {
     if (!hasLLMConfig) {
         return (
-            <div className="bg-theme-card rounded-xl shadow-md p-8 text-center">
+            <div className="card-paper p-8 text-center">
                 <div className="w-16 h-16 bg-theme-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                     <svg className="w-8 h-8 text-theme-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-theme mb-2">
+                <h3 className="font-display text-xl font-semibold text-theme mb-2">
                     LLM Analysis Locked
                 </h3>
                 <p className="text-theme-secondary mb-4 max-w-sm mx-auto">
@@ -65,9 +65,9 @@ export default function LLMAnalysisView({
     return (
         <div className="space-y-6">
             {/* News Summary */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>📰</span> News Summary (LLM Generated)
+            <div className="card-paper p-6">
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> News Summary (LLM Generated)
                 </h3>
                 {newsSummary ? (
                     <div className="space-y-3 text-theme-secondary text-sm leading-relaxed
@@ -81,9 +81,9 @@ export default function LLMAnalysisView({
             </div>
 
             {/* AI Sentiment */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>🧠</span> AI Sentiment Analysis
+            <div className="card-paper p-6">
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> AI Sentiment Analysis
                 </h3>
                 {sentiment ? (
                     <div className="space-y-4">
@@ -143,9 +143,9 @@ export default function LLMAnalysisView({
             </div>
 
             {/* AI Insights */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>💡</span> AI Investment Insights
+            <div className="card-paper p-6">
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> AI Investment Insights
                 </h3>
                 {aiInsights ? (
                     <div className="space-y-4 text-theme-secondary text-sm leading-relaxed
@@ -164,9 +164,9 @@ export default function LLMAnalysisView({
             </div>
 
             {/* Disclaimer */}
-            <div className="bg-amber-50 dark:bg-yellow-500/10 border border-amber-300 dark:border-yellow-500/30 rounded-lg p-4">
-                <p className="text-sm text-amber-700 dark:text-yellow-400">
-                    <strong>Disclaimer:</strong> This is AI-generated analysis and should not be considered financial advice.
+            <div className="bg-accent/10 border-l-4 border-accent p-4">
+                <p className="text-sm text-theme-secondary">
+                    <strong className="text-theme">Disclaimer:</strong> This is AI-generated analysis and should not be considered financial advice.
                     Always consult with a qualified financial advisor before making investment decisions.
                 </p>
             </div>
@@ -176,7 +176,7 @@ export default function LLMAnalysisView({
 
 function LoadingCard({ title }: { title: string }) {
     return (
-        <div className="bg-theme-card rounded-xl shadow-md p-6">
+        <div className="card-paper p-6">
             <h3 className="text-lg font-semibold text-theme mb-4">{title}</h3>
             <div className="animate-pulse space-y-3">
                 <div className="h-4 bg-theme-secondary rounded w-3/4"></div>

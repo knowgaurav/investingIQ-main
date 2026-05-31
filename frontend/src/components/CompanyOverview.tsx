@@ -53,9 +53,9 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
     return (
         <div className="space-y-6">
             {/* Company Profile */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>🏢</span> Company Profile
+            <div className="card-paper p-6">
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Company Profile
                 </h3>
 
                 {companyInfo ? (
@@ -85,9 +85,9 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
             </div>
 
             {/* Key Metrics */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>📈</span> Key Metrics
+            <div className="card-paper p-6">
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Key Metrics
                 </h3>
 
                 {companyInfo ? (
@@ -107,9 +107,9 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
             </div>
 
             {/* Price Ranges & Moving Averages */}
-            <div className="bg-theme-card rounded-xl shadow-md p-6">
-                <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-                    <span>📊</span> Price Analysis
+            <div className="card-paper p-6">
+                <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                    <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Price Analysis
                 </h3>
 
                 {companyInfo ? (
@@ -240,9 +240,9 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
 
             {/* Earnings History */}
             {earnings && (earnings.quarterly_earnings?.length || earnings.annual_earnings?.length) ? (
-                <div className="bg-theme-card rounded-xl shadow-md p-6">
-                    <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-                        <span>💰</span> Earnings History
+                <div className="card-paper p-6">
+                    <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                        <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Earnings History
                     </h3>
 
                     {earnings.quarterly_earnings && earnings.quarterly_earnings.length > 0 && (
@@ -283,9 +283,9 @@ export default function CompanyOverview({ ticker, companyInfo, currentPrice, new
 
             {/* Recent News */}
             {news && news.length > 0 && (
-                <div className="bg-theme-card rounded-xl shadow-md p-6">
-                    <h3 className="text-lg font-semibold text-theme mb-4 flex items-center gap-2">
-                        <span>📰</span> Recent News
+                <div className="card-paper p-6">
+                    <h3 className="font-display text-lg font-bold text-theme mb-4 flex items-center gap-2.5">
+                        <span className="inline-block w-1 h-5 rounded-full bg-accent" /> Recent News
                     </h3>
 
                     <div className="space-y-4 max-h-96 overflow-y-auto">

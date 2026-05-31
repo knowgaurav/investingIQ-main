@@ -2,42 +2,279 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * InvestingIQ — "Quant Desk"
+ * Institutional research-terminal aesthetic. Deep navy ink, disciplined
+ * electric-blue primary, cyan AI/ML accent, hairline structure, tabular
+ * numerals, restrained tech motifs (dot-grid, soft glow, live pulse).
+ */
+
 :root {
-    /* Light mode colors - spaces required for Tailwind rgb() syntax */
-    --color-bg: 226 232 240;
-    --color-bg-secondary: 241 245 249;
+    /* Light — clean cool-gray institutional surfaces */
+    --color-bg: 247 248 250;
+    --color-bg-secondary: 238 241 246;
     --color-card: 255 255 255;
-    --color-border: 203 213 225;
-    --color-text: 15 23 42;
-    --color-text-secondary: 71 85 105;
-    --color-text-muted: 100 116 139;
-    
+    --color-border: 224 228 236;
+    --color-text: 13 19 32;
+    --color-text-secondary: 71 82 104;
+    --color-text-muted: 130 141 161;
+
+    /* Brand — institutional blue + cyan AI accent */
+    --color-primary: 37 84 199;
+    --color-accent: 13 148 168;
+
+    /* Semantic market colors */
+    --color-gain: 13 150 94;
+    --color-loss: 205 58 52;
+
     /* Chart colors (hex for recharts) */
-    --chart-grid: #CBD5E1;
-    --chart-tooltip-bg: #FFFFFF;
-    --chart-tooltip-border: #CBD5E1;
-    --chart-axis-text: #64748B;
+    --chart-grid: #e6e9ef;
+    --chart-tooltip-bg: #ffffff;
+    --chart-tooltip-border: #d8dde6;
+    --chart-axis-text: #828da1;
+
+    /* Atmosphere */
+    --grid-line: rgba(13, 19, 32, 0.05);
+    --glow: rgba(37, 84, 199, 0.10);
+    --hairline: rgba(13, 19, 32, 0.08);
+    --elev: 0 1px 2px rgba(13, 19, 32, 0.04), 0 12px 32px -20px rgba(13, 19, 32, 0.18);
 }
 
 .dark {
-    /* Dark mode colors - professional dark navy blue theme */
-    --color-bg: 15 23 42;
-    --color-bg-secondary: 30 41 59;
-    --color-card: 30 41 59;
-    --color-border: 51 65 85;
-    --color-text: 248 250 252;
-    --color-text-secondary: 203 213 225;
-    --color-text-muted: 148 163 184;
-    
-    /* Chart colors (hex for recharts) */
-    --chart-grid: #334155;
-    --chart-tooltip-bg: #1e293b;
-    --chart-tooltip-border: #475569;
-    --chart-axis-text: #94a3b8;
+    /* Dark — deep navy-black trading terminal */
+    --color-bg: 9 13 20;
+    --color-bg-secondary: 16 22 34;
+    --color-card: 18 24 38;
+    --color-border: 33 42 61;
+    --color-text: 233 238 247;
+    --color-text-secondary: 167 178 198;
+    --color-text-muted: 109 122 146;
+
+    --color-primary: 88 134 255;
+    --color-accent: 45 212 232;
+
+    --color-gain: 41 197 134;
+    --color-loss: 240 104 99;
+
+    --chart-grid: #212a3d;
+    --chart-tooltip-bg: #121826;
+    --chart-tooltip-border: #2c374f;
+    --chart-axis-text: #6d7a92;
+
+    --grid-line: rgba(255, 255, 255, 0.04);
+    --glow: rgba(88, 134, 255, 0.16);
+    --hairline: rgba(255, 255, 255, 0.07);
+    --elev: 0 1px 2px rgba(0, 0, 0, 0.4), 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
 }
 
 body {
     color: rgb(var(--color-text));
+    background-color: rgb(var(--color-bg));
+    transition: background-color 0.3s ease, color 0.3s ease;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* Subtle dot-grid backdrop — quant terminal texture */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: radial-gradient(var(--grid-line) 1px, transparent 1px);
+    background-size: 26px 26px;
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+/* Soft brand glow anchored top-center */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(60% 50% at 50% -8%, var(--glow), transparent 70%);
+}
+
+body>* {
+    position: relative;
+    z-index: 1;
+}
+
+/* ---- Typography helpers ---- */
+.font-display {
+    font-family: var(--font-display), system-ui, sans-serif;
+    letter-spacing: -0.02em;
+}
+
+.font-mono-data {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-feature-settings: 'tnum' 1, 'zero' 1;
+}
+
+/* Section eyebrow — refined uppercase label with leading tick */
+.eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: rgb(var(--color-primary));
+}
+
+.eyebrow::before {
+    content: '';
+    width: 0.875rem;
+    height: 2px;
+    background: rgb(var(--color-accent));
+}
+
+/* Hairline divider */
+.rule-gold {
+    border: 0;
+    height: 1px;
+    background: rgb(var(--color-border));
+}
+
+/* Institutional card — clean elevated surface */
+.card-paper {
+    background-color: rgb(var(--color-card));
+    border: 1px solid rgb(var(--color-border));
+    border-radius: 12px;
+    box-shadow: var(--elev);
+}
+
+/* AI badge — small pill with live pulse */
+.ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid rgb(var(--color-border));
+    border-radius: 999px;
+    background: rgb(var(--color-card));
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgb(var(--color-text-secondary));
+}
+
+.ai-badge .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: rgb(var(--color-accent));
+    box-shadow: 0 0 0 0 rgba(var(--color-accent), 0.6);
+    animation: live-pulse 2.4s ease-in-out infinite;
+}
+
+/* ---- Selection + scrollbar ---- */
+::selection {
+    background: rgba(var(--color-primary), 0.25);
+    color: rgb(var(--color-text));
+}
+
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
     background: rgb(var(--color-bg));
-    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgb(var(--color-border));
+    border-radius: 999px;
+    border: 3px solid rgb(var(--color-bg));
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgb(var(--color-text-muted));
+}
+
+/* ---- Motion ---- */
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes ticker-scroll {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@keyframes live-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(var(--color-accent), 0.5);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(var(--color-accent), 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(var(--color-accent), 0);
+    }
+}
+
+.animate-fade-up {
+    opacity: 0;
+    animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.5s ease forwards;
+}
+
+.animate-ticker {
+    animation: ticker-scroll 45s linear infinite;
+}
+
+.ticker-mask:hover .animate-ticker {
+    animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .animate-fade-up,
+    .animate-fade-in,
+    .animate-ticker,
+    .ai-badge .dot {
+        animation: none;
+        opacity: 1;
+    }
 }

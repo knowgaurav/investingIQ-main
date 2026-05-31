@@ -38,12 +38,12 @@ describe('Home Page', () => {
 
     it('renders the main title', () => {
         render(<Home />)
-        expect(screen.getByText('InvestingIQ')).toBeInTheDocument()
+        expect(screen.getAllByText('InvestingIQ').length).toBeGreaterThan(0)
     })
 
     it('renders the tagline', () => {
         render(<Home />)
-        expect(screen.getByText(/AI-Powered Stock Analysis Platform/)).toBeInTheDocument()
+        expect(screen.getByText(/AI · ML Research Platform/)).toBeInTheDocument()
     })
 
     it('renders stock search component', () => {
@@ -51,26 +51,26 @@ describe('Home Page', () => {
         expect(screen.getByTestId('stock-search')).toBeInTheDocument()
     })
 
-    it('renders feature badges', () => {
+    it('renders capability cards', () => {
         render(<Home />)
-        expect(screen.getByText('Real-time Analysis')).toBeInTheDocument()
-        expect(screen.getByText('AI-Powered Insights')).toBeInTheDocument()
-        expect(screen.getByText('Sentiment Analysis')).toBeInTheDocument()
-        expect(screen.getByText('Any Stock Worldwide')).toBeInTheDocument()
+        expect(screen.getByText('ML Price Models')).toBeInTheDocument()
+        expect(screen.getByText('Sentiment Engine')).toBeInTheDocument()
+        expect(screen.getByText('AI Analyst Desk')).toBeInTheDocument()
+        expect(screen.getByText('Signal Coverage')).toBeInTheDocument()
     })
 
-    it('renders popular stocks section', () => {
+    it('renders coverage universe section', () => {
         render(<Home />)
-        expect(screen.getByText('Popular Stocks')).toBeInTheDocument()
-        expect(screen.getByText('AAPL')).toBeInTheDocument()
-        expect(screen.getByText('MSFT')).toBeInTheDocument()
-        expect(screen.getByText('GOOGL')).toBeInTheDocument()
-        expect(screen.getByText('TSLA')).toBeInTheDocument()
+        expect(screen.getByText('Most-followed names')).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /AAPL/ })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /MSFT/ })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /GOOGL/ })).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /TSLA/ })).toBeInTheDocument()
     })
 
     it('navigates to analyze page on popular stock click', () => {
         render(<Home />)
-        fireEvent.click(screen.getByText('AAPL'))
+        fireEvent.click(screen.getByRole('button', { name: /AAPL/ }))
         expect(mockPush).toHaveBeenCalledWith('/analyze/AAPL')
     })
 
@@ -86,6 +86,6 @@ describe('Home Page', () => {
 
     it('does not render recent searches section when empty', () => {
         render(<Home />)
-        expect(screen.queryByText('Recent Searches')).not.toBeInTheDocument()
+        expect(screen.queryByText('Recent Activity')).not.toBeInTheDocument()
     })
 })
