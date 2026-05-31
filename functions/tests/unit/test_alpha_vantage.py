@@ -13,6 +13,7 @@ from shared.alpha_vantage import (
     fetch_income_statement,
     fetch_balance_sheet,
     fetch_cash_flow,
+    fetch_stock_data,
     BASE_URL,
 )
 from tests.mocks.alpha_vantage_mocks import (
@@ -223,6 +224,45 @@ class TestFetchDailyPrices:
         
         assert len(result["price_history"]) == 2
         assert result.get("_rate_limited") is None
+
+    @responses.activate
+    def test_uses_user_provided_key_without_pool(self):
+        """A user-provided key is used directly without touching the configured pool."""
+        responses.add(responses.GET, BASE_URL, json=MOCK_DAILY_RESPONSE, status=200)
+        
+        # get_api_keys would raise if called (no pool configured), proving the
+        # user key path bypasses the pool entirely.
+        with patch("shared.alpha_vantage.get_api_keys", side_effect=AssertionError("pool should not be used")):
+            result = fetch_daily_prices("AAPL", api_key="user-key")
+        
+        assert len(result["price_history"]) == 2
+
+
+class TestFetchStockDataRateLimit:
+    """Tests that fetch_stock_data surfaces the rate-limit cause."""
+
+    @responses.activate
+    def test_rate_limited_flag_propagated(self):
+        """When prices are rate-limited, fetch_stock_data flags rate_limited=True."""
+        # Both prices and overview calls return the rate-limit message.
+        responses.add(responses.GET, BASE_URL, json=MOCK_RATE_LIMIT_RESPONSE, status=200)
+        responses.add(responses.GET, BASE_URL, json=MOCK_RATE_LIMIT_RESPONSE, status=200)
+        
+        result = fetch_stock_data("AAPL", api_key="user-key")
+        
+        assert result["price_history"] == []
+        assert result["rate_limited"] is True
+
+    @responses.activate
+    def test_not_rate_limited_on_success(self):
+        """Successful fetches do not set the rate_limited flag."""
+        responses.add(responses.GET, BASE_URL, json=MOCK_DAILY_RESPONSE, status=200)
+        responses.add(responses.GET, BASE_URL, json=MOCK_OVERVIEW_RESPONSE, status=200)
+        
+        result = fetch_stock_data("AAPL", api_key="user-key")
+        
+        assert len(result["price_history"]) == 2
+        assert result["rate_limited"] is False
 
 
 class TestFetchCompanyOverview:

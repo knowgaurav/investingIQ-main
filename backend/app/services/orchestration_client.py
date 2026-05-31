@@ -22,6 +22,7 @@ class OrchestrationClient:
         ticker: str,
         task_id: str,
         llm_config: Optional[Dict[str, Any]],
+        alpha_vantage_key: Optional[str] = None,
     ) -> None:
         """Start the analysis orchestration for a ticker.
 
@@ -29,12 +30,18 @@ class OrchestrationClient:
             ticker: Stock ticker symbol.
             task_id: UUID tracking the analysis task.
             llm_config: Optional LLM provider configuration.
+            alpha_vantage_key: Optional user-provided Alpha Vantage API key.
         """
         params = {"code": self._functions_key} if self._functions_key else None
         response = requests.post(
             self._starter_url,
             params=params,
-            json={"ticker": ticker, "task_id": task_id, "llm_config": llm_config},
+            json={
+                "ticker": ticker,
+                "task_id": task_id,
+                "llm_config": llm_config,
+                "alpha_vantage_key": alpha_vantage_key,
+            },
             timeout=15,
         )
         response.raise_for_status()

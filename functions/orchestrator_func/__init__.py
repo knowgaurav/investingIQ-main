@@ -14,11 +14,13 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     ticker = input_data["ticker"]
     task_id = input_data["task_id"]
     llm_config = input_data.get("llm_config")
+    alpha_vantage_key = input_data.get("alpha_vantage_key")
     
     # Step 1: Fetch data (sequential)
     fetch_result = yield context.call_activity("activity_fetch_data", {
         "ticker": ticker,
         "task_id": task_id,
+        "alpha_vantage_key": alpha_vantage_key,
     })
     
     stock_data = fetch_result["stock_data"]
@@ -46,6 +48,7 @@ def orchestrator_function(context: df.DurableOrchestrationContext):
     parallel_tasks.append(context.call_activity("activity_financials_ingest", {
         "ticker": ticker,
         "task_id": task_id,
+        "alpha_vantage_key": alpha_vantage_key,
     }))
     
     # LLM Analysis (only if llm_config present)

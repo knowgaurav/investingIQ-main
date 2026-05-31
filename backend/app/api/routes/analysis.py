@@ -32,7 +32,7 @@ async def request_analysis(request: AnalysisRequest) -> AnalysisTaskResponse:
                 "api_key": request.llm_config.api_key,
                 "model": request.llm_config.model,
             }
-        client.start_analysis(ticker, task_id, llm_config)
+        client.start_analysis(ticker, task_id, llm_config, request.alpha_vantage_key)
     except Exception as e:
         logger.error(f"Failed to start orchestration: {e}")
         raise HTTPException(status_code=503, detail=f"Orchestration unavailable: {e}")
