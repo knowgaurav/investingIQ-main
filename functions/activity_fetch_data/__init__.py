@@ -19,7 +19,7 @@ def main(input_data: dict) -> dict:
     stock_data["earnings"] = earnings
     
     send_progress(task_id, 12, "Fetching news")
-    news_data = fetch_news(ticker, max_articles=20)
+    news_data = fetch_news(ticker, limit=20)
     
     logger.info(f"Fetched data for {ticker}: {len(stock_data.get('price_history', []))} prices, {len(news_data)} news")
     
