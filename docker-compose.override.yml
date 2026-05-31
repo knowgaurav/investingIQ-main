@@ -1,0 +1,40 @@
+# Development overrides — automatically merged by `docker compose up`.
+# Targets the `dev` build stages and bind-mounts source so code changes
+# hot reload without rebuilding the images.
+#
+#   Dev (hot reload):   docker compose up --build
+#   Prod (no override): docker compose -f docker-compose.yml up --build
+services:
+  functions:
+    build:
+      context: ./functions
+      target: dev
+    volumes:
+      # Mount the function app source; reloads on change. Keep tests excluded.
+      - ./functions:/home/site/wwwroot
+
+  backend:
+    build:
+      context: ./backend
+      target: dev
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      # Force polling so uvicorn's watcher catches edits across the bind mount.
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    command: npm run dev
+    environment:
+      # Force polling so Next.js/webpack picks up edits across the bind mount.
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./frontend:/app
+      # Preserve image-built deps/build cache against the bind mount above.
+      - /app/node_modules
+      - /app/.next
